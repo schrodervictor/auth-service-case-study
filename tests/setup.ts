@@ -1,4 +1,3 @@
-import dotenv from 'dotenv';
 import path from 'path';
 
-dotenv.config({ path: path.resolve(__dirname, '..', '.env.test') });
+process.env.CONFIG_PATH = path.resolve(__dirname, '..', 'config', 'test.json');
