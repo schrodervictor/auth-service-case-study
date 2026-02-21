@@ -10,6 +10,7 @@ import {
     ValidationError,
 } from '../../../src/errors';
 import { InvalidRefreshTokenError } from '../../../src/errors/invalid-refresh-token-error';
+import { TYPES } from '../../../src/lib/types';
 
 const createMockUserService = (): jest.Mocked<UserService> => ({
     register: jest.fn(),
@@ -615,6 +616,38 @@ describe('UserController', () => {
 
             expect(res.statusCode).toBe(500);
             expect(res.body).toEqual({ message: 'Internal server error' });
+        });
+    });
+
+    describe('rate limit middleware decorator wiring', () => {
+        type MethodMetadata = { key: string; method: string; path: string; middleware: symbol[] };
+
+        const getMethodMetadata = (): MethodMetadata[] =>
+            Reflect.getMetadata('inversify-express-utils:controller-method', UserController) ?? [];
+
+        it('should have TYPES.LoginRateLimiter applied to login endpoint', () => {
+            const metadata = getMethodMetadata();
+            const loginMeta = metadata.find((m) => m.key === 'login');
+
+            expect(loginMeta).toBeDefined();
+            expect(loginMeta!.middleware).toContain(TYPES.LoginRateLimiter);
+        });
+
+        it('should have TYPES.RefreshRateLimiter applied to refresh endpoint', () => {
+            const metadata = getMethodMetadata();
+            const refreshMeta = metadata.find((m) => m.key === 'refresh');
+
+            expect(refreshMeta).toBeDefined();
+            expect(refreshMeta!.middleware).toContain(TYPES.RefreshRateLimiter);
+        });
+
+        it('should NOT have rate limiter on register endpoint', () => {
+            const metadata = getMethodMetadata();
+            const registerMeta = metadata.find((m) => m.key === 'register');
+
+            expect(registerMeta).toBeDefined();
+            expect(registerMeta!.middleware).not.toContain(TYPES.LoginRateLimiter);
+            expect(registerMeta!.middleware).not.toContain(TYPES.RefreshRateLimiter);
         });
     });
 
