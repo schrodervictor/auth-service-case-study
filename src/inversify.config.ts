@@ -13,9 +13,11 @@ import { TYPES } from './lib/types';
 //     ExampleServiceImpl,
 //     UserService,
 //     UserServiceImpl,
-//     PasswordManagerService,
-//     PasswordManagerServiceImpl,
 // } from './services';
+import {
+    PasswordManagerService,
+    PasswordManagerServiceImpl,
+} from './services';
 // import { UserRepository, UserRepositoryImpl } from './repositories';
 
 export function createContainer(config: AppConfig, dataSource: DataSource): Container {
@@ -31,9 +33,9 @@ export function createContainer(config: AppConfig, dataSource: DataSource): Cont
     // // bind services
     // container.bind<ExampleService>(TYPES.ExampleService).to(ExampleServiceImpl);
     // container.bind<UserService>(TYPES.UserService).to(UserServiceImpl);
-    // container
-    //     .bind<PasswordManagerService>(TYPES.PasswordManagerService)
-    //     .to(PasswordManagerServiceImpl);
+    container
+        .bind<PasswordManagerService>(TYPES.PasswordManagerService)
+        .to(PasswordManagerServiceImpl);
 
     // // bind repositories
     // container.bind<UserRepository>(TYPES.UserRepository).to(UserRepositoryImpl);
