@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:24-alpine3.23 AS builder
+FROM node:24-alpine3.23 AS base
 WORKDIR /app
 
 RUN apk add openssh \
@@ -8,18 +8,35 @@ RUN apk add openssh \
     && mkdir -p -m 0600 ~/.ssh \
     && ssh-keyscan github.com >> ~/.ssh/known_hosts
 
+
+# Fast, simplyfied image for development with no source code included.
+# Expected to mount code at `/app/src` and `/app/tests`.
+FROM base AS dev
+
 # Spliting the copy of src and package/yarn greatly abbreviates
-# build times during development.
+# build times during development, in case deps haven't changed
+COPY package*.json .
+RUN --mount=type=ssh,id=default npm install --omit optional
+
+# Copy the remaining dev config files
+COPY .eslintrc jest.config.json prettierrc.json tsconfig.json .
+
+EXPOSE 9000
+CMD ["npm", "run", "dev"]
+
+
+FROM base AS builder
+
+# Spliting the copy of src and package/yarn greatly abbreviates
+# build times, in case deps haven't changed
 COPY package*.json .
 
 # Changed id=github_ssh_key to id=default to match local env
 # will be reverted back to the original at the end.
-RUN --mount=type=ssh,id=default npm install --omit optional
+RUN --mount=type=ssh,id=default npm install --include prod
 
-# Ideally a development image should not copy source code,
-# but mount/build it on demand. Keeping it for now.
 COPY . .
-RUN npm build
+RUN npm run build
 
 
 # For better security, the final image should be pure alpine of the
