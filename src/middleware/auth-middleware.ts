@@ -15,7 +15,7 @@ interface JwtPayload {
     userId: string;
 }
 
-export function createAuthMiddleware(): AuthMiddlewareFunction {
+export function createAuthMiddleware(_jwtSecret?: string): AuthMiddlewareFunction {
     return (req: Request, res: Response, next: NextFunction): void => {
         const authHeader = req.headers.authorization;
 

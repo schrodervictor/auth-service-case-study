@@ -6,6 +6,7 @@ import './controllers/health-check-controller';
 import './controllers/user-controller';
 
 import type { AppConfig } from './config/schema';
+import type { AppSecrets } from './config/secrets-schema';
 import { TYPES } from './lib/types';
 
 import {
@@ -18,7 +19,7 @@ import { UserRepository, UserRepositoryImpl } from './repositories';
 import { createAuthMiddleware } from './middleware/auth-middleware';
 import type { AuthMiddlewareFunction } from './middleware/auth-middleware';
 
-export function createContainer(config: AppConfig, dataSource: DataSource): Container {
+export function createContainer(config: AppConfig, dataSource: DataSource, secrets?: AppSecrets): Container {
     if (config == null) {
         throw new Error('Config is required to create the DI container');
     }
@@ -27,6 +28,11 @@ export function createContainer(config: AppConfig, dataSource: DataSource): Cont
 
     container.bind<AppConfig>(TYPES.Config).toConstantValue(config);
     container.bind<DataSource>(TYPES.DataSource).toConstantValue(dataSource);
+
+    // bind secrets
+    if (secrets) {
+        container.bind<AppSecrets>(TYPES.Secrets).toConstantValue(secrets);
+    }
 
     // bind services
     container.bind<UserService>(TYPES.UserService).to(UserServiceImpl);
@@ -37,7 +43,7 @@ export function createContainer(config: AppConfig, dataSource: DataSource): Cont
     // bind middleware
     container
         .bind<AuthMiddlewareFunction>(TYPES.AuthMiddleware)
-        .toConstantValue(createAuthMiddleware());
+        .toConstantValue(createAuthMiddleware(secrets?.jwtSecret));
 
     // bind repositories
     container.bind<UserRepository>(TYPES.UserRepository).to(UserRepositoryImpl);
