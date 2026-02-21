@@ -1,7 +1,8 @@
 import { Container } from 'inversify';
 
-import './src/lib/base-controller';
-// import './src/controllers';
+import './lib/base-controller';
+import './controllers/health-check-controller';
+// import './controllers';
 
 // import {
 //     ExampleService,
@@ -10,10 +11,10 @@ import './src/lib/base-controller';
 //     UserServiceImpl,
 //     PasswordManagerService,
 //     PasswordManagerServiceImpl,
-// } from './src/services';
-// import { UserRepository, UserRepositoryImpl } from './src/repositories';
+// } from './services';
+// import { UserRepository, UserRepositoryImpl } from './repositories';
 
-// import { TYPES } from './src/lib';
+// import { TYPES } from './lib';
 
 export const diContainer = new Container();
 
