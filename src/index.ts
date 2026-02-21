@@ -6,6 +6,7 @@ import { InversifyExpressServer } from 'inversify-express-utils';
 // import { createKafkaClient, Producer, Consumer } from '@marta/eventbus/dist';
 
 import { loadConfig } from './config';
+import { loadSecrets } from './config/secrets-loader';
 import { createContainer } from './inversify.config';
 import { createDataSource } from './database';
 // import { exampleEventHandler } from './events/handlers';
@@ -13,7 +14,9 @@ import { createDataSource } from './database';
 (async () => {
     try {
         const config = loadConfig();
-        const dataSource = createDataSource(config, { username: '', password: '' });
+        const secrets = await loadSecrets(config);
+        const credentials = { username: secrets.databaseUser, password: secrets.databasePassword };
+        const dataSource = createDataSource(config, credentials);
 
         await dataSource.initialize();
         console.log('Database connection established');
@@ -21,7 +24,7 @@ import { createDataSource } from './database';
         await dataSource.runMigrations();
         console.log('Database migrations executed');
 
-        const diContainer = createContainer(config, dataSource);
+        const diContainer = createContainer(config, dataSource, secrets);
 
         // Create Kafka producer and consumer instance
         // const kafkaClient = await createKafkaClient();

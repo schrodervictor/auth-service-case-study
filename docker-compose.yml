@@ -9,8 +9,6 @@ services:
       - "9000:9000"
     environment:
       CONFIG_PATH: /app/config/default.json
-      DATABASE_USER: postgres
-      DATABASE_PASSWORD: postgres
     volumes:
       - ./src:/app/src
       - ./tests:/app/tests
