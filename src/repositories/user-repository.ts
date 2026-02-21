@@ -40,7 +40,8 @@ export class UserRepositoryImpl implements UserRepository {
     }
 
     async create(data: CreateUserData): Promise<User> {
-        const { createdAt, updatedAt, ...safeData } = data as CreateUserData & Record<string, unknown>;
+        // Strip caller-supplied timestamps — these are managed by the database
+        const { createdAt: _createdAt, updatedAt: _updatedAt, ...safeData } = data as CreateUserData & Record<string, unknown>;
         const entity = this.repository.create(safeData as CreateUserData);
         return this.repository.save(entity);
     }
@@ -50,7 +51,8 @@ export class UserRepositoryImpl implements UserRepository {
         if (user === null) {
             return null;
         }
-        const { createdAt, updatedAt, ...safeData } = data as UpdateUserData & Record<string, unknown>;
+        // Strip caller-supplied timestamps — these are managed by the database
+        const { createdAt: _createdAt, updatedAt: _updatedAt, ...safeData } = data as UpdateUserData & Record<string, unknown>;
         Object.assign(user, safeData);
         return this.repository.save(user);
     }
