@@ -51,9 +51,10 @@ describe('User Entity', () => {
             expect(hasUniqueOption || hasUniqueDecorator).toBe(true);
         });
 
-        it('should have a "password" column', () => {
-            const passwordColumn = getColumn('password');
-            expect(passwordColumn).toBeDefined();
+        it('should have a "passwordHash" column mapped to "password_hash"', () => {
+            const passwordHashColumn = getColumn('passwordHash');
+            expect(passwordHashColumn).toBeDefined();
+            expect(passwordHashColumn!.options.name).toBe('password_hash');
         });
 
         it('should have a "firstName" column mapped to "first_name"', () => {

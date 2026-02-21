@@ -27,7 +27,7 @@ const MIGRATION_UP = `
     CREATE TABLE "users" (
         "id"         UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
         "email"      VARCHAR NOT NULL UNIQUE,
-        "password"   VARCHAR NOT NULL,
+        "password_hash" VARCHAR NOT NULL,
         "first_name" VARCHAR NOT NULL,
         "last_name"  VARCHAR NOT NULL,
         "created_at" TIMESTAMP NOT NULL DEFAULT now(),
@@ -39,7 +39,7 @@ const MIGRATION_DOWN = `DROP TABLE IF EXISTS "users";`;
 
 const sampleUser: CreateUserData = {
     email: 'integration@example.com',
-    password: 'hashed_password_value',
+    passwordHash: 'hashed_password_value',
     firstName: 'Integration',
     lastName: 'Test',
 };
@@ -76,7 +76,7 @@ describe('UserRepository integration', () => {
                 /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
             );
             expect(user.email).toBe(sampleUser.email);
-            expect(user.password).toBe(sampleUser.password);
+            expect(user.passwordHash).toBe(sampleUser.passwordHash);
             expect(user.firstName).toBe(sampleUser.firstName);
             expect(user.lastName).toBe(sampleUser.lastName);
             expect(user.createdAt).toBeInstanceOf(Date);
@@ -181,7 +181,7 @@ describe('UserRepository integration', () => {
             expect(updated!.firstName).toBe('OnlyFirst');
             expect(updated!.lastName).toBe(sampleUser.lastName); // preserved
             expect(updated!.email).toBe(sampleUser.email); // preserved
-            expect(updated!.password).toBe(sampleUser.password); // preserved
+            expect(updated!.passwordHash).toBe(sampleUser.passwordHash); // preserved
         });
 
         it('should preserve createdAt unchanged after update', async () => {
