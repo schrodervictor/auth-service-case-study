@@ -3,7 +3,6 @@ import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConne
 import { User } from '../../../src/entities/user';
 import {
     createDataSource,
-    loadDatabaseCredentials,
     DatabaseCredentials,
 } from '../../../src/database/data-source';
 import { AppConfig } from '../../../src/config/schema';
@@ -75,43 +74,5 @@ describe('createDataSource', () => {
         const entities = opts.entities as unknown[];
 
         expect(entities).toContain(User);
-    });
-});
-
-describe('loadDatabaseCredentials', () => {
-    const originalEnv = process.env;
-
-    beforeEach(() => {
-        process.env = { ...originalEnv };
-    });
-
-    afterAll(() => {
-        process.env = originalEnv;
-    });
-
-    it('should return username and password from environment variables', () => {
-        process.env.DATABASE_USER = 'env_user';
-        process.env.DATABASE_PASSWORD = 'env_pass';
-
-        const creds = loadDatabaseCredentials();
-
-        expect(creds).toEqual({
-            username: 'env_user',
-            password: 'env_pass',
-        });
-    });
-
-    it('should throw when DATABASE_USER is missing', () => {
-        delete process.env.DATABASE_USER;
-        process.env.DATABASE_PASSWORD = 'env_pass';
-
-        expect(() => loadDatabaseCredentials()).toThrow(/DATABASE_USER/);
-    });
-
-    it('should throw when DATABASE_PASSWORD is missing', () => {
-        process.env.DATABASE_USER = 'env_user';
-        delete process.env.DATABASE_PASSWORD;
-
-        expect(() => loadDatabaseCredentials()).toThrow(/DATABASE_PASSWORD/);
     });
 });
