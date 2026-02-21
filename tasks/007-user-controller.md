@@ -1,6 +1,6 @@
 # Task: User Controller (Outside-In TDD)
 
-## Status: pending
+## Status: done
 
 ## Context
 
@@ -380,11 +380,9 @@ export class UserController extends BaseController {
       const userId = (req as AuthenticatedRequest).user.id;
       const { firstName, lastName } = req.body ?? {};
       if (!firstName && !lastName) {
-        return res
-          .status(400)
-          .json({
-            message: "At least one field (firstName or lastName) is required",
-          });
+        return res.status(400).json({
+          message: "At least one field (firstName or lastName) is required",
+        });
       }
       const data: { firstName?: string; lastName?: string } = {};
       if (firstName) data.firstName = firstName;
@@ -622,72 +620,72 @@ No new npm packages required. All imports are from existing dependencies:
 - **Description**: Create the domain error hierarchy used by the service
   interface contract and caught by the controller for HTTP status mapping.
 - **Acceptance Criteria**:
-  - [ ] `src/errors/app-error.ts` exports abstract `AppError` extending `Error`
+  - [x] `src/errors/app-error.ts` exports abstract `AppError` extending `Error`
         with abstract `statusCode` property
-  - [ ] `src/errors/email-already-exists-error.ts` exports
+  - [x] `src/errors/email-already-exists-error.ts` exports
         `EmailAlreadyExistsError` (statusCode 409)
-  - [ ] `src/errors/invalid-credentials-error.ts` exports
+  - [x] `src/errors/invalid-credentials-error.ts` exports
         `InvalidCredentialsError` (statusCode 401)
-  - [ ] `src/errors/user-not-found-error.ts` exports `UserNotFoundError`
+  - [x] `src/errors/user-not-found-error.ts` exports `UserNotFoundError`
         (statusCode 404)
-  - [ ] `src/errors/validation-error.ts` exports `ValidationError`
+  - [x] `src/errors/validation-error.ts` exports `ValidationError`
         (statusCode 422)
-  - [ ] `src/errors/index.ts` barrel exports all error classes
-  - [ ] Each error sets `this.name = this.constructor.name`
-  - [ ] `make typecheck` passes
-- **Status**: pending
+  - [x] `src/errors/index.ts` barrel exports all error classes
+  - [x] Each error sets `this.name = this.constructor.name`
+  - [x] `make typecheck` passes
+- **Status**: done
 
 ### Milestone 2: UserService Interface and DTOs
 
 - **Description**: Define the UserService interface and all DTO types. NO
   implementation class -- types only.
 - **Acceptance Criteria**:
-  - [ ] `src/services/user-service.ts` exports `UserService` interface with
+  - [x] `src/services/user-service.ts` exports `UserService` interface with
         `register`, `authenticate`, `getProfile`, `updateProfile` methods
-  - [ ] Exports `RegisterUserDto`, `UpdateProfileDto`, `UserResponseDto`,
+  - [x] Exports `RegisterUserDto`, `UpdateProfileDto`, `UserResponseDto`,
         `AuthResponseDto` types
-  - [ ] File contains NO `@injectable()` class, NO implementation
-  - [ ] `src/services/index.ts` exports user-service
-  - [ ] `TYPES.UserService` symbol added to `src/lib/types.ts`
-  - [ ] `make typecheck` passes
-- **Status**: pending
+  - [x] File contains NO `@injectable()` class, NO implementation
+  - [x] `src/services/index.ts` exports user-service
+  - [x] `TYPES.UserService` symbol added to `src/lib/types.ts`
+  - [x] `make typecheck` passes
+- **Status**: done
 
 ### Milestone 3: Auth Middleware Types
 
 - **Description**: Define the auth middleware type contract. Types only, no
   implementation.
 - **Acceptance Criteria**:
-  - [ ] `src/middleware/auth-middleware.ts` exports `AuthenticatedRequest` type
+  - [x] `src/middleware/auth-middleware.ts` exports `AuthenticatedRequest` type
         and `AuthMiddlewareFunction` type
-  - [ ] `src/middleware/index.ts` barrel exports all types
-  - [ ] `TYPES.AuthMiddleware` symbol added to `src/lib/types.ts`
-  - [ ] `make typecheck` passes
-- **Status**: pending
+  - [x] `src/middleware/index.ts` barrel exports all types
+  - [x] `TYPES.AuthMiddleware` symbol added to `src/lib/types.ts`
+  - [x] `make typecheck` passes
+- **Status**: done
 
 ### Milestone 4: UserController Implementation
 
 - **Description**: Implement the UserController with all 4 routes, injecting
   UserService, using auth middleware symbol for protected routes.
 - **Acceptance Criteria**:
-  - [ ] `src/controllers/user-controller.ts` exports `UserController` class
-  - [ ] Class has `@controller('/users')` decorator and extends `BaseController`
-  - [ ] Constructor injects `UserService` via `@inject(TYPES.UserService)`
-  - [ ] `POST /register` route: extracts body, validates required fields, calls
+  - [x] `src/controllers/user-controller.ts` exports `UserController` class
+  - [x] Class has `@controller('/users')` decorator and extends `BaseController`
+  - [x] Constructor injects `UserService` via `@inject(TYPES.UserService)`
+  - [x] `POST /register` route: extracts body, validates required fields, calls
         `userService.register`, returns 201
-  - [ ] `POST /login` route: extracts body, validates required fields, calls
+  - [x] `POST /login` route: extracts body, validates required fields, calls
         `userService.authenticate`, returns 200 with token
-  - [ ] `GET /profile` route: protected via `TYPES.AuthMiddleware`, extracts
+  - [x] `GET /profile` route: protected via `TYPES.AuthMiddleware`, extracts
         userId from `req.user.id`, calls `userService.getProfile`, returns 200
-  - [ ] `PUT /profile` route: protected via `TYPES.AuthMiddleware`, extracts
+  - [x] `PUT /profile` route: protected via `TYPES.AuthMiddleware`, extracts
         userId and body, validates at least one field, calls
         `userService.updateProfile`, returns 200
-  - [ ] All routes catch `AppError` and map to appropriate HTTP status
-  - [ ] All routes catch unexpected errors and return 500
-  - [ ] Response bodies never include password
-  - [ ] `src/controllers/index.ts` exports user-controller
-  - [ ] `src/inversify.config.ts` imports `'./controllers/user-controller'`
-  - [ ] `make typecheck` passes
-- **Status**: pending
+  - [x] All routes catch `AppError` and map to appropriate HTTP status
+  - [x] All routes catch unexpected errors and return 500
+  - [x] Response bodies never include password
+  - [x] `src/controllers/index.ts` exports user-controller
+  - [x] `src/inversify.config.ts` imports `'./controllers/user-controller'`
+  - [x] `make typecheck` passes
+- **Status**: done
 
 ### Milestone 5: Unit Tests
 
@@ -695,13 +693,13 @@ No new npm packages required. All imports are from existing dependencies:
   mocked UserService, covering happy paths, validation errors, domain errors,
   and unexpected errors.
 - **Acceptance Criteria**:
-  - [ ] `tests/unit/controllers/user-controller.test.ts` exists
-  - [ ] Tests instantiate the controller directly with a mocked UserService
-  - [ ] Tests use mock Request/Response objects (no real Express server)
-  - [ ] All 30 test cases from the test strategy are covered
-  - [ ] Tests verify correct HTTP status codes for all scenarios
-  - [ ] Tests verify response body structure (user data, token, error messages)
-  - [ ] Tests verify service methods are called with correct arguments
-  - [ ] Tests verify password is never included in responses
-  - [ ] `make test-unit` passes with all tests green
-- **Status**: pending
+  - [x] `tests/unit/controllers/user-controller.test.ts` exists
+  - [x] Tests instantiate the controller directly with a mocked UserService
+  - [x] Tests use mock Request/Response objects (no real Express server)
+  - [x] All 30 test cases from the test strategy are covered
+  - [x] Tests verify correct HTTP status codes for all scenarios
+  - [x] Tests verify response body structure (user data, token, error messages)
+  - [x] Tests verify service methods are called with correct arguments
+  - [x] Tests verify password is never included in responses
+  - [x] `make test-unit` passes with all tests green
+- **Status**: done
