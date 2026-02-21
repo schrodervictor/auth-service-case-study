@@ -18,6 +18,8 @@ export const TYPES = {
 
     // Middleware
     AuthMiddleware: Symbol.for('AuthMiddleware'),
+    LoginRateLimiter: Symbol.for('LoginRateLimiter'),
+    RefreshRateLimiter: Symbol.for('RefreshRateLimiter'),
 
     // Repositories
     UserRepository: Symbol.for('UserRepository'),
