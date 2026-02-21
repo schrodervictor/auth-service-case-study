@@ -41,9 +41,11 @@ export function createContainer(config: AppConfig, dataSource: DataSource, secre
         .to(PasswordManagerServiceImpl);
 
     // bind middleware
-    container
-        .bind<AuthMiddlewareFunction>(TYPES.AuthMiddleware)
-        .toConstantValue(createAuthMiddleware(secrets?.jwtSecret));
+    if (secrets) {
+        container
+            .bind<AuthMiddlewareFunction>(TYPES.AuthMiddleware)
+            .toConstantValue(createAuthMiddleware(secrets.jwtSecret));
+    }
 
     // bind repositories
     container.bind<UserRepository>(TYPES.UserRepository).to(UserRepositoryImpl);
