@@ -1,6 +1,6 @@
 # Task: User Repository
 
-## Status: pending
+## Status: done
 
 ## Context
 
@@ -287,53 +287,53 @@ installed.
 - **Description**: Replace the placeholder with the UserRepository interface and
   UserRepositoryImpl class
 - **Acceptance Criteria**:
-  - [ ] `src/repositories/user-repository.ts` exports `UserRepository`
+  - [x] `src/repositories/user-repository.ts` exports `UserRepository`
         interface, `UserRepositoryImpl` class, `CreateUserData` type, and
         `UpdateUserData` type
-  - [ ] `UserRepositoryImpl` has `@injectable()` decorator
-  - [ ] Constructor injects `DataSource` via `@inject(TYPES.DataSource)` and
+  - [x] `UserRepositoryImpl` has `@injectable()` decorator
+  - [x] Constructor injects `DataSource` via `@inject(TYPES.DataSource)` and
         derives `Repository<User>` from it
-  - [ ] `findByEmail(email)` returns `User | null`
-  - [ ] `findById(id)` returns `User | null`
-  - [ ] `create(data)` creates and saves, returns `User` with id and timestamps
-  - [ ] `update(id, data)` returns updated `User` or `null` if not found
-  - [ ] `src/repositories/index.ts` exports the repository
-- **Status**: pending
+  - [x] `findByEmail(email)` returns `User | null`
+  - [x] `findById(id)` returns `User | null`
+  - [x] `create(data)` creates and saves, returns `User` with id and timestamps
+  - [x] `update(id, data)` returns updated `User` or `null` if not found
+  - [x] `src/repositories/index.ts` exports the repository
+- **Status**: done
 
 ### Milestone 2: DI Wiring
 
 - **Description**: Wire the UserRepository into the DI container
 - **Acceptance Criteria**:
-  - [ ] `TYPES.UserRepository` symbol is active in `src/lib/types.ts`
-  - [ ] `createContainer` binds `UserRepository` to `UserRepositoryImpl`
-  - [ ] Import in `src/inversify.config.ts` is uncommented and correct
-  - [ ] `make typecheck` passes
-- **Status**: pending
+  - [x] `TYPES.UserRepository` symbol is active in `src/lib/types.ts`
+  - [x] `createContainer` binds `UserRepository` to `UserRepositoryImpl`
+  - [x] Import in `src/inversify.config.ts` is uncommented and correct
+  - [x] `make typecheck` passes
+- **Status**: done
 
 ### Milestone 3: Unit Tests
 
 - **Description**: Unit tests with mocked TypeORM Repository covering all
   repository methods, plus DI integration assertions
 - **Acceptance Criteria**:
-  - [ ] `tests/unit/repositories/user-repository.test.ts` exists with all test
+  - [x] `tests/unit/repositories/user-repository.test.ts` exists with all test
         cases from the test strategy (cases 1-14)
-  - [ ] Tests mock the DataSource and Repository — no real DB needed
-  - [ ] DI integration test updated with UserRepository binding assertions
+  - [x] Tests mock the DataSource and Repository — no real DB needed
+  - [x] DI integration test updated with UserRepository binding assertions
         (cases 15-16)
-  - [ ] `MOCK_DATA_SOURCE` in DI integration test includes `getRepository` mock
-  - [ ] `make test-unit` passes with all tests green
-- **Status**: pending
+  - [x] `MOCK_DATA_SOURCE` in DI integration test includes `getRepository` mock
+  - [x] `make test-unit` passes with all tests green
+- **Status**: done
 
 ### Milestone 4: Integration Tests
 
 - **Description**: Integration tests running against real PostgreSQL verifying
   actual CRUD operations and constraint enforcement
 - **Acceptance Criteria**:
-  - [ ] `tests/integration/repositories/user-repository.test.ts` exists with all
+  - [x] `tests/integration/repositories/user-repository.test.ts` exists with all
         test cases from the test strategy (cases 17-25)
-  - [ ] Tests use real DataSource with test credentials
-  - [ ] Test isolation via TRUNCATE between tests
-  - [ ] Duplicate email test verifies unique constraint throws
-  - [ ] Partial update test verifies only specified fields change
-  - [ ] `make test-integration` passes with all tests green
-- **Status**: pending
+  - [x] Tests use real DataSource with test credentials
+  - [x] Test isolation via TRUNCATE between tests
+  - [x] Duplicate email test verifies unique constraint throws
+  - [x] Partial update test verifies only specified fields change
+  - [x] `make test-integration` passes with all tests green
+- **Status**: done
