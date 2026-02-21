@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import { inject, injectable } from 'inversify';
 
 import type { AppConfig } from '../config/schema';
+import type { AppSecrets } from '../config/secrets-schema';
 import type { User } from '../entities/user';
 import {
     EmailAlreadyExistsError,
@@ -56,6 +57,7 @@ export class UserServiceImpl implements UserService {
         @inject(TYPES.UserRepository) private readonly userRepository: UserRepository,
         @inject(TYPES.PasswordManagerService) private readonly passwordManager: PasswordManagerService,
         @inject(TYPES.Config) private readonly config: AppConfig,
+        @inject(TYPES.Secrets) private readonly secrets: AppSecrets,
     ) {}
 
     async register(data: RegisterUserDto): Promise<UserResponseDto> {
@@ -126,14 +128,9 @@ export class UserServiceImpl implements UserService {
             throw new InvalidCredentialsError();
         }
 
-        const secret = process.env.JWT_SECRET;
-        if (!secret) {
-            throw new Error('JWT_SECRET environment variable is not set');
-        }
-
         const token = jwt.sign(
             { userId: user.id },
-            secret,
+            this.secrets.jwtSecret,
             { expiresIn: this.config.auth.accessToken.expiresIn as jwt.SignOptions['expiresIn'] },
         );
 
