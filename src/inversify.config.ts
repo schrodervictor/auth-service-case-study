@@ -15,6 +15,8 @@ import {
 import type { UserService } from './services/user-service';
 import { UserServiceImpl } from './services/user-service';
 import { UserRepository, UserRepositoryImpl } from './repositories';
+import { createAuthMiddleware } from './middleware/auth-middleware';
+import type { AuthMiddlewareFunction } from './middleware/auth-middleware';
 
 export function createContainer(config: AppConfig, dataSource: DataSource): Container {
     if (config == null) {
@@ -31,6 +33,11 @@ export function createContainer(config: AppConfig, dataSource: DataSource): Cont
     container
         .bind<PasswordManagerService>(TYPES.PasswordManagerService)
         .to(PasswordManagerServiceImpl);
+
+    // bind middleware
+    container
+        .bind<AuthMiddlewareFunction>(TYPES.AuthMiddleware)
+        .toConstantValue(createAuthMiddleware());
 
     // bind repositories
     container.bind<UserRepository>(TYPES.UserRepository).to(UserRepositoryImpl);
