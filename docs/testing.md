@@ -71,6 +71,8 @@ tests/
 │   │   └── data-source.test.ts  # DataSource factory and credentials loader
 │   ├── entities/
 │   │   └── user.test.ts         # User entity metadata (TypeORM decorators)
+│   ├── services/
+│   │   └── password-manager-service.test.ts  # Hashing and comparison logic
 │   └── example.test.ts
 ├── integration/                 # Requires PostgreSQL
 │   ├── database/
