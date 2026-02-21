@@ -3,7 +3,7 @@ import type { DataSource } from 'typeorm';
 
 import './lib/base-controller';
 import './controllers/health-check-controller';
-// import './controllers';
+import './controllers/user-controller';
 
 import type { AppConfig } from './config/schema';
 import { TYPES } from './lib/types';
