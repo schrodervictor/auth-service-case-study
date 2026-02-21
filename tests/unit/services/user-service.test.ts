@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import jwt from 'jsonwebtoken';
 
 import type { UserRepository } from '../../../src/repositories/user-repository';
+import type { RefreshTokenRepository } from '../../../src/repositories/refresh-token-repository';
 import type { PasswordManagerService } from '../../../src/services/password-manager-service';
 import type { AppConfig } from '../../../src/config/schema';
 import type { AppSecrets } from '../../../src/config/secrets-schema';
@@ -29,6 +30,13 @@ const createMockUserRepository = (): jest.Mocked<UserRepository> => ({
 const createMockPasswordManager = (): jest.Mocked<PasswordManagerService> => ({
     toHash: jest.fn(),
     compare: jest.fn(),
+});
+
+const createMockRefreshTokenRepository = (): jest.Mocked<RefreshTokenRepository> => ({
+    save: jest.fn(),
+    findByTokenHash: jest.fn(),
+    deleteByTokenHash: jest.fn(),
+    deleteAllByUserId: jest.fn(),
 });
 
 const mockConfig: AppConfig = {
@@ -82,12 +90,14 @@ const catchError = async <T>(promise: Promise<T>): Promise<ValidationError> => {
 describe('UserServiceImpl', () => {
     let mockRepo: jest.Mocked<UserRepository>;
     let mockPasswordManager: jest.Mocked<PasswordManagerService>;
+    let mockRefreshTokenRepo: jest.Mocked<RefreshTokenRepository>;
     let service: UserServiceImpl;
 
     beforeEach(() => {
         mockRepo = createMockUserRepository();
         mockPasswordManager = createMockPasswordManager();
-        service = new UserServiceImpl(mockRepo, mockPasswordManager, mockConfig, mockSecrets);
+        mockRefreshTokenRepo = createMockRefreshTokenRepository();
+        service = new UserServiceImpl(mockRepo, mockPasswordManager, mockConfig, mockSecrets, mockRefreshTokenRepo);
     });
 
     afterEach(() => {
@@ -294,14 +304,49 @@ describe('UserServiceImpl', () => {
     });
 
     describe('authenticate', () => {
-        it('should return AuthResponseDto with token on successful authentication', async () => {
+        it('should return AuthResponseDto with accessToken and refreshToken on successful authentication', async () => {
             const user = createSampleUser();
             mockRepo.findByEmail.mockResolvedValue(user);
             mockPasswordManager.compare.mockResolvedValue(true);
 
             const result = await service.authenticate('test@example.com', 'StrongPass1');
 
-            expect(result).toEqual({ token: 'mock-jwt-token' });
+            expect(result).toHaveProperty('accessToken', 'mock-jwt-token');
+            expect(result).toHaveProperty('refreshToken');
+            expect(typeof result.refreshToken).toBe('string');
+        });
+
+        it('should return refreshToken as a 64-character hex string (32 bytes)', async () => {
+            const user = createSampleUser();
+            mockRepo.findByEmail.mockResolvedValue(user);
+            mockPasswordManager.compare.mockResolvedValue(true);
+
+            const result = await service.authenticate('test@example.com', 'StrongPass1');
+
+            expect(result.refreshToken).toMatch(/^[0-9a-f]{64}$/);
+        });
+
+        it('should call refreshTokenRepository.save with hashed token, userId, and future expiresAt', async () => {
+            const user = createSampleUser();
+            mockRepo.findByEmail.mockResolvedValue(user);
+            mockPasswordManager.compare.mockResolvedValue(true);
+
+            const beforeCall = new Date();
+            await service.authenticate('test@example.com', 'StrongPass1');
+
+            expect(mockRefreshTokenRepo.save).toHaveBeenCalledTimes(1);
+            const [tokenHash, userId, expiresAt] = mockRefreshTokenRepo.save.mock.calls[0];
+
+            // tokenHash should be a non-empty string (hashed, not the raw token)
+            expect(typeof tokenHash).toBe('string');
+            expect(tokenHash.length).toBeGreaterThan(0);
+
+            // userId should match the authenticated user
+            expect(userId).toBe('uuid-1');
+
+            // expiresAt should be in the future
+            expect(expiresAt).toBeInstanceOf(Date);
+            expect(expiresAt.getTime()).toBeGreaterThan(beforeCall.getTime());
         });
 
         it('should throw InvalidCredentialsError when email is not found', async () => {
