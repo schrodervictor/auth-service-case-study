@@ -18,4 +18,5 @@ export const TYPES = {
 
     // Repositories
     UserRepository: Symbol.for('UserRepository'),
+    RefreshTokenRepository: Symbol.for('RefreshTokenRepository'),
 };
