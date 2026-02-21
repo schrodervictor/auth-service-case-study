@@ -263,6 +263,34 @@ describe('loadSecrets', () => {
             await expect(loadSecrets(ssmConfig())).rejects.toThrow();
         });
 
+        it('should handle multiple keys mapping to the same SSM parameter name', async () => {
+            const config = configWith({
+                ssm: {
+                    region: 'us-east-1',
+                    parameters: {
+                        jwtSecret: '/shared/secret',
+                        databaseUser: '/shared/secret',
+                        databasePassword: '/db/pass',
+                    },
+                },
+            });
+
+            mockSend.mockResolvedValue({
+                Parameters: [
+                    { Name: '/shared/secret', Value: 'shared-value' },
+                    { Name: '/db/pass', Value: 'db-pass' },
+                ],
+            });
+
+            const result = await loadSecrets(config);
+
+            expect(result).toEqual({
+                jwtSecret: 'shared-value',
+                databaseUser: 'shared-value',
+                databasePassword: 'db-pass',
+            });
+        });
+
         it('should propagate SSM client errors', async () => {
             mockSend.mockRejectedValue(new Error('SSM access denied'));
 
