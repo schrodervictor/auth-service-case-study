@@ -1,6 +1,6 @@
 # Task: Refresh Token Mechanism
 
-## Status: pending
+## Status: done
 
 ## Context
 
@@ -63,69 +63,69 @@ POST /logout                        (auth middleware required)
 
 - **Description**: Create RefreshToken TypeORM entity and database migration
 - **Acceptance Criteria**:
-  - [ ] `refresh_tokens` table with id, token_hash, user_id, expires_at,
+  - [x] `refresh_tokens` table with id, token_hash, user_id, expires_at,
         created_at
-  - [ ] FK to users(id) ON DELETE CASCADE
-  - [ ] Indexes on token_hash and user_id
-  - [ ] ManyToOne relation to User entity
-  - [ ] Entity registered in data-source
-- **Status**: pending
+  - [x] FK to users(id) ON DELETE CASCADE
+  - [x] Indexes on token_hash and user_id
+  - [x] ManyToOne relation to User entity
+  - [x] Entity registered in data-source
+- **Status**: done
 
 ### Milestone 2: RefreshTokenRepository
 
 - **Description**: CRUD repository for refresh token storage
 - **Acceptance Criteria**:
-  - [ ] save(tokenHash, userId, expiresAt)
-  - [ ] findByTokenHash(hash)
-  - [ ] deleteByTokenHash(hash)
-  - [ ] deleteAllByUserId(userId)
-  - [ ] TYPES.RefreshTokenRepository symbol added
-  - [ ] Follows existing repository pattern
-- **Status**: pending
+  - [x] save(tokenHash, userId, expiresAt)
+  - [x] findByTokenHash(hash)
+  - [x] deleteByTokenHash(hash)
+  - [x] deleteAllByUserId(userId)
+  - [x] TYPES.RefreshTokenRepository symbol added
+  - [x] Follows existing repository pattern
+- **Status**: done
 
 ### Milestone 3: AuthResponseDto + authenticate() change
 
 - **Description**: Breaking change — authenticate returns both tokens
 - **Acceptance Criteria**:
-  - [ ] AuthResponseDto: { accessToken, refreshToken }
-  - [ ] authenticate() generates opaque token, SHA-256 hashes, saves to DB
-  - [ ] InvalidRefreshTokenError class (401)
-  - [ ] RefreshTokenRepository injected as 5th constructor param
-- **Status**: pending
+  - [x] AuthResponseDto: { accessToken, refreshToken }
+  - [x] authenticate() generates opaque token, SHA-256 hashes, saves to DB
+  - [x] InvalidRefreshTokenError class (401)
+  - [x] RefreshTokenRepository injected as 5th constructor param
+- **Status**: done
 
 ### Milestone 4: refreshAccessToken service method
 
 - **Description**: Token refresh with rotation
 - **Acceptance Criteria**:
-  - [ ] Hash incoming token, lookup in DB
-  - [ ] Verify not expired, user still exists
-  - [ ] Delete old token, generate + save new pair
-  - [ ] Return new { accessToken, refreshToken }
-  - [ ] Throws InvalidRefreshTokenError on any failure
-- **Status**: pending
+  - [x] Hash incoming token, lookup in DB
+  - [x] Verify not expired, user still exists
+  - [x] Delete old token, generate + save new pair
+  - [x] Return new { accessToken, refreshToken }
+  - [x] Throws InvalidRefreshTokenError on any failure
+- **Status**: done
 
 ### Milestone 5: logout service method
 
 - **Description**: Revoke all refresh tokens for a user
 - **Acceptance Criteria**:
-  - [ ] logout(userId) deletes all refresh tokens
-  - [ ] Added to UserService interface
-- **Status**: pending
+  - [x] logout(userId) deletes all refresh tokens
+  - [x] Added to UserService interface
+- **Status**: done
 
 ### Milestone 6: Controller endpoints + login response
 
 - **Description**: New /refresh and /logout endpoints, login response update
 - **Acceptance Criteria**:
-  - [ ] POST /refresh — 200 with new tokens, 400 missing body, 401 invalid
-  - [ ] POST /logout — 204, requires auth middleware
-  - [ ] Login response uses { accessToken, refreshToken }
-  - [ ] InvalidRefreshTokenError mapped to 401
-- **Status**: pending
+  - [x] POST /refresh — 200 with new tokens, 400 missing body, 401 invalid
+  - [x] POST /logout — 204, requires auth middleware
+  - [x] Login response uses { accessToken, refreshToken }
+  - [x] InvalidRefreshTokenError mapped to 401
+- **Status**: done
 
 ### Milestone 7: DI wiring
 
 - **Description**: Wire RefreshTokenRepository into DI container
 - **Acceptance Criteria**:
-  - [ ] TYPES.RefreshTokenRepository bound to RefreshTokenRepositoryImpl
-  - [ ] DI integration tests pass
-- **Status**: pending
+  - [x] TYPES.RefreshTokenRepository bound to RefreshTokenRepositoryImpl
+  - [x] DI integration tests pass
+- **Status**: done
