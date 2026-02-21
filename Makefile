@@ -37,5 +37,5 @@ test-integration: build
 	$(RUN_WITH_DEPS) npm run test:integration
 
 test-acceptance: up wait-for-app
-	docker compose exec app npm run test:acceptance
+	docker compose run --rm acceptance
 	docker compose down

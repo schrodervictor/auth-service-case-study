@@ -37,3 +37,14 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  acceptance:
+    build:
+      context: ./tests/acceptance
+    environment:
+      API_URL: http://app:9000
+    volumes:
+      - ./tests/acceptance/specs:/app/specs
+    depends_on:
+      app:
+        condition: service_started

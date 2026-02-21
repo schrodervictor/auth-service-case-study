@@ -33,12 +33,24 @@ npm run test:integration
 
 ### Acceptance tests
 
-Require the full application stack running (API + database).
+Acceptance tests run in a **separate Docker container** that has no access to
+the application source code. The test container only makes HTTP requests against
+the running API — true black-box testing.
 
 ```bash
-docker compose up -d
-npm run test:acceptance
+make test-acceptance
 ```
+
+This will:
+
+1. Start the full stack (`app` + `postgres`)
+2. Wait for the app health-check to pass
+3. Run the `acceptance` container (Jest runs and exits)
+4. Tear down all containers
+
+The acceptance test client lives in `tests/acceptance/` with its own
+`package.json`, `Dockerfile`, and Jest configuration. It is completely isolated
+from the main application's `node_modules` and `src/`.
 
 ### All tests (unit + integration)
 
@@ -47,7 +59,7 @@ npm test
 ```
 
 Note: `npm test` runs unit and integration tests only. Acceptance tests are
-excluded because they require the full stack and are meant to run separately.
+excluded because they require the full stack and run in a separate container.
 
 ## Directory Structure
 
@@ -57,7 +69,11 @@ tests/
 │   └── *.test.ts
 ├── integration/       # Requires database
 │   └── *.test.ts
-├── acceptance/        # Requires full running stack
+├── acceptance/        # Separate Docker container (black-box)
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── jest.config.json
 │   └── *.test.ts
 ├── setup.ts           # Shared setup (loads .env.test)
 ├── teardown.ts        # Shared teardown
