@@ -5,6 +5,7 @@ import type { DataSource } from 'typeorm';
 import { createContainer } from '../../../src/inversify.config';
 import { TYPES } from '../../../src/lib/types';
 import type { AppConfig } from '../../../src/config/schema';
+import { PasswordManagerServiceImpl } from '../../../src/services/password-manager-service';
 
 const VALID_CONFIG: AppConfig = {
     server: { port: 9000 },
@@ -46,6 +47,22 @@ describe('DI container config integration', () => {
             const second = container.get<AppConfig>(TYPES.Config);
 
             expect(first).toBe(second);
+        });
+    });
+
+    describe('PasswordManagerService binding', () => {
+        it('should bind TYPES.PasswordManagerService in the container', () => {
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE);
+
+            expect(container.isBound(TYPES.PasswordManagerService)).toBe(true);
+        });
+
+        it('should resolve PasswordManagerService to a PasswordManagerServiceImpl instance', () => {
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE);
+
+            const service = container.get(TYPES.PasswordManagerService);
+
+            expect(service).toBeInstanceOf(PasswordManagerServiceImpl);
         });
     });
 
