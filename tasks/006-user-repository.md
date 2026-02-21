@@ -1,6 +1,6 @@
 # Task: User Repository
 
-## Status: in-progress
+## Status: done
 
 ## Context
 
@@ -358,10 +358,10 @@ installed.
 - **Description**: Add integration tests proving `createdAt` is immutable across
   updates, `updatedAt` strictly advances, and injected timestamps are ignored
 - **Acceptance Criteria**:
-  - [ ] Test: `createdAt` remains unchanged after `update`
-  - [ ] Test: `updatedAt` is strictly greater after `update`
-  - [ ] Test: `create` ignores injected `createdAt`/`updatedAt` (via `as any`)
-  - [ ] Test: `update` ignores injected `createdAt`/`updatedAt` (via `as any`)
-  - [ ] `make test-integration` passes with all tests green
-  - [ ] If injection prevention requires implementation changes, those are made
-- **Status**: pending
+  - [x] Test: `createdAt` remains unchanged after `update`
+  - [x] Test: `updatedAt` is strictly greater after `update`
+  - [x] Test: `create` ignores injected `createdAt`/`updatedAt` (via `as any`)
+  - [x] Test: `update` ignores injected `createdAt`/`updatedAt` (via `as any`)
+  - [x] `make test-integration` passes with all tests green
+  - [x] If injection prevention requires implementation changes, those are made
+- **Status**: done
