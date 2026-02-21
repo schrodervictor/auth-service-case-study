@@ -106,9 +106,10 @@ export class UserServiceImpl implements UserService {
 
         // Hash password and create user
         const hashedPassword = await this.passwordManager.toHash(data.password);
+        const { password: _password, ...userData } = data;
         const createdUser = await this.userRepository.create({
-            ...data,
-            password: hashedPassword,
+            ...userData,
+            passwordHash: hashedPassword,
         });
 
         return this.toUserResponse(createdUser);
@@ -120,7 +121,7 @@ export class UserServiceImpl implements UserService {
             throw new InvalidCredentialsError();
         }
 
-        const isMatch = await this.passwordManager.compare(user.password, password);
+        const isMatch = await this.passwordManager.compare(user.passwordHash, password);
         if (!isMatch) {
             throw new InvalidCredentialsError();
         }

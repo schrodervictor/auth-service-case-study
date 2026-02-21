@@ -10,7 +10,7 @@ export class CreateUser1740000000000 implements MigrationInterface {
             CREATE TABLE "users" (
                 "id"         UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
                 "email"      VARCHAR NOT NULL UNIQUE,
-                "password"   VARCHAR NOT NULL,
+                "password_hash" VARCHAR NOT NULL,
                 "first_name" VARCHAR NOT NULL,
                 "last_name"  VARCHAR NOT NULL,
                 "created_at" TIMESTAMP NOT NULL DEFAULT now(),
