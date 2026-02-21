@@ -1,6 +1,6 @@
 # Task: User Controller (Outside-In TDD)
 
-## Status: done
+## Status: in-progress
 
 ## Context
 
@@ -99,7 +99,11 @@ What this task produces:
   - 409 Conflict -- email already registered (service throws
     `EmailAlreadyExistsError`)
   - 422 Unprocessable Entity -- validation failures like weak password or
-    invalid email (service throws `ValidationError`)
+    invalid email (service throws `ValidationError`). The 422 response body MUST
+    include structured per-field errors:
+    `{ message: string, errors: Record<string, string[]> }` where each key is a
+    field name and the value is an array of violation messages for that field.
+    This allows a frontend to display errors next to specific form fields.
 
 #### POST /users/login
 
@@ -118,9 +122,10 @@ What this task produces:
   `{ id, email, firstName, lastName, createdAt, updatedAt }` (no password)
 - **Errors**:
   - 401 Unauthorized -- no/invalid token (handled by auth middleware before
-    controller)
-  - 404 Not Found -- user ID from token not found in DB (service throws
-    `UserNotFoundError`)
+    controller), OR user not found in DB. SECURITY: if the service throws
+    `UserNotFoundError` on a protected route, the controller MUST return 401
+    (not 404) to avoid leaking information about whether a user exists. The
+    response message should be generic: "Unauthorized".
 
 #### PUT /users/profile (protected)
 
@@ -130,8 +135,8 @@ What this task produces:
   `{ id, email, firstName, lastName, createdAt, updatedAt }` (no password)
 - **Errors**:
   - 400 Bad Request -- no updatable fields provided
-  - 401 Unauthorized -- no/invalid token (auth middleware)
-  - 404 Not Found -- user not found (service throws `UserNotFoundError`)
+  - 401 Unauthorized -- no/invalid token (auth middleware), OR user not found
+    (same security rationale as GET /profile)
 
 ### Interface Contracts
 
@@ -703,3 +708,37 @@ No new npm packages required. All imports are from existing dependencies:
   - [x] Tests verify password is never included in responses
   - [x] `make test-unit` passes with all tests green
 - **Status**: done
+
+### Milestone 6: ValidationError Structured Field Errors
+
+- **Description**: Enhance ValidationError to carry per-field structured errors.
+  Update the controller's handleError to include them in 422 responses.
+- **Acceptance Criteria**:
+  - [ ] `ValidationError` constructor accepts `errors: Record<string, string[]>`
+        in addition to `message`
+  - [ ] `ValidationError` exposes a public `readonly errors` property
+  - [ ] Controller's `handleError` returns `{ message, errors }` for
+        `ValidationError` (not just `{ message }`)
+  - [ ] Test: 422 response includes both `message` and `errors` with per-field
+        violations
+  - [ ] Test: `errors` object has field names as keys and string arrays as
+        values
+  - [ ] Existing ValidationError tests still pass (backward compatible)
+  - [ ] `make test-unit` and `make typecheck` pass
+- **Status**: pending
+
+### Milestone 7: Profile Routes Return 401 for UserNotFoundError
+
+- **Description**: On protected routes (GET/PUT /profile), if the service throws
+  `UserNotFoundError`, return 401 Unauthorized instead of 404. This prevents
+  leaking information about user existence in the database.
+- **Acceptance Criteria**:
+  - [ ] `getProfile` catches `UserNotFoundError` and returns 401 with generic
+        "Unauthorized" message
+  - [ ] `updateProfile` catches `UserNotFoundError` and returns 401 with generic
+        "Unauthorized" message
+  - [ ] Test: GET /profile with UserNotFoundError returns 401 (not 404)
+  - [ ] Test: PUT /profile with UserNotFoundError returns 401 (not 404)
+  - [ ] Test: response message is generic "Unauthorized" (no user ID leaked)
+  - [ ] `make test-unit` and `make typecheck` pass
+- **Status**: pending
