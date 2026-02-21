@@ -8,6 +8,7 @@ import type { User } from '../entities/user';
 import {
     EmailAlreadyExistsError,
     InvalidCredentialsError,
+    InvalidRefreshTokenError,
     UserNotFoundError,
     ValidationError,
 } from '../errors';
@@ -45,6 +46,7 @@ export type AuthResponseDto = {
 export interface UserService {
     register(data: RegisterUserDto): Promise<UserResponseDto>;
     authenticate(email: string, password: string): Promise<AuthResponseDto>;
+    refreshAccessToken(token: string): Promise<AuthResponseDto>;
     getProfile(userId: string): Promise<UserResponseDto>;
     updateProfile(
         userId: string,
@@ -145,6 +147,35 @@ export class UserServiceImpl implements UserService {
         await this.refreshTokenRepository.save(tokenHash, user.id, expiresAt);
 
         return { accessToken, refreshToken: rawRefreshToken };
+    }
+
+    async refreshAccessToken(token: string): Promise<AuthResponseDto> {
+        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+        const stored = await this.refreshTokenRepository.findByTokenHash(tokenHash);
+
+        if (!stored || stored.expiresAt < new Date()) {
+            throw new InvalidRefreshTokenError();
+        }
+
+        const user = await this.userRepository.findById(stored.userId);
+        if (!user) {
+            throw new InvalidRefreshTokenError();
+        }
+
+        // Rotate: delete old token, create new pair
+        await this.refreshTokenRepository.deleteByTokenHash(stored.tokenHash);
+
+        const accessToken = jwt.sign(
+            { userId: user.id },
+            this.secrets.jwtSecret,
+            { expiresIn: this.config.auth.accessToken.expiresIn as jwt.SignOptions['expiresIn'] },
+        );
+
+        const newRawToken = crypto.randomBytes(32).toString('hex');
+        const newHash = crypto.createHash('sha256').update(newRawToken).digest('hex');
+        await this.refreshTokenRepository.save(newHash, user.id, this.computeRefreshExpiresAt());
+
+        return { accessToken, refreshToken: newRawToken };
     }
 
     async getProfile(userId: string): Promise<UserResponseDto> {
