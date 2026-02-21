@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm';
 import { AppConfig } from '../config/schema';
 import { User } from '../entities/user';
-import { CreateUser1 } from '../migrations/1-CreateUser';
+import { CreateUser1740000000000 } from '../migrations/1740000000000-CreateUser';
 
 export interface DatabaseCredentials {
     username: string;
@@ -21,7 +21,7 @@ export function createDataSource(
         password: credentials.password,
         synchronize: false,
         entities: [User],
-        migrations: [CreateUser1],
+        migrations: [CreateUser1740000000000],
     });
 }
 
