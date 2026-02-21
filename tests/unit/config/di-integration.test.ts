@@ -5,8 +5,20 @@ import type { DataSource } from 'typeorm';
 import { createContainer } from '../../../src/inversify.config';
 import { TYPES } from '../../../src/lib/types';
 import type { AppConfig } from '../../../src/config/schema';
+import type { AppSecrets } from '../../../src/config/secrets-schema';
 import { PasswordManagerServiceImpl } from '../../../src/services/password-manager-service';
 import { UserRepositoryImpl } from '../../../src/repositories/user-repository';
+import { createAuthMiddleware } from '../../../src/middleware/auth-middleware';
+
+jest.mock('../../../src/middleware/auth-middleware', () => ({
+    createAuthMiddleware: jest.fn().mockReturnValue(jest.fn()),
+}));
+
+const MOCK_SECRETS: AppSecrets = {
+    jwtSecret: 'test-secret',
+    databaseUser: 'testuser',
+    databasePassword: 'testpass',
+};
 
 const VALID_CONFIG: AppConfig = {
     server: { port: 9000 },
@@ -87,6 +99,48 @@ describe('DI container config integration', () => {
             const repository = container.get(TYPES.UserRepository);
 
             expect(repository).toBeInstanceOf(UserRepositoryImpl);
+        });
+    });
+
+    describe('secrets binding', () => {
+        it('should have TYPES.Secrets symbol defined', () => {
+            expect(TYPES.Secrets).toBeDefined();
+            expect(typeof TYPES.Secrets).toBe('symbol');
+        });
+
+        it('should accept secrets as 3rd parameter to createContainer', () => {
+            expect(() =>
+                createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS),
+            ).not.toThrow();
+        });
+
+        it('should bind secrets under TYPES.Secrets', () => {
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS);
+
+            expect(container.isBound(TYPES.Secrets)).toBe(true);
+        });
+
+        it('should retrieve the secrets object with correct values', () => {
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS);
+
+            const secrets = container.get<AppSecrets>(TYPES.Secrets);
+
+            expect(secrets).toEqual(MOCK_SECRETS);
+        });
+
+        it('should bind secrets as a constant (same reference on multiple gets)', () => {
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS);
+
+            const first = container.get<AppSecrets>(TYPES.Secrets);
+            const second = container.get<AppSecrets>(TYPES.Secrets);
+
+            expect(first).toBe(second);
+        });
+
+        it('should pass secrets.jwtSecret to createAuthMiddleware', () => {
+            createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS);
+
+            expect(createAuthMiddleware).toHaveBeenCalledWith(MOCK_SECRETS.jwtSecret);
         });
     });
 
