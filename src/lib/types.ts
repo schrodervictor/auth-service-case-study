@@ -13,6 +13,9 @@ export const TYPES = {
     // Secrets
     Secrets: Symbol.for('Secrets'),
 
+    // Redis
+    RedisClient: Symbol.for('RedisClient'),
+
     // Middleware
     AuthMiddleware: Symbol.for('AuthMiddleware'),
 
