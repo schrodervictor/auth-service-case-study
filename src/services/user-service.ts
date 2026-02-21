@@ -1,3 +1,18 @@
+import jwt from 'jsonwebtoken';
+import { inject, injectable } from 'inversify';
+
+import type { AppConfig } from '../config/schema';
+import type { User } from '../entities/user';
+import {
+    EmailAlreadyExistsError,
+    InvalidCredentialsError,
+    UserNotFoundError,
+    ValidationError,
+} from '../errors';
+import { TYPES } from '../lib/types';
+import type { UserRepository } from '../repositories/user-repository';
+import type { PasswordManagerService } from './password-manager-service';
+
 export type RegisterUserDto = {
     email: string;
     password: string;
@@ -31,4 +46,139 @@ export interface UserService {
         userId: string,
         data: UpdateProfileDto,
     ): Promise<UserResponseDto>;
+}
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+@injectable()
+export class UserServiceImpl implements UserService {
+    constructor(
+        @inject(TYPES.UserRepository) private readonly userRepository: UserRepository,
+        @inject(TYPES.PasswordManagerService) private readonly passwordManager: PasswordManagerService,
+        @inject(TYPES.Config) private readonly config: AppConfig,
+    ) {}
+
+    async register(data: RegisterUserDto): Promise<UserResponseDto> {
+        const errors: Record<string, string[]> = {};
+
+        // Validate email
+        if (!EMAIL_REGEX.test(data.email)) {
+            errors.email = ['Invalid email format'];
+        }
+
+        // Validate password
+        const passwordErrors: string[] = [];
+        if (data.password.length < 8) {
+            passwordErrors.push('Password must be at least 8 characters long');
+        }
+        if (!/[A-Z]/.test(data.password)) {
+            passwordErrors.push('Password must contain at least one uppercase letter');
+        }
+        if (!/[a-z]/.test(data.password)) {
+            passwordErrors.push('Password must contain at least one lowercase letter');
+        }
+        if (!/[0-9]/.test(data.password)) {
+            passwordErrors.push('Password must contain at least one number');
+        }
+        if (passwordErrors.length > 0) {
+            errors.password = passwordErrors;
+        }
+
+        // Validate firstName
+        if (!data.firstName || data.firstName.trim().length === 0) {
+            errors.firstName = ['First name is required'];
+        }
+
+        // Validate lastName
+        if (!data.lastName || data.lastName.trim().length === 0) {
+            errors.lastName = ['Last name is required'];
+        }
+
+        if (Object.keys(errors).length > 0) {
+            throw new ValidationError('Validation failed', errors);
+        }
+
+        // Check email uniqueness
+        const existingUser = await this.userRepository.findByEmail(data.email);
+        if (existingUser) {
+            throw new EmailAlreadyExistsError(data.email);
+        }
+
+        // Hash password and create user
+        const hashedPassword = await this.passwordManager.toHash(data.password);
+        const createdUser = await this.userRepository.create({
+            ...data,
+            password: hashedPassword,
+        });
+
+        return this.toUserResponse(createdUser);
+    }
+
+    async authenticate(email: string, password: string): Promise<AuthResponseDto> {
+        const user = await this.userRepository.findByEmail(email);
+        if (!user) {
+            throw new InvalidCredentialsError();
+        }
+
+        const isMatch = await this.passwordManager.compare(user.password, password);
+        if (!isMatch) {
+            throw new InvalidCredentialsError();
+        }
+
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            throw new Error('JWT_SECRET environment variable is not set');
+        }
+
+        const token = jwt.sign(
+            { userId: user.id },
+            secret,
+            { expiresIn: this.config.auth.accessToken.expiresIn as jwt.SignOptions['expiresIn'] },
+        );
+
+        return { token };
+    }
+
+    async getProfile(userId: string): Promise<UserResponseDto> {
+        const user = await this.userRepository.findById(userId);
+        if (!user) {
+            throw new UserNotFoundError(userId);
+        }
+
+        return this.toUserResponse(user);
+    }
+
+    async updateProfile(userId: string, data: UpdateProfileDto): Promise<UserResponseDto> {
+        const errors: Record<string, string[]> = {};
+
+        if ('firstName' in data && (!data.firstName || data.firstName.trim().length === 0)) {
+            errors.firstName = ['First name cannot be empty'];
+        }
+
+        if ('lastName' in data && (!data.lastName || data.lastName.trim().length === 0)) {
+            errors.lastName = ['Last name cannot be empty'];
+        }
+
+        if (Object.keys(errors).length > 0) {
+            throw new ValidationError('Validation failed', errors);
+        }
+
+        const updatedUser = await this.userRepository.update(userId, data);
+        if (!updatedUser) {
+            throw new UserNotFoundError(userId);
+        }
+
+        return this.toUserResponse(updatedUser);
+    }
+
+    private toUserResponse(user: User): UserResponseDto {
+        return {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+        };
+    }
 }
