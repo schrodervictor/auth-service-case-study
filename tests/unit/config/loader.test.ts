@@ -211,6 +211,60 @@ describe('loadConfig', () => {
         });
     });
 
+    describe('immutability', () => {
+        function loadValidConfig() {
+            const configPath = writeTmpConfig(VALID_FULL_CONFIG);
+            tmpFiles.push(configPath);
+            process.env.CONFIG_PATH = configPath;
+            return loadConfig();
+        }
+
+        it('should return a frozen top-level object', () => {
+            const config = loadValidConfig();
+
+            expect(Object.isFrozen(config)).toBe(true);
+        });
+
+        it('should freeze nested objects (server, database, auth)', () => {
+            const config = loadValidConfig();
+
+            expect(Object.isFrozen(config.server)).toBe(true);
+            expect(Object.isFrozen(config.database)).toBe(true);
+            expect(Object.isFrozen(config.auth)).toBe(true);
+        });
+
+        it('should freeze deeply nested objects (auth.accessToken, auth.refreshToken)', () => {
+            const config = loadValidConfig();
+
+            expect(Object.isFrozen(config.auth.accessToken)).toBe(true);
+            expect(Object.isFrozen(config.auth.refreshToken)).toBe(true);
+        });
+
+        it('should throw TypeError when mutating a top-level property', () => {
+            const config = loadValidConfig();
+
+            expect(() => {
+                (config as Record<string, unknown>).server = { port: 9999 };
+            }).toThrow(TypeError);
+        });
+
+        it('should throw TypeError when mutating a nested property', () => {
+            const config = loadValidConfig();
+
+            expect(() => {
+                (config.server as Record<string, unknown>).port = 1234;
+            }).toThrow(TypeError);
+        });
+
+        it('should throw TypeError when mutating a deeply nested property', () => {
+            const config = loadValidConfig();
+
+            expect(() => {
+                (config.auth.accessToken as Record<string, unknown>).expiresIn = '1h';
+            }).toThrow(TypeError);
+        });
+    });
+
     describe('extra/unknown fields', () => {
         it('should strip unknown top-level fields', () => {
             const configPath = writeTmpConfig({
