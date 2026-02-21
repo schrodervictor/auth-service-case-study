@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { inject, injectable } from 'inversify';
 
@@ -7,10 +8,12 @@ import type { User } from '../entities/user';
 import {
     EmailAlreadyExistsError,
     InvalidCredentialsError,
+    InvalidRefreshTokenError,
     UserNotFoundError,
     ValidationError,
 } from '../errors';
 import { TYPES } from '../lib/types';
+import type { RefreshTokenRepository } from '../repositories/refresh-token-repository';
 import type { UserRepository } from '../repositories/user-repository';
 import type { PasswordManagerService } from './password-manager-service';
 
@@ -36,12 +39,15 @@ export type UserResponseDto = {
 };
 
 export type AuthResponseDto = {
-    token: string;
+    accessToken: string;
+    refreshToken: string;
 };
 
 export interface UserService {
     register(data: RegisterUserDto): Promise<UserResponseDto>;
     authenticate(email: string, password: string): Promise<AuthResponseDto>;
+    refreshAccessToken(token: string): Promise<AuthResponseDto>;
+    logout(userId: string): Promise<void>;
     getProfile(userId: string): Promise<UserResponseDto>;
     updateProfile(
         userId: string,
@@ -58,6 +64,7 @@ export class UserServiceImpl implements UserService {
         @inject(TYPES.PasswordManagerService) private readonly passwordManager: PasswordManagerService,
         @inject(TYPES.Config) private readonly config: AppConfig,
         @inject(TYPES.Secrets) private readonly secrets: AppSecrets,
+        @inject(TYPES.RefreshTokenRepository) private readonly refreshTokenRepository: RefreshTokenRepository,
     ) {}
 
     async register(data: RegisterUserDto): Promise<UserResponseDto> {
@@ -128,13 +135,30 @@ export class UserServiceImpl implements UserService {
             throw new InvalidCredentialsError();
         }
 
-        const token = jwt.sign(
-            { userId: user.id },
-            this.secrets.jwtSecret,
-            { expiresIn: this.config.auth.accessToken.expiresIn as jwt.SignOptions['expiresIn'] },
-        );
+        return this.generateTokenPair(user.id);
+    }
 
-        return { token };
+    async refreshAccessToken(token: string): Promise<AuthResponseDto> {
+        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+        const stored = await this.refreshTokenRepository.findByTokenHash(tokenHash);
+
+        if (!stored || stored.expiresAt < new Date()) {
+            throw new InvalidRefreshTokenError();
+        }
+
+        const user = await this.userRepository.findById(stored.userId);
+        if (!user) {
+            throw new InvalidRefreshTokenError();
+        }
+
+        // Rotate: delete old token, create new pair
+        await this.refreshTokenRepository.deleteByTokenHash(stored.tokenHash);
+
+        return this.generateTokenPair(user.id);
+    }
+
+    async logout(userId: string): Promise<void> {
+        await this.refreshTokenRepository.deleteAllByUserId(userId);
     }
 
     async getProfile(userId: string): Promise<UserResponseDto> {
@@ -167,6 +191,39 @@ export class UserServiceImpl implements UserService {
         }
 
         return this.toUserResponse(updatedUser);
+    }
+
+    private async generateTokenPair(userId: string): Promise<AuthResponseDto> {
+        const accessToken = jwt.sign(
+            { userId },
+            this.secrets.jwtSecret,
+            { expiresIn: this.config.auth.accessToken.expiresIn as jwt.SignOptions['expiresIn'] },
+        );
+
+        const rawRefreshToken = crypto.randomBytes(32).toString('hex');
+        const tokenHash = crypto.createHash('sha256').update(rawRefreshToken).digest('hex');
+        await this.refreshTokenRepository.save(tokenHash, userId, this.computeRefreshExpiresAt());
+
+        return { accessToken, refreshToken: rawRefreshToken };
+    }
+
+    private computeRefreshExpiresAt(): Date {
+        const expiresIn = this.config.auth.refreshToken.expiresIn;
+        const match = expiresIn.match(/^(\d+)([smhd])$/);
+        if (!match) {
+            throw new Error(`Invalid refreshToken.expiresIn format: ${expiresIn}`);
+        }
+
+        const value = parseInt(match[1], 10);
+        const unit = match[2];
+        const multipliers: Record<string, number> = {
+            s: 1_000,
+            m: 60_000,
+            h: 3_600_000,
+            d: 86_400_000,
+        };
+
+        return new Date(Date.now() + value * multipliers[unit]);
     }
 
     private toUserResponse(user: User): UserResponseDto {

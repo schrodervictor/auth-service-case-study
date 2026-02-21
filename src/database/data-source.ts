@@ -1,7 +1,9 @@
 import { DataSource } from 'typeorm';
 import { AppConfig } from '../config/schema';
 import { User } from '../entities/user';
+import { RefreshToken } from '../entities/refresh-token';
 import { CreateUser1740000000000 } from '../migrations/1740000000000-CreateUser';
+import { CreateRefreshTokensTable1740100000000 } from '../migrations/1740100000000-CreateRefreshTokensTable';
 
 export interface DatabaseCredentials {
     username: string;
@@ -20,7 +22,7 @@ export function createDataSource(
         username: credentials.username,
         password: credentials.password,
         synchronize: false,
-        entities: [User],
-        migrations: [CreateUser1740000000000],
+        entities: [User, RefreshToken],
+        migrations: [CreateUser1740000000000, CreateRefreshTokensTable1740100000000],
     });
 }

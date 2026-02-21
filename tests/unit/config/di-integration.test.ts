@@ -8,6 +8,7 @@ import type { AppConfig } from '../../../src/config/schema';
 import type { AppSecrets } from '../../../src/config/secrets-schema';
 import { PasswordManagerServiceImpl } from '../../../src/services/password-manager-service';
 import { UserRepositoryImpl } from '../../../src/repositories/user-repository';
+import { RefreshTokenRepositoryImpl } from '../../../src/repositories/refresh-token-repository';
 import { createAuthMiddleware } from '../../../src/middleware/auth-middleware';
 
 jest.mock('../../../src/middleware/auth-middleware', () => ({
@@ -35,6 +36,7 @@ const MOCK_DATA_SOURCE = {
         findOneBy: jest.fn(),
         create: jest.fn(),
         save: jest.fn(),
+        delete: jest.fn(),
     }),
 } as unknown as DataSource;
 
@@ -99,6 +101,22 @@ describe('DI container config integration', () => {
             const repository = container.get(TYPES.UserRepository);
 
             expect(repository).toBeInstanceOf(UserRepositoryImpl);
+        });
+    });
+
+    describe('RefreshTokenRepository binding', () => {
+        it('should bind TYPES.RefreshTokenRepository in the container', () => {
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS);
+
+            expect(container.isBound(TYPES.RefreshTokenRepository)).toBe(true);
+        });
+
+        it('should resolve RefreshTokenRepository to a RefreshTokenRepositoryImpl instance', () => {
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS);
+
+            const repository = container.get(TYPES.RefreshTokenRepository);
+
+            expect(repository).toBeInstanceOf(RefreshTokenRepositoryImpl);
         });
     });
 

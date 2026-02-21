@@ -57,6 +57,34 @@ export class UserController extends BaseController {
         }
     }
 
+    @httpPost('/refresh')
+    async refresh(req: Request, res: Response): Promise<void> {
+        try {
+            const { refreshToken } = req.body ?? {};
+
+            if (!refreshToken) {
+                res.status(400).json({ message: 'Missing required fields' });
+                return;
+            }
+
+            const result = await this.userService.refreshAccessToken(refreshToken);
+            res.status(200).json(result);
+        } catch (error) {
+            this.handleError(res, error);
+        }
+    }
+
+    @httpPost('/logout', TYPES.AuthMiddleware)
+    async logout(req: Request, res: Response): Promise<void> {
+        try {
+            const userId = (req as AuthenticatedRequest).user.id;
+            await this.userService.logout(userId);
+            res.status(204).send();
+        } catch (error) {
+            this.handleError(res, error);
+        }
+    }
+
     @httpGet('/profile', TYPES.AuthMiddleware)
     async getProfile(req: Request, res: Response): Promise<void> {
         try {

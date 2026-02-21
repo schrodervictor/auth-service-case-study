@@ -15,7 +15,7 @@ import {
 } from './services';
 import type { UserService } from './services/user-service';
 import { UserServiceImpl } from './services/user-service';
-import { UserRepository, UserRepositoryImpl } from './repositories';
+import { UserRepository, UserRepositoryImpl, RefreshTokenRepository, RefreshTokenRepositoryImpl } from './repositories';
 import { createAuthMiddleware } from './middleware/auth-middleware';
 import type { AuthMiddlewareFunction } from './middleware/auth-middleware';
 
@@ -48,6 +48,7 @@ export function createContainer(config: AppConfig, dataSource: DataSource, secre
 
     // bind repositories
     container.bind<UserRepository>(TYPES.UserRepository).to(UserRepositoryImpl);
+    container.bind<RefreshTokenRepository>(TYPES.RefreshTokenRepository).to(RefreshTokenRepositoryImpl);
 
     return container;
 }
