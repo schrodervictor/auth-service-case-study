@@ -9,10 +9,13 @@ import {
     UserNotFoundError,
     ValidationError,
 } from '../../../src/errors';
+import { InvalidRefreshTokenError } from '../../../src/errors/invalid-refresh-token-error';
 
 const createMockUserService = (): jest.Mocked<UserService> => ({
     register: jest.fn(),
     authenticate: jest.fn(),
+    refreshAccessToken: jest.fn(),
+    logout: jest.fn(),
     getProfile: jest.fn(),
     updateProfile: jest.fn(),
 });
@@ -38,6 +41,8 @@ const createMockResponse = (): Partial<Response> & {
         res.body = data;
         return res;
     });
+    res.send = jest.fn().mockImplementation(() => res);
+    res.end = jest.fn().mockImplementation(() => res);
     return res;
 };
 
@@ -260,8 +265,13 @@ describe('UserController', () => {
     });
 
     describe('POST /login', () => {
-        it('should return 200 with token on successful authentication', async () => {
-            mockService.authenticate.mockResolvedValue({ token: 'jwt-token-123' });
+        const authResponse = {
+            accessToken: 'jwt-token-123',
+            refreshToken: 'a'.repeat(64),
+        };
+
+        it('should return 200 with accessToken and refreshToken on successful authentication', async () => {
+            mockService.authenticate.mockResolvedValue(authResponse);
             const req = createMockRequest({
                 email: 'test@example.com',
                 password: 'StrongPass1!',
@@ -271,11 +281,11 @@ describe('UserController', () => {
             await controller.login(req as Request, res as Response);
 
             expect(res.statusCode).toBe(200);
-            expect(res.body).toEqual({ token: 'jwt-token-123' });
+            expect(res.body).toEqual(authResponse);
         });
 
         it('should call userService.authenticate with email and password from body', async () => {
-            mockService.authenticate.mockResolvedValue({ token: 'jwt-token-123' });
+            mockService.authenticate.mockResolvedValue(authResponse);
             const req = createMockRequest({
                 email: 'test@example.com',
                 password: 'StrongPass1!',
@@ -485,6 +495,123 @@ describe('UserController', () => {
             const res = createMockResponse();
 
             await controller.updateProfile(req as Request, res as Response);
+
+            expect(res.statusCode).toBe(500);
+            expect(res.body).toEqual({ message: 'Internal server error' });
+        });
+    });
+
+    describe('POST /refresh', () => {
+        const refreshResponse = {
+            accessToken: 'new-jwt-token',
+            refreshToken: 'b'.repeat(64),
+        };
+
+        it('should return 200 with new accessToken and refreshToken on success', async () => {
+            mockService.refreshAccessToken.mockResolvedValue(refreshResponse);
+            const req = createMockRequest({ refreshToken: 'old-token-hex' });
+            const res = createMockResponse();
+
+            await controller.refresh(req as Request, res as Response);
+
+            expect(res.statusCode).toBe(200);
+            expect(res.body).toEqual(refreshResponse);
+        });
+
+        it('should call userService.refreshAccessToken with refreshToken from body', async () => {
+            mockService.refreshAccessToken.mockResolvedValue(refreshResponse);
+            const req = createMockRequest({ refreshToken: 'old-token-hex' });
+            const res = createMockResponse();
+
+            await controller.refresh(req as Request, res as Response);
+
+            expect(mockService.refreshAccessToken).toHaveBeenCalledWith('old-token-hex');
+        });
+
+        it('should return 400 when refreshToken is missing from body', async () => {
+            const req = createMockRequest({});
+            const res = createMockResponse();
+
+            await controller.refresh(req as Request, res as Response);
+
+            expect(res.statusCode).toBe(400);
+            expect(res.body).toEqual({ message: 'Missing required fields' });
+        });
+
+        it('should return 401 when service throws InvalidRefreshTokenError', async () => {
+            mockService.refreshAccessToken.mockRejectedValue(new InvalidRefreshTokenError());
+            const req = createMockRequest({ refreshToken: 'bad-token' });
+            const res = createMockResponse();
+
+            await controller.refresh(req as Request, res as Response);
+
+            expect(res.statusCode).toBe(401);
+            expect(res.body).toEqual({ message: 'Invalid or expired refresh token' });
+        });
+
+        it('should return 500 on unexpected error', async () => {
+            mockService.refreshAccessToken.mockRejectedValue(new Error('DB error'));
+            const req = createMockRequest({ refreshToken: 'some-token' });
+            const res = createMockResponse();
+
+            await controller.refresh(req as Request, res as Response);
+
+            expect(res.statusCode).toBe(500);
+            expect(res.body).toEqual({ message: 'Internal server error' });
+        });
+
+        it('should not require auth middleware (no Bearer token needed)', async () => {
+            mockService.refreshAccessToken.mockResolvedValue(refreshResponse);
+            // Request has no user property — simulates unauthenticated request
+            const req = createMockRequest({ refreshToken: 'old-token-hex' });
+            const res = createMockResponse();
+
+            await controller.refresh(req as Request, res as Response);
+
+            expect(res.statusCode).toBe(200);
+        });
+    });
+
+    describe('POST /logout', () => {
+        it('should return 204 on success with no body', async () => {
+            mockService.logout.mockResolvedValue(undefined);
+            const req = createMockRequest(undefined, { id: 'uuid-1' });
+            const res = createMockResponse();
+
+            await controller.logout(req as Request, res as Response);
+
+            expect(res.statusCode).toBe(204);
+            // 204 should not have a JSON body
+            expect(res.body).toBeUndefined();
+        });
+
+        it('should call userService.logout with authenticated user ID', async () => {
+            mockService.logout.mockResolvedValue(undefined);
+            const req = createMockRequest(undefined, { id: 'uuid-1' });
+            const res = createMockResponse();
+
+            await controller.logout(req as Request, res as Response);
+
+            expect(mockService.logout).toHaveBeenCalledWith('uuid-1');
+        });
+
+        it('should require auth middleware (uses req.user.id)', async () => {
+            mockService.logout.mockResolvedValue(undefined);
+            const req = createMockRequest(undefined, { id: 'uuid-1' });
+            const res = createMockResponse();
+
+            await controller.logout(req as Request, res as Response);
+
+            // Verifies the endpoint reads from req.user.id (set by auth middleware)
+            expect(mockService.logout).toHaveBeenCalledWith('uuid-1');
+        });
+
+        it('should return 500 on unexpected error', async () => {
+            mockService.logout.mockRejectedValue(new Error('DB error'));
+            const req = createMockRequest(undefined, { id: 'uuid-1' });
+            const res = createMockResponse();
+
+            await controller.logout(req as Request, res as Response);
 
             expect(res.statusCode).toBe(500);
             expect(res.body).toEqual({ message: 'Internal server error' });
