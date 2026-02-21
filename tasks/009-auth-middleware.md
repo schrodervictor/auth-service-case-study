@@ -1,6 +1,6 @@
 # Task: Auth Middleware
 
-## Status: done
+## Status: in-progress
 
 ## Context
 
@@ -333,3 +333,39 @@ const createMockNext = (): NextFunction => jest.fn();
   - [x] TypeScript compiles: `make typecheck`
   - [x] Lint passes: `make lint`
 - **Status**: done
+
+### Milestone 5: Rename `password` to `passwordHash` in entity and data layer
+
+- **Description**: The `password` column and entity field give the false
+  impression that raw passwords are stored. In reality, the field holds a scrypt
+  hash. Rename throughout the data layer for semantic clarity. Since the app has
+  never been released, we change everything in place — no new migration needed.
+- **Scope of changes**:
+  - `src/entities/user.ts` — field `password` → `passwordHash`, column name
+    `password` → `password_hash`
+  - `src/migrations/1740000000000-CreateUser.ts` — column `"password"` →
+    `"password_hash"`
+  - `src/repositories/user-repository.ts` — `CreateUserData.password` →
+    `passwordHash`
+  - `src/services/user-service.ts` — `RegisterUserDto.password` stays (raw input
+    from user), but entity references `user.password` → `user.passwordHash` and
+    `{ password: hashedPassword }` → `{ passwordHash: hashedPassword }`. The
+    `toUserResponse` helper already omits `password` — update it to omit
+    `passwordHash` instead.
+  - `src/controllers/user-controller.ts` — untouched (handles raw passwords from
+    request body, passed to service layer)
+  - `src/services/password-manager-service.ts` — untouched (operates on strings,
+    not entity fields)
+  - All test files referencing `password` on mock User entities or
+    CreateUserData objects must be updated
+- **Acceptance Criteria**:
+  - [ ] Entity field renamed to `passwordHash` with column `password_hash`
+  - [ ] Migration uses `password_hash` column name
+  - [ ] `CreateUserData` type uses `passwordHash`
+  - [ ] Service layer stores hash as `passwordHash`, reads `user.passwordHash`
+  - [ ] `toUserResponse` does not leak `passwordHash`
+  - [ ] All tests updated and passing (`make test-unit`,
+        `make test-integration`)
+  - [ ] `make typecheck` passes
+  - [ ] `make lint` passes
+- **Status**: pending
