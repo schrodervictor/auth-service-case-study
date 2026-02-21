@@ -10,7 +10,10 @@
     "dev": "tsx watch src/index.ts",
     "build": "rimraf ./dist && tsc",
     "start": "node ./dist/src/index.js",
-    "test": "jest -c ./jest.config.json",
+    "test": "jest -c ./jest.config.json --testPathPatterns='tests/(unit|integration)'",
+    "test:unit": "jest -c ./jest.config.json --testPathPatterns=tests/unit",
+    "test:integration": "jest -c ./jest.config.json --testPathPatterns=tests/integration",
+    "test:acceptance": "jest -c ./jest.config.json --testPathPatterns=tests/acceptance",
     "test:watch": "jest -c ./jest.config.json --watchAll=true",
     "test:cov": "jest -c ./jest.config.json --coverage",
     "typecheck": "tsc --noEmit"

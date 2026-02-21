@@ -15,7 +15,8 @@ services:
       DATABASE_USER: postgres
       DATABASE_PASSWORD: postgres
     volumes:
-      - .:/app
+      - ./src:/app/src
+      - ./tests:/app/tests
     depends_on:
       postgres:
         condition: service_healthy
