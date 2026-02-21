@@ -36,12 +36,13 @@ function configWith(overrides: Partial<AppConfig>): AppConfig {
 describe('loadSecrets', () => {
     afterEach(() => {
         jest.restoreAllMocks();
+        delete process.env.SECRETS_PATH;
     });
 
     // ── Priority logic ───────────────────────────────────────────────────
 
     describe('priority logic', () => {
-        it('should use SSM backend when both ssm and secretsPath are configured', async () => {
+        it('should use SSM backend when both ssm and SECRETS_PATH env var are set', async () => {
             // Import the mocked SSM module so we can set up return values
             const { SSMClient } = await import('@aws-sdk/client-ssm');
             const mockSend = jest.fn().mockResolvedValue({
@@ -53,8 +54,8 @@ describe('loadSecrets', () => {
             });
             (SSMClient as jest.Mock).mockImplementation(() => ({ send: mockSend }));
 
+            process.env.SECRETS_PATH = '/tmp/secrets.json';
             const config = configWith({
-                secretsPath: '/tmp/secrets.json',
                 ssm: {
                     region: 'us-east-1',
                     parameters: {
@@ -72,21 +73,20 @@ describe('loadSecrets', () => {
             expect(mockedFs.readFileSync).not.toHaveBeenCalled();
         });
 
-        it('should use file backend when only secretsPath is configured', async () => {
+        it('should use file backend when SECRETS_PATH env var is set and no ssm configured', async () => {
             mockedFs.readFileSync.mockReturnValue(JSON.stringify(VALID_SECRETS));
 
-            const config = configWith({
-                secretsPath: '/tmp/secrets.json',
-            });
+            process.env.SECRETS_PATH = '/tmp/secrets.json';
+            const config = configWith({});
 
             await loadSecrets(config);
 
             expect(mockedFs.readFileSync).toHaveBeenCalledWith('/tmp/secrets.json', 'utf-8');
         });
 
-        it('should throw a descriptive error when neither ssm nor secretsPath is configured', async () => {
+        it('should throw when neither ssm nor SECRETS_PATH env var is configured', async () => {
+            delete process.env.SECRETS_PATH;
             const config = configWith({
-                secretsPath: undefined,
                 ssm: undefined,
             });
 
@@ -97,9 +97,13 @@ describe('loadSecrets', () => {
     // ── File backend ─────────────────────────────────────────────────────
 
     describe('file backend', () => {
-        function fileConfig(secretsPath = '/tmp/secrets.json'): AppConfig {
-            return configWith({ secretsPath });
+        function fileConfig(): AppConfig {
+            return configWith({});
         }
+
+        beforeEach(() => {
+            process.env.SECRETS_PATH = '/tmp/secrets.json';
+        });
 
         it('should parse valid JSON and return validated AppSecrets', async () => {
             mockedFs.readFileSync.mockReturnValue(JSON.stringify(VALID_SECRETS));
@@ -107,6 +111,15 @@ describe('loadSecrets', () => {
             const result = await loadSecrets(fileConfig());
 
             expect(result).toEqual(VALID_SECRETS);
+        });
+
+        it('should read from the path specified in SECRETS_PATH env var', async () => {
+            process.env.SECRETS_PATH = '/custom/path/secrets.json';
+            mockedFs.readFileSync.mockReturnValue(JSON.stringify(VALID_SECRETS));
+
+            await loadSecrets(fileConfig());
+
+            expect(mockedFs.readFileSync).toHaveBeenCalledWith('/custom/path/secrets.json', 'utf-8');
         });
 
         it('should return a frozen object', async () => {

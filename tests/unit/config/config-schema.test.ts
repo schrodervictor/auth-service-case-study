@@ -15,33 +15,27 @@ const FULL_CONFIG = {
 
 describe('configSchema — secrets injection fields', () => {
     describe('backward compatibility', () => {
-        it('should parse config without secretsPath or ssm (existing configs unchanged)', () => {
+        it('should parse config without ssm (existing configs unchanged)', () => {
             const result = configSchema.safeParse(MINIMAL_CONFIG);
 
             expect(result.success).toBe(true);
         });
 
-        it('should parse full config without secretsPath or ssm', () => {
+        it('should parse full config without ssm', () => {
             const result = configSchema.safeParse(FULL_CONFIG);
 
             expect(result.success).toBe(true);
         });
     });
 
-    describe('secretsPath field', () => {
-        it('should accept config with secretsPath string', () => {
+    describe('secretsPath field removed', () => {
+        it('should strip secretsPath from parsed output (field no longer in schema)', () => {
             const result = configSchema.parse({
                 ...MINIMAL_CONFIG,
                 secretsPath: '/run/secrets/app-secrets.json',
             });
 
-            expect(result.secretsPath).toBe('/run/secrets/app-secrets.json');
-        });
-
-        it('should allow secretsPath to be omitted (undefined)', () => {
-            const result = configSchema.parse(MINIMAL_CONFIG);
-
-            expect(result.secretsPath).toBeUndefined();
+            expect(result).not.toHaveProperty('secretsPath');
         });
     });
 
@@ -105,26 +99,6 @@ describe('configSchema — secrets injection fields', () => {
             });
 
             expect(result.success).toBe(false);
-        });
-    });
-
-    describe('secretsPath and ssm coexistence', () => {
-        it('should accept config with both secretsPath and ssm', () => {
-            const result = configSchema.parse({
-                ...MINIMAL_CONFIG,
-                secretsPath: '/run/secrets/app-secrets.json',
-                ssm: {
-                    region: 'us-east-1',
-                    parameters: {
-                        jwtSecret: '/myapp/prod/jwt-secret',
-                        databaseUser: '/myapp/prod/db-user',
-                        databasePassword: '/myapp/prod/db-password',
-                    },
-                },
-            });
-
-            expect(result.secretsPath).toBe('/run/secrets/app-secrets.json');
-            expect(result.ssm).toBeDefined();
         });
     });
 });

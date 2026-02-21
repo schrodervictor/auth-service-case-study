@@ -41,19 +41,19 @@ const MOCK_DATA_SOURCE = {
 describe('DI container config integration', () => {
     describe('config binding', () => {
         it('should return a Container instance', () => {
-            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE);
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS);
 
             expect(container).toBeInstanceOf(Container);
         });
 
         it('should bind config under TYPES.Config', () => {
-            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE);
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS);
 
             expect(container.isBound(TYPES.Config)).toBe(true);
         });
 
         it('should retrieve the config object with correct values', () => {
-            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE);
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS);
 
             const config = container.get<AppConfig>(TYPES.Config);
 
@@ -61,7 +61,7 @@ describe('DI container config integration', () => {
         });
 
         it('should bind config as a constant (same reference on multiple gets)', () => {
-            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE);
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS);
 
             const first = container.get<AppConfig>(TYPES.Config);
             const second = container.get<AppConfig>(TYPES.Config);
@@ -72,13 +72,13 @@ describe('DI container config integration', () => {
 
     describe('PasswordManagerService binding', () => {
         it('should bind TYPES.PasswordManagerService in the container', () => {
-            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE);
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS);
 
             expect(container.isBound(TYPES.PasswordManagerService)).toBe(true);
         });
 
         it('should resolve PasswordManagerService to a PasswordManagerServiceImpl instance', () => {
-            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE);
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS);
 
             const service = container.get(TYPES.PasswordManagerService);
 
@@ -88,13 +88,13 @@ describe('DI container config integration', () => {
 
     describe('UserRepository binding', () => {
         it('should bind TYPES.UserRepository in the container', () => {
-            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE);
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS);
 
             expect(container.isBound(TYPES.UserRepository)).toBe(true);
         });
 
         it('should resolve UserRepository to a UserRepositoryImpl instance', () => {
-            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE);
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS);
 
             const repository = container.get(TYPES.UserRepository);
 
@@ -108,10 +108,11 @@ describe('DI container config integration', () => {
             expect(typeof TYPES.Secrets).toBe('symbol');
         });
 
-        it('should accept secrets as 3rd parameter to createContainer', () => {
+        it('should require secrets as 3rd parameter to createContainer', () => {
+            // secrets is required — calling without it should throw
             expect(() =>
-                createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS),
-            ).not.toThrow();
+                createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, undefined as unknown as AppSecrets),
+            ).toThrow();
         });
 
         it('should bind secrets under TYPES.Secrets', () => {
@@ -146,11 +147,11 @@ describe('DI container config integration', () => {
 
     describe('invalid config', () => {
         it('should throw when config is null', () => {
-            expect(() => createContainer(null as unknown as AppConfig, MOCK_DATA_SOURCE)).toThrow();
+            expect(() => createContainer(null as unknown as AppConfig, MOCK_DATA_SOURCE, MOCK_SECRETS)).toThrow();
         });
 
         it('should throw when config is undefined', () => {
-            expect(() => createContainer(undefined as unknown as AppConfig, MOCK_DATA_SOURCE)).toThrow();
+            expect(() => createContainer(undefined as unknown as AppConfig, MOCK_DATA_SOURCE, MOCK_SECRETS)).toThrow();
         });
     });
 });
