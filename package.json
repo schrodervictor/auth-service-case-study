@@ -39,7 +39,6 @@
   "dependencies": {
     "@aws-sdk/client-ssm": "^3.995.0",
     "body-parser": "^1.20.3",
-    "dotenv": "^17.3.1",
     "express": "^4.22.1",
     "inversify": "^6.2.2",
     "inversify-express-utils": "^6.5.0",
