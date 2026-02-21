@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import type { UserRepository } from '../../../src/repositories/user-repository';
 import type { PasswordManagerService } from '../../../src/services/password-manager-service';
 import type { AppConfig } from '../../../src/config/schema';
+import type { AppSecrets } from '../../../src/config/secrets-schema';
 import type { UserResponseDto } from '../../../src/services/user-service';
 import { UserServiceImpl } from '../../../src/services/user-service';
 import { User } from '../../../src/entities/user';
@@ -37,6 +38,12 @@ const mockConfig: AppConfig = {
         accessToken: { expiresIn: '15m' },
         refreshToken: { expiresIn: '7d' },
     },
+};
+
+const mockSecrets: AppSecrets = {
+    jwtSecret: 'test-jwt-secret',
+    databaseUser: 'testuser',
+    databasePassword: 'testpass',
 };
 
 const createSampleUser = (overrides?: Partial<User>): User => {
@@ -80,12 +87,10 @@ describe('UserServiceImpl', () => {
     beforeEach(() => {
         mockRepo = createMockUserRepository();
         mockPasswordManager = createMockPasswordManager();
-        service = new UserServiceImpl(mockRepo, mockPasswordManager, mockConfig);
-        process.env.JWT_SECRET = 'test-secret';
+        service = new UserServiceImpl(mockRepo, mockPasswordManager, mockConfig, mockSecrets);
     });
 
     afterEach(() => {
-        delete process.env.JWT_SECRET;
         jest.clearAllMocks();
     });
 
@@ -326,20 +331,9 @@ describe('UserServiceImpl', () => {
 
             expect(jwt.sign).toHaveBeenCalledWith(
                 { userId: 'uuid-1' },
-                'test-secret',
+                'test-jwt-secret',
                 { expiresIn: '15m' },
             );
-        });
-
-        it('should throw Error when JWT_SECRET env var is not set', async () => {
-            delete process.env.JWT_SECRET;
-            const user = createSampleUser();
-            mockRepo.findByEmail.mockResolvedValue(user);
-            mockPasswordManager.compare.mockResolvedValue(true);
-
-            await expect(
-                service.authenticate('test@example.com', 'StrongPass1'),
-            ).rejects.toThrow('JWT_SECRET environment variable is not set');
         });
 
         it('should call passwordManager.compare with stored hash and supplied password', async () => {

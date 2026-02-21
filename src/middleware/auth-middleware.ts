@@ -15,7 +15,11 @@ interface JwtPayload {
     userId: string;
 }
 
-export function createAuthMiddleware(): AuthMiddlewareFunction {
+export function createAuthMiddleware(jwtSecret: string): AuthMiddlewareFunction {
+    if (!jwtSecret) {
+        throw new Error('jwtSecret is required');
+    }
+
     return (req: Request, res: Response, next: NextFunction): void => {
         const authHeader = req.headers.authorization;
 
@@ -31,14 +35,8 @@ export function createAuthMiddleware(): AuthMiddlewareFunction {
             return;
         }
 
-        const secret = process.env.JWT_SECRET;
-        if (!secret) {
-            res.status(500).json({ message: 'Internal server error' });
-            return;
-        }
-
         try {
-            const decoded = jwt.verify(token, secret) as JwtPayload;
+            const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
 
             (req as AuthenticatedRequest).user = { id: decoded.userId };
             next();

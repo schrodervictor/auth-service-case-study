@@ -24,18 +24,3 @@ export function createDataSource(
         migrations: [CreateUser1740000000000],
     });
 }
-
-export function loadDatabaseCredentials(): DatabaseCredentials {
-    const username = process.env.DATABASE_USER;
-    const password = process.env.DATABASE_PASSWORD;
-
-    if (!username) {
-        throw new Error('Missing required environment variable: DATABASE_USER');
-    }
-
-    if (!password) {
-        throw new Error('Missing required environment variable: DATABASE_PASSWORD');
-    }
-
-    return { username, password };
-}

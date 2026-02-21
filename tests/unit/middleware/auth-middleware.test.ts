@@ -11,6 +11,8 @@ import {
 jest.mock('jsonwebtoken');
 const mockVerify = jwt.verify as jest.Mock;
 
+const JWT_SECRET = 'test-jwt-secret';
+
 const createMockRequest = (authHeader?: string): Partial<Request> => ({
     headers: authHeader !== undefined ? { authorization: authHeader } : {},
 });
@@ -37,13 +39,14 @@ describe('createAuthMiddleware', () => {
     let middleware: AuthMiddlewareFunction;
 
     beforeEach(() => {
-        process.env.JWT_SECRET = 'test-secret';
-        middleware = createAuthMiddleware();
+        middleware = createAuthMiddleware(JWT_SECRET);
         jest.clearAllMocks();
     });
 
-    afterEach(() => {
-        delete process.env.JWT_SECRET;
+    describe('factory validation', () => {
+        it('should throw when called with an empty string', () => {
+            expect(() => createAuthMiddleware('')).toThrow();
+        });
     });
 
     describe('happy path', () => {
@@ -55,7 +58,7 @@ describe('createAuthMiddleware', () => {
 
             middleware(req as Request, res as Response, next);
 
-            expect(mockVerify).toHaveBeenCalledWith('valid-token', 'test-secret');
+            expect(mockVerify).toHaveBeenCalledWith('valid-token', JWT_SECRET);
             expect((req as AuthenticatedRequest).user).toEqual({ id: 'user-123' });
             expect(next).toHaveBeenCalled();
             expect(res.status).not.toHaveBeenCalled();
@@ -154,22 +157,6 @@ describe('createAuthMiddleware', () => {
             expect(res.statusCode).toBe(401);
             expect(res.body).toEqual({ message: 'Unauthorized' });
             expect(next).not.toHaveBeenCalled();
-        });
-    });
-
-    describe('missing JWT_SECRET', () => {
-        it('should return 500 when JWT_SECRET env var is not set', () => {
-            delete process.env.JWT_SECRET;
-            const req = createMockRequest('Bearer valid-token');
-            const res = createMockResponse();
-            const next = createMockNext();
-
-            middleware(req as Request, res as Response, next);
-
-            expect(res.statusCode).toBe(500);
-            expect(res.body).toEqual({ message: 'Internal server error' });
-            expect(next).not.toHaveBeenCalled();
-            expect(mockVerify).not.toHaveBeenCalled();
         });
     });
 
