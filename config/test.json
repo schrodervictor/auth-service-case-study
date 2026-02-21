@@ -7,7 +7,6 @@
         "port": 5433,
         "name": "case_study_test_db"
     },
-    "secretsPath": "/app/config/test-secrets.json",
     "auth": {
         "accessToken": {
             "expiresIn": "15m"

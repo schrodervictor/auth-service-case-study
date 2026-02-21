@@ -46,11 +46,12 @@ export async function loadSecrets(config: AppConfig): Promise<AppSecrets> {
         return loadFromSSM(config.ssm);
     }
 
-    if (config.secretsPath) {
-        return loadFromFile(config.secretsPath);
+    const secretsPath = process.env.SECRETS_PATH;
+    if (secretsPath) {
+        return loadFromFile(secretsPath);
     }
 
     throw new Error(
-        'No secrets backend configured: provide either "ssm" or "secretsPath" in config',
+        'No secrets backend configured: provide either "ssm" in config or set SECRETS_PATH env var',
     );
 }

@@ -19,9 +19,12 @@ import { UserRepository, UserRepositoryImpl } from './repositories';
 import { createAuthMiddleware } from './middleware/auth-middleware';
 import type { AuthMiddlewareFunction } from './middleware/auth-middleware';
 
-export function createContainer(config: AppConfig, dataSource: DataSource, secrets?: AppSecrets): Container {
+export function createContainer(config: AppConfig, dataSource: DataSource, secrets: AppSecrets): Container {
     if (config == null) {
         throw new Error('Config is required to create the DI container');
+    }
+    if (secrets == null) {
+        throw new Error('Secrets are required to create the DI container');
     }
 
     const container = new Container();
@@ -30,9 +33,7 @@ export function createContainer(config: AppConfig, dataSource: DataSource, secre
     container.bind<DataSource>(TYPES.DataSource).toConstantValue(dataSource);
 
     // bind secrets
-    if (secrets) {
-        container.bind<AppSecrets>(TYPES.Secrets).toConstantValue(secrets);
-    }
+    container.bind<AppSecrets>(TYPES.Secrets).toConstantValue(secrets);
 
     // bind services
     container.bind<UserService>(TYPES.UserService).to(UserServiceImpl);
@@ -41,11 +42,9 @@ export function createContainer(config: AppConfig, dataSource: DataSource, secre
         .to(PasswordManagerServiceImpl);
 
     // bind middleware
-    if (secrets) {
-        container
-            .bind<AuthMiddlewareFunction>(TYPES.AuthMiddleware)
-            .toConstantValue(createAuthMiddleware(secrets.jwtSecret));
-    }
+    container
+        .bind<AuthMiddlewareFunction>(TYPES.AuthMiddleware)
+        .toConstantValue(createAuthMiddleware(secrets.jwtSecret));
 
     // bind repositories
     container.bind<UserRepository>(TYPES.UserRepository).to(UserRepositoryImpl);

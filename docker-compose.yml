@@ -9,6 +9,7 @@ services:
       - "9000:9000"
     environment:
       CONFIG_PATH: /app/config/default.json
+      SECRETS_PATH: /app/config/secrets.json
     volumes:
       - ./src:/app/src
       - ./tests:/app/tests

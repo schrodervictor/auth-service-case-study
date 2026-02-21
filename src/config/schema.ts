@@ -41,7 +41,6 @@ export const configSchema = z.object({
         accessToken: { expiresIn: '15m' },
         refreshToken: { expiresIn: '7d' },
     }),
-    secretsPath: z.string().optional(),
     ssm: ssmSchema.optional(),
 });
 
