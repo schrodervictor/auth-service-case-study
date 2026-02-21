@@ -47,6 +47,7 @@ export interface UserService {
     register(data: RegisterUserDto): Promise<UserResponseDto>;
     authenticate(email: string, password: string): Promise<AuthResponseDto>;
     refreshAccessToken(token: string): Promise<AuthResponseDto>;
+    logout(userId: string): Promise<void>;
     getProfile(userId: string): Promise<UserResponseDto>;
     updateProfile(
         userId: string,
@@ -176,6 +177,10 @@ export class UserServiceImpl implements UserService {
         await this.refreshTokenRepository.save(newHash, user.id, this.computeRefreshExpiresAt());
 
         return { accessToken, refreshToken: newRawToken };
+    }
+
+    async logout(userId: string): Promise<void> {
+        await this.refreshTokenRepository.deleteAllByUserId(userId);
     }
 
     async getProfile(userId: string): Promise<UserResponseDto> {
