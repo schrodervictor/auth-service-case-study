@@ -23,6 +23,17 @@ const authSchema = z.object({
     refreshToken: refreshTokenSchema.default({ expiresIn: '7d' }),
 });
 
+const ssmParametersSchema = z.object({
+    jwtSecret: z.string(),
+    databaseUser: z.string(),
+    databasePassword: z.string(),
+});
+
+const ssmSchema = z.object({
+    region: z.string(),
+    parameters: ssmParametersSchema,
+});
+
 export const configSchema = z.object({
     server: serverSchema.default({ port: 9000 }),
     database: databaseSchema,
@@ -30,6 +41,8 @@ export const configSchema = z.object({
         accessToken: { expiresIn: '15m' },
         refreshToken: { expiresIn: '7d' },
     }),
+    secretsPath: z.string().optional(),
+    ssm: ssmSchema.optional(),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
