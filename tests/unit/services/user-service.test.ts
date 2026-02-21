@@ -15,6 +15,8 @@ import {
     UserNotFoundError,
     ValidationError,
 } from '../../../src/errors';
+import { InvalidRefreshTokenError } from '../../../src/errors/invalid-refresh-token-error';
+import { RefreshToken } from '../../../src/entities/refresh-token';
 
 jest.mock('jsonwebtoken', () => ({
     sign: jest.fn().mockReturnValue('mock-jwt-token'),
@@ -392,6 +394,105 @@ describe('UserServiceImpl', () => {
                 'stored-hash',
                 'supplied-pw',
             );
+        });
+    });
+
+    describe('refreshAccessToken', () => {
+        const rawToken = 'a'.repeat(64); // 32-byte hex token
+
+        const createStoredRefreshToken = (overrides?: Partial<RefreshToken>): RefreshToken => {
+            const token = new RefreshToken();
+            token.id = 'rt-uuid-1';
+            token.tokenHash = 'stored-hash';
+            token.userId = 'uuid-1';
+            token.expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+            token.createdAt = new Date('2024-01-01');
+            Object.assign(token, overrides);
+            return token;
+        };
+
+        it('should return new accessToken and refreshToken when given a valid refresh token', async () => {
+            const storedToken = createStoredRefreshToken();
+            mockRefreshTokenRepo.findByTokenHash.mockResolvedValue(storedToken);
+            mockRepo.findById.mockResolvedValue(createSampleUser());
+
+            const result = await service.refreshAccessToken(rawToken);
+
+            expect(result).toHaveProperty('accessToken');
+            expect(result).toHaveProperty('refreshToken');
+            expect(typeof result.accessToken).toBe('string');
+            expect(typeof result.refreshToken).toBe('string');
+        });
+
+        it('should throw InvalidRefreshTokenError when token hash is not found in DB', async () => {
+            mockRefreshTokenRepo.findByTokenHash.mockResolvedValue(null);
+
+            await expect(
+                service.refreshAccessToken(rawToken),
+            ).rejects.toThrow(InvalidRefreshTokenError);
+        });
+
+        it('should throw InvalidRefreshTokenError when token is expired', async () => {
+            const expiredToken = createStoredRefreshToken({
+                expiresAt: new Date(Date.now() - 1000), // 1 second in the past
+            });
+            mockRefreshTokenRepo.findByTokenHash.mockResolvedValue(expiredToken);
+
+            await expect(
+                service.refreshAccessToken(rawToken),
+            ).rejects.toThrow(InvalidRefreshTokenError);
+        });
+
+        it('should throw InvalidRefreshTokenError when user no longer exists', async () => {
+            const storedToken = createStoredRefreshToken();
+            mockRefreshTokenRepo.findByTokenHash.mockResolvedValue(storedToken);
+            mockRepo.findById.mockResolvedValue(null);
+
+            await expect(
+                service.refreshAccessToken(rawToken),
+            ).rejects.toThrow(InvalidRefreshTokenError);
+        });
+
+        it('should perform token rotation: delete old hash and save new hash', async () => {
+            const storedToken = createStoredRefreshToken();
+            mockRefreshTokenRepo.findByTokenHash.mockResolvedValue(storedToken);
+            mockRepo.findById.mockResolvedValue(createSampleUser());
+
+            await service.refreshAccessToken(rawToken);
+
+            // Old token should be deleted
+            expect(mockRefreshTokenRepo.deleteByTokenHash).toHaveBeenCalledWith(storedToken.tokenHash);
+
+            // New token should be saved
+            expect(mockRefreshTokenRepo.save).toHaveBeenCalledTimes(1);
+            const [newHash] = mockRefreshTokenRepo.save.mock.calls[0];
+
+            // New hash should differ from old hash
+            expect(newHash).not.toBe(storedToken.tokenHash);
+        });
+
+        it('should sign a new access token with jwt.sign for the correct userId', async () => {
+            const storedToken = createStoredRefreshToken();
+            mockRefreshTokenRepo.findByTokenHash.mockResolvedValue(storedToken);
+            mockRepo.findById.mockResolvedValue(createSampleUser());
+
+            await service.refreshAccessToken(rawToken);
+
+            expect(jwt.sign).toHaveBeenCalledWith(
+                { userId: 'uuid-1' },
+                'test-jwt-secret',
+                { expiresIn: '15m' },
+            );
+        });
+
+        it('should return refreshToken as a 64-character hex string', async () => {
+            const storedToken = createStoredRefreshToken();
+            mockRefreshTokenRepo.findByTokenHash.mockResolvedValue(storedToken);
+            mockRepo.findById.mockResolvedValue(createSampleUser());
+
+            const result = await service.refreshAccessToken(rawToken);
+
+            expect(result.refreshToken).toMatch(/^[0-9a-f]{64}$/);
         });
     });
 
