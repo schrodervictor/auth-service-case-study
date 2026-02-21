@@ -22,8 +22,7 @@ wait-for-app:
 	done; \
 	echo "Timed out waiting for app." >&2; exit 1
 
-test: build
-	$(RUN_ISOLATED) npm test
+test: build test-unit test-integration test-acceptance
 
 test-unit: build
 	$(RUN_ISOLATED) npm run test:unit
@@ -33,3 +32,4 @@ test-integration: build
 
 test-acceptance: up wait-for-app
 	docker compose exec app npm run test:acceptance
+	docker compose down
