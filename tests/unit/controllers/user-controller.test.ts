@@ -184,7 +184,11 @@ describe('UserController', () => {
 
         it('should return 422 when service throws ValidationError', async () => {
             mockService.register.mockRejectedValue(
-                new ValidationError('Password is too weak'),
+                // @ts-expect-error ValidationError will accept (message, errors) after implementation
+                new ValidationError('Validation failed', {
+                    password: ['Must be at least 8 characters', 'Must contain uppercase'],
+                    email: ['Invalid email format'],
+                }),
             );
             const req = createMockRequest({
                 email: 'test@example.com',
@@ -197,7 +201,47 @@ describe('UserController', () => {
             await controller.register(req as Request, res as Response);
 
             expect(res.statusCode).toBe(422);
-            expect(res.body).toEqual({ message: 'Password is too weak' });
+            expect(res.body).toEqual({
+                message: 'Validation failed',
+                errors: {
+                    password: ['Must be at least 8 characters', 'Must contain uppercase'],
+                    email: ['Invalid email format'],
+                },
+            });
+        });
+
+        it('should include per-field errors in 422 response with field names as keys and string arrays as values', async () => {
+            const fieldErrors = {
+                firstName: ['Cannot be empty'],
+                email: ['Invalid email format', 'Email domain not allowed'],
+            };
+            mockService.register.mockRejectedValue(
+                // @ts-expect-error ValidationError will accept (message, errors) after implementation
+                new ValidationError('Validation failed', fieldErrors),
+            );
+            const req = createMockRequest({
+                email: 'bad@blocked.com',
+                password: 'StrongPass1!',
+                firstName: '',
+                lastName: 'Doe',
+            });
+            const res = createMockResponse();
+
+            await controller.register(req as Request, res as Response);
+
+            expect(res.statusCode).toBe(422);
+            expect(res.body).toHaveProperty('errors');
+            const body = res.body as { errors: Record<string, string[]> };
+            expect(typeof body.errors).toBe('object');
+            expect(Array.isArray(body.errors)).toBe(false);
+            for (const [field, messages] of Object.entries(body.errors)) {
+                expect(typeof field).toBe('string');
+                expect(Array.isArray(messages)).toBe(true);
+                for (const msg of messages) {
+                    expect(typeof msg).toBe('string');
+                }
+            }
+            expect(body.errors).toEqual(fieldErrors);
         });
 
         it('should return 500 when service throws an unexpected error', async () => {
@@ -319,15 +363,15 @@ describe('UserController', () => {
             expect(mockService.getProfile).toHaveBeenCalledWith('uuid-1');
         });
 
-        it('should return 404 when service throws UserNotFoundError', async () => {
+        it('should return 401 when service throws UserNotFoundError', async () => {
             mockService.getProfile.mockRejectedValue(new UserNotFoundError('uuid-1'));
             const req = createMockRequest(undefined, { id: 'uuid-1' });
             const res = createMockResponse();
 
             await controller.getProfile(req as Request, res as Response);
 
-            expect(res.statusCode).toBe(404);
-            expect(res.body).toEqual({ message: 'User not found: uuid-1' });
+            expect(res.statusCode).toBe(401);
+            expect(res.body).toEqual({ message: 'Unauthorized' });
         });
 
         it('should return 500 when service throws an unexpected error', async () => {
@@ -426,15 +470,15 @@ describe('UserController', () => {
             });
         });
 
-        it('should return 404 when service throws UserNotFoundError', async () => {
+        it('should return 401 when service throws UserNotFoundError', async () => {
             mockService.updateProfile.mockRejectedValue(new UserNotFoundError('uuid-1'));
             const req = createMockRequest({ firstName: 'Jane' }, { id: 'uuid-1' });
             const res = createMockResponse();
 
             await controller.updateProfile(req as Request, res as Response);
 
-            expect(res.statusCode).toBe(404);
-            expect(res.body).toEqual({ message: 'User not found: uuid-1' });
+            expect(res.statusCode).toBe(401);
+            expect(res.body).toEqual({ message: 'Unauthorized' });
         });
 
         it('should return 500 when service throws an unexpected error', async () => {
@@ -502,7 +546,8 @@ describe('UserController', () => {
 
             await controller.getProfile(req2 as Request, res2 as Response);
 
-            expect(res2.body).toEqual({ message: 'User not found: uuid-99' });
+            expect(res2.statusCode).toBe(401);
+            expect(res2.body).toEqual({ message: 'Unauthorized' });
         });
     });
 });
