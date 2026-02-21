@@ -1,7 +1,7 @@
 RUN_ISOLATED := docker compose run --rm --no-deps -v ./src:/app/src -v ./tests:/app/tests app
 RUN_WITH_DEPS := docker compose run --rm -v ./src:/app/src -v ./tests:/app/tests app
 
-.PHONY: build up down wait-for-app test test-unit test-integration test-acceptance
+.PHONY: build up down wait-for-app lint typecheck test test-unit test-integration test-acceptance
 
 build:
 	docker compose build --quiet app
@@ -21,6 +21,12 @@ wait-for-app:
 		sleep 1; i=$$((i + 1)); \
 	done; \
 	echo "Timed out waiting for app." >&2; exit 1
+
+lint: build
+	$(RUN_ISOLATED) npm run lint
+
+typecheck: build
+	$(RUN_ISOLATED) npm run typecheck
 
 test: build test-unit test-integration test-acceptance
 
