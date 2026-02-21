@@ -22,13 +22,13 @@ const MIGRATION_UP = `
     CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
     CREATE TABLE "users" (
-        "id"         UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-        "email"      VARCHAR NOT NULL UNIQUE,
-        "password"   VARCHAR NOT NULL,
-        "first_name" VARCHAR NOT NULL,
-        "last_name"  VARCHAR NOT NULL,
-        "created_at" TIMESTAMP NOT NULL DEFAULT now(),
-        "updated_at" TIMESTAMP NOT NULL DEFAULT now()
+        "id"            UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+        "email"         VARCHAR NOT NULL UNIQUE,
+        "password_hash" VARCHAR NOT NULL,
+        "first_name"    VARCHAR NOT NULL,
+        "last_name"     VARCHAR NOT NULL,
+        "created_at"    TIMESTAMP NOT NULL DEFAULT now(),
+        "updated_at"    TIMESTAMP NOT NULL DEFAULT now()
     );
 `;
 
@@ -120,7 +120,7 @@ describe('User entity roundtrip', () => {
 
         const user = userRepo.create({
             email: 'test@example.com',
-            password: 'hashed_password_value',
+            passwordHash: 'hashed_password_value',
             firstName: 'Test',
             lastName: 'User',
         });
@@ -132,7 +132,7 @@ describe('User entity roundtrip', () => {
             /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
         );
         expect(saved.email).toBe('test@example.com');
-        expect(saved.password).toBe('hashed_password_value');
+        expect(saved.passwordHash).toBe('hashed_password_value');
         expect(saved.firstName).toBe('Test');
         expect(saved.lastName).toBe('User');
         expect(saved.createdAt).toBeInstanceOf(Date);
