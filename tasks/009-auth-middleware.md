@@ -1,6 +1,6 @@
 # Task: Auth Middleware
 
-## Status: done
+## Status: in-progress
 
 ## Context
 
@@ -369,3 +369,34 @@ const createMockNext = (): NextFunction => jest.fn();
   - [x] `make typecheck` passes
   - [x] `make lint` passes
 - **Status**: done
+
+### Milestone 6: Missing JWT_SECRET should be a 500 server error, not 401
+
+- **Description**: A missing `JWT_SECRET` env var is a server misconfiguration,
+  not an authentication failure. Returning 401 is misleading — it suggests the
+  client sent bad credentials when the real problem is the server is not
+  properly configured. Both the auth middleware and the UserServiceImpl must
+  return a 500 `Internal server error` response when `JWT_SECRET` is absent.
+- **Scope of changes**:
+  - `src/middleware/auth-middleware.ts` — change the `!secret` branch from
+    `res.status(401).json({ message: 'Unauthorized' })` to
+    `res.status(500).json({ message: 'Internal server error' })`
+  - `src/services/user-service.ts` — the `throw new Error(...)` already
+    propagates as 500 through the controller's `handleError`, so the service is
+    already correct. No change needed.
+  - `tests/unit/middleware/auth-middleware.test.ts` — update the missing
+    JWT_SECRET test to assert 500 and `{ message: 'Internal server error' }`
+    instead of 401/Unauthorized
+  - `tests/unit/services/user-service.test.ts` — verify the existing JWT_SECRET
+    test already expects an Error throw (should be fine, but confirm)
+- **Acceptance Criteria**:
+  - [ ] Middleware returns 500 with `{ message: 'Internal server error' }` when
+        `JWT_SECRET` is missing
+  - [ ] UserServiceImpl still throws Error when `JWT_SECRET` is missing
+        (controller handles as 500)
+  - [ ] Tests updated to assert 500 for missing JWT_SECRET
+  - [ ] All other 401 cases unchanged (missing/invalid/expired token)
+  - [ ] `make test-unit` passes
+  - [ ] `make typecheck` passes
+  - [ ] `make lint` passes
+- **Status**: pending
