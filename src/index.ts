@@ -7,14 +7,13 @@ import { InversifyExpressServer } from 'inversify-express-utils';
 
 import { loadConfig } from './config';
 import { createContainer } from './inversify.config';
-import { createDataSource, loadDatabaseCredentials } from './database';
+import { createDataSource } from './database';
 // import { exampleEventHandler } from './events/handlers';
 
 (async () => {
     try {
         const config = loadConfig();
-        const credentials = loadDatabaseCredentials();
-        const dataSource = createDataSource(config, credentials);
+        const dataSource = createDataSource(config, { username: '', password: '' });
 
         await dataSource.initialize();
         console.log('Database connection established');

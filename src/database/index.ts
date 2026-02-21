@@ -1,2 +1,2 @@
-export { createDataSource, loadDatabaseCredentials } from './data-source';
+export { createDataSource } from './data-source';
 export type { DatabaseCredentials } from './data-source';
