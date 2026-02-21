@@ -135,19 +135,7 @@ export class UserServiceImpl implements UserService {
             throw new InvalidCredentialsError();
         }
 
-        const accessToken = jwt.sign(
-            { userId: user.id },
-            this.secrets.jwtSecret,
-            { expiresIn: this.config.auth.accessToken.expiresIn as jwt.SignOptions['expiresIn'] },
-        );
-
-        const rawRefreshToken = crypto.randomBytes(32).toString('hex');
-        const tokenHash = crypto.createHash('sha256').update(rawRefreshToken).digest('hex');
-        const expiresAt = this.computeRefreshExpiresAt();
-
-        await this.refreshTokenRepository.save(tokenHash, user.id, expiresAt);
-
-        return { accessToken, refreshToken: rawRefreshToken };
+        return this.generateTokenPair(user.id);
     }
 
     async refreshAccessToken(token: string): Promise<AuthResponseDto> {
@@ -166,17 +154,7 @@ export class UserServiceImpl implements UserService {
         // Rotate: delete old token, create new pair
         await this.refreshTokenRepository.deleteByTokenHash(stored.tokenHash);
 
-        const accessToken = jwt.sign(
-            { userId: user.id },
-            this.secrets.jwtSecret,
-            { expiresIn: this.config.auth.accessToken.expiresIn as jwt.SignOptions['expiresIn'] },
-        );
-
-        const newRawToken = crypto.randomBytes(32).toString('hex');
-        const newHash = crypto.createHash('sha256').update(newRawToken).digest('hex');
-        await this.refreshTokenRepository.save(newHash, user.id, this.computeRefreshExpiresAt());
-
-        return { accessToken, refreshToken: newRawToken };
+        return this.generateTokenPair(user.id);
     }
 
     async logout(userId: string): Promise<void> {
@@ -213,6 +191,20 @@ export class UserServiceImpl implements UserService {
         }
 
         return this.toUserResponse(updatedUser);
+    }
+
+    private async generateTokenPair(userId: string): Promise<AuthResponseDto> {
+        const accessToken = jwt.sign(
+            { userId },
+            this.secrets.jwtSecret,
+            { expiresIn: this.config.auth.accessToken.expiresIn as jwt.SignOptions['expiresIn'] },
+        );
+
+        const rawRefreshToken = crypto.randomBytes(32).toString('hex');
+        const tokenHash = crypto.createHash('sha256').update(rawRefreshToken).digest('hex');
+        await this.refreshTokenRepository.save(tokenHash, userId, this.computeRefreshExpiresAt());
+
+        return { accessToken, refreshToken: rawRefreshToken };
     }
 
     private computeRefreshExpiresAt(): Date {
