@@ -3,14 +3,10 @@ import fs from 'node:fs';
 import type { AppConfig } from '../../../src/config/schema';
 import { loadSecrets } from '../../../src/config/secrets-loader';
 
-// ── Mocks ────────────────────────────────────────────────────────────────────
-
 jest.mock('node:fs');
 jest.mock('@aws-sdk/client-ssm');
 
 const mockedFs = jest.mocked(fs);
-
-// ── Fixtures ─────────────────────────────────────────────────────────────────
 
 const VALID_SECRETS = {
     jwtSecret: 'super-secret-key-256-bits-long',
@@ -31,15 +27,11 @@ function configWith(overrides: Partial<AppConfig>): AppConfig {
     return { ...BASE_CONFIG, ...overrides };
 }
 
-// ── Tests ────────────────────────────────────────────────────────────────────
-
 describe('loadSecrets', () => {
     afterEach(() => {
         jest.restoreAllMocks();
         delete process.env.SECRETS_PATH;
     });
-
-    // ── Priority logic ───────────────────────────────────────────────────
 
     describe('priority logic', () => {
         it('should use SSM backend when both ssm and SECRETS_PATH env var are set', async () => {
@@ -93,8 +85,6 @@ describe('loadSecrets', () => {
             await expect(loadSecrets(config)).rejects.toThrow();
         });
     });
-
-    // ── File backend ─────────────────────────────────────────────────────
 
     describe('file backend', () => {
         function fileConfig(): AppConfig {
@@ -164,8 +154,6 @@ describe('loadSecrets', () => {
             await expect(loadSecrets(fileConfig())).rejects.toThrow();
         });
     });
-
-    // ── SSM backend ──────────────────────────────────────────────────────
 
     describe('SSM backend', () => {
         const SSM_PARAMS = {

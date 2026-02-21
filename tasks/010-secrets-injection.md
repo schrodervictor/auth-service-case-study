@@ -1,6 +1,6 @@
 # Task: Secrets Injection — Centralize All Secrets via loadSecrets()
 
-## Status: pending
+## Status: done
 
 ## Context
 
@@ -60,30 +60,20 @@ export type AppSecrets = z.infer<typeof secretsSchema>;
 
 ### Config Schema Extension
 
-Add an optional `secrets` section to `configSchema` in `src/config/schema.ts`:
+Added `ssm` as a top-level optional field on `configSchema` in
+`src/config/schema.ts`:
 
 ```typescript
-const secretsConfigSchema = z.object({
-  /** Path to local secrets JSON file (dev/test) */
-  secretsPath: z.string().optional(),
-  /** AWS SSM parameter names (production) */
-  ssm: z
-    .object({
-      region: z.string(),
-      parameters: z.object({
-        jwtSecret: z.string(),
-        databaseUser: z.string(),
-        databasePassword: z.string(),
-      }),
-    })
-    .optional(),
-});
+// Already implemented in schema.ts
+ssm: ssmSchema.optional(),
 ```
 
-- If `secretsPath` is set → load from local JSON file
-- If `ssm` is set → load from AWS SSM
+`secretsPath` was removed from the config schema — the file backend now uses the
+`SECRETS_PATH` environment variable instead.
+
+- If `config.ssm` is set → load from AWS SSM (takes priority)
+- If `SECRETS_PATH` env var is set → load from local JSON file
 - If neither → throw at startup
-- If both → `secretsPath` wins (local override for dev convenience)
 
 ### Secrets Loader
 
@@ -102,27 +92,11 @@ src/config/secrets-loader.ts
 
 Add `Secrets: Symbol.for('Secrets')` to `src/lib/types.ts`.
 
-### Config JSON Updates
+### Secrets Path
 
-**config/default.json** (dev):
-
-```json
-{
-  "secrets": {
-    "secretsPath": "/app/config/secrets.json"
-  }
-}
-```
-
-**config/test.json** (unit tests):
-
-```json
-{
-  "secrets": {
-    "secretsPath": "/app/config/secrets.json"
-  }
-}
-```
+The file backend reads from the `SECRETS_PATH` environment variable (not from
+config JSON). Set in `docker-compose.yml` for the app service and passed as env
+var in test environments.
 
 **config/secrets.json** (new file, dev/test only):
 
@@ -136,11 +110,11 @@ Add `Secrets: Symbol.for('Secrets')` to `src/lib/types.ts`.
 
 ### Docker Compose Cleanup
 
-Remove `DATABASE_USER`, `DATABASE_PASSWORD` from `docker-compose.yml`
-environment section for the `app` service. Add `JWT_SECRET` to the app service?
-**No** — secrets now come from the JSON file mounted via volumes, not env vars.
-Keep `POSTGRES_USER` and `POSTGRES_PASSWORD` on the postgres service (those are
-for PostgreSQL itself, not our app).
+Removed `DATABASE_USER`, `DATABASE_PASSWORD` from `docker-compose.yml` app
+service environment. Added `SECRETS_PATH: /app/config/secrets.json`. Secrets
+come from the JSON file mounted via the existing `./config:/app/config` volume.
+`POSTGRES_USER` and `POSTGRES_PASSWORD` remain on the postgres service (for
+PostgreSQL itself, not our app).
 
 ### Files Deleted
 
@@ -179,8 +153,10 @@ for PostgreSQL itself, not our app).
 - Invalid JSON in secrets file → clear parse error
 - SSM returns partial parameters → Zod validation catches it
 - Empty string values → Zod `.min(1)` rejects them
-- `loadSecrets` called without valid config.secrets → throw before attempting
+- `loadSecrets` called without valid config or env var → throw before attempting
   any I/O
+- SSM: multiple config keys mapping to the same parameter name → all keys get
+  the value (forward lookup, not reverse map)
 
 ---
 
@@ -201,15 +177,16 @@ for PostgreSQL itself, not our app).
   composed in `src/config/schema.ts:1-35`. Extract sub-schemas as `const` before
   composing into the parent.
 - **Acceptance Criteria**:
-  - [ ] `secretsSchema` validates
+  - [x] `secretsSchema` validates
         `{ jwtSecret, databaseUser, databasePassword }`
-  - [ ] All three fields are required strings with `.min(1)`
-  - [ ] `AppSecrets` type is exported
-  - [ ] `configSchema` has optional `secrets` field with `secretsPath` and `ssm`
-  - [ ] `AppConfig` type now includes `secrets?` property
-  - [ ] Existing config tests still pass (field is optional, no breaking change)
-  - [ ] New schema tests cover valid input, missing fields, empty strings
-- **Status**: pending
+  - [x] All three fields are required strings with `.min(1)`
+  - [x] `AppSecrets` type is exported
+  - [x] `configSchema` has optional `secretsPath` and `ssm` fields
+  - [x] `AppConfig` type now includes `secretsPath?` and `ssm?` properties
+  - [x] Existing config tests still pass (fields are optional, no breaking
+        change)
+  - [x] New schema tests cover valid input, missing fields, empty strings
+- **Status**: done
 
 ### Milestone 2: Secrets Loader Function
 
@@ -227,26 +204,25 @@ for PostgreSQL itself, not our app).
   - Use `fs.readFile` (from `node:fs/promises`) for the file backend
   - Use `SSMClient` + `GetParametersCommand` from `@aws-sdk/client-ssm` for the
     SSM backend (already a dependency)
-  - If `config.secrets.secretsPath` is set, use file backend
-  - If `config.secrets.ssm` is set, use SSM backend
-  - If both are set, prefer file backend (local override)
+  - If `config.ssm` is set, use SSM backend (takes priority)
+  - If `SECRETS_PATH` env var is set, use file backend
   - If neither is set, throw a descriptive error
   - Validate with `secretsSchema.parse()`, freeze with `Object.freeze()`
 - **Patterns to follow**: See `src/config/loader.ts` for the file-reading
   pattern used by `loadConfig()`. The secrets loader should be similar in style
   but async.
 - **Acceptance Criteria**:
-  - [ ] `loadSecrets(config)` returns a `Promise<AppSecrets>`
-  - [ ] File backend reads JSON, parses, and validates
-  - [ ] SSM backend fetches parameters and maps them to schema fields
-  - [ ] Zod validation rejects missing/empty fields
-  - [ ] Returned object is frozen (`Object.isFrozen()`)
-  - [ ] Throws descriptive error when no secrets source is configured
-  - [ ] Tests mock `fs.readFile` and SSM client — no real I/O
-  - [ ] Tests cover: happy path (file), happy path (SSM), missing file, invalid
+  - [x] `loadSecrets(config)` returns a `Promise<AppSecrets>`
+  - [x] File backend reads JSON, parses, and validates
+  - [x] SSM backend fetches parameters and maps them to schema fields
+  - [x] Zod validation rejects missing/empty fields
+  - [x] Returned object is frozen (`Object.isFrozen()`)
+  - [x] Throws descriptive error when no secrets source is configured
+  - [x] Tests mock `fs.readFile` and SSM client — no real I/O
+  - [x] Tests cover: happy path (file), happy path (SSM), missing file, invalid
         JSON, missing fields, empty strings, both sources set, neither source
         set
-- **Status**: pending
+- **Status**: done
 
 ### Milestone 3: DI Integration — TYPES.Secrets
 
@@ -254,26 +230,27 @@ for PostgreSQL itself, not our app).
   to accept and bind `AppSecrets` as a third parameter.
 - **Files to modify**:
   - `src/lib/types.ts` — add `Secrets: Symbol.for('Secrets')`
-  - `src/inversify.config.ts` — add `secrets: AppSecrets` parameter to
-    `createContainer`, bind as `TYPES.Secrets`
+  - `src/inversify.config.ts` — add `secrets: AppSecrets` (required) parameter
+    to `createContainer`, bind as `TYPES.Secrets`
 - **Tests to update**:
   - Any tests that call `createContainer(config, dataSource)` must now pass a
     third `secrets` argument. If no such tests exist yet, note this for
     milestone 8.
 - **Implementation notes**:
-  - `createContainer(config, dataSource, secrets)` — bind secrets as
-    `container.bind<AppSecrets>(TYPES.Secrets).toConstantValue(secrets)`
+  - `createContainer(config, dataSource, secrets)` — secrets is required, bind
+    as `container.bind<AppSecrets>(TYPES.Secrets).toConstantValue(secrets)`
   - Keep it simple: secrets is a plain object, not an injectable class
+  - No conditional guards — app won't boot without secrets
 - **Patterns to follow**: See how `TYPES.Config` is bound in
   `src/inversify.config.ts:28`.
 - **Acceptance Criteria**:
-  - [ ] `TYPES.Secrets` symbol exists in `src/lib/types.ts`
-  - [ ] `createContainer` accepts 3 parameters: `config`, `dataSource`,
+  - [x] `TYPES.Secrets` symbol exists in `src/lib/types.ts`
+  - [x] `createContainer` accepts 3 parameters: `config`, `dataSource`,
         `secrets`
-  - [ ] `AppSecrets` is bound to `TYPES.Secrets` as a constant value
-  - [ ] Existing DI bindings are unaffected
-  - [ ] Unit tests pass
-- **Status**: pending
+  - [x] `AppSecrets` is bound to `TYPES.Secrets` as a constant value
+  - [x] Existing DI bindings are unaffected
+  - [x] Unit tests pass
+- **Status**: done
 
 ### Milestone 4: Auth Middleware — Factory Takes jwtSecret Param
 
@@ -304,14 +281,14 @@ for PostgreSQL itself, not our app).
 - **Patterns to follow**: The factory pattern is already in use. We're just
   adding a parameter.
 - **Acceptance Criteria**:
-  - [ ] `createAuthMiddleware` accepts `jwtSecret: string` parameter
-  - [ ] No `process.env` reads in `auth-middleware.ts`
-  - [ ] Factory throws if `jwtSecret` is empty/missing (startup guard)
-  - [ ] DI binding passes `secrets.jwtSecret`
-  - [ ] All auth middleware tests pass without `process.env` manipulation
-  - [ ] Tests for the "missing secret" case now test the factory throw, not a
+  - [x] `createAuthMiddleware` accepts `jwtSecret: string` parameter
+  - [x] No `process.env` reads in `auth-middleware.ts`
+  - [x] Factory throws if `jwtSecret` is empty/missing (startup guard)
+  - [x] DI binding passes `secrets.jwtSecret`
+  - [x] All auth middleware tests pass without `process.env` manipulation
+  - [x] Tests for the "missing secret" case now test the factory throw, not a
         500 response
-- **Status**: pending
+- **Status**: done
 
 ### Milestone 5: UserService — Inject TYPES.Secrets
 
@@ -339,12 +316,12 @@ for PostgreSQL itself, not our app).
 - **Patterns to follow**: See how `@inject(TYPES.Config)` is used in the same
   constructor at `src/services/user-service.ts:58`.
 - **Acceptance Criteria**:
-  - [ ] `UserServiceImpl` constructor has 4th param: `@inject(TYPES.Secrets)`
-  - [ ] No `process.env` reads in `user-service.ts`
-  - [ ] `authenticate()` uses `this.secrets.jwtSecret`
-  - [ ] All user-service tests pass without `process.env` manipulation
-  - [ ] Tests provide mock secrets object in constructor
-- **Status**: pending
+  - [x] `UserServiceImpl` constructor has 4th param: `@inject(TYPES.Secrets)`
+  - [x] No `process.env` reads in `user-service.ts`
+  - [x] `authenticate()` uses `this.secrets.jwtSecret`
+  - [x] All user-service tests pass without `process.env` manipulation
+  - [x] Tests provide mock secrets object in constructor
+- **Status**: done
 
 ### Milestone 6: Remove loadDatabaseCredentials
 
@@ -369,14 +346,14 @@ for PostgreSQL itself, not our app).
     intermediary types.
   - Remove the `DatabaseCredentials` interface entirely.
 - **Acceptance Criteria**:
-  - [ ] `loadDatabaseCredentials` function is deleted
-  - [ ] `DatabaseCredentials` interface is deleted
-  - [ ] `createDataSource` accepts `AppSecrets` as second parameter
-  - [ ] DataSource uses `secrets.databaseUser` and `secrets.databasePassword`
-  - [ ] No `process.env` reads remain in `data-source.ts`
-  - [ ] All data-source tests pass with updated signatures
-  - [ ] `src/database/index.ts` only exports `createDataSource`
-- **Status**: pending
+  - [x] `loadDatabaseCredentials` function is deleted
+  - [x] `DatabaseCredentials` interface is deleted
+  - [x] `createDataSource` accepts `AppSecrets` as second parameter
+  - [x] DataSource uses `secrets.databaseUser` and `secrets.databasePassword`
+  - [x] No `process.env` reads remain in `data-source.ts`
+  - [x] All data-source tests pass with updated signatures
+  - [x] `src/database/index.ts` only exports `createDataSource`
+- **Status**: done
 
 ### Milestone 7: Bootstrap + Config Files + Cleanup
 
@@ -388,8 +365,8 @@ for PostgreSQL itself, not our app).
     `createDataSource` and `createContainer`
   - `config/default.json` — add `secrets.secretsPath`
   - `config/test.json` — add `secrets.secretsPath`
-  - `docker-compose.yml` — remove `DATABASE_USER`, `DATABASE_PASSWORD` from app
-    service environment; add `JWT_SECRET` to `config/secrets.json` instead
+  - `docker-compose.yml` — remove `DATABASE_USER`, `DATABASE_PASSWORD`; add
+    `SECRETS_PATH: /app/config/secrets.json` to app service environment
 - **Files to create**:
   - `config/secrets.json` — dev/test secrets (not production secrets!)
 - **Files to delete**:
@@ -409,16 +386,15 @@ for PostgreSQL itself, not our app).
     `./config:/app/config` volume mount — no docker-compose change needed for
     that
 - **Acceptance Criteria**:
-  - [ ] `src/index.ts` calls `loadSecrets` and passes secrets through
-  - [ ] No `process.env` reads for secrets remain in any `src/` file
-  - [ ] `config/default.json` has `secrets.secretsPath` field
-  - [ ] `config/test.json` has `secrets.secretsPath` field
-  - [ ] `config/secrets.json` exists with dev values
-  - [ ] `src/typeormconfig.ts` is deleted
-  - [ ] `docker-compose.yml` no longer sets `DATABASE_USER` /
+  - [x] `src/index.ts` calls `loadSecrets` and passes secrets through
+  - [x] No `process.env` reads for secrets remain in any `src/` file
+  - [x] `docker-compose.yml` sets `SECRETS_PATH` env var for app service
+  - [x] `config/secrets.json` exists with dev values
+  - [x] `src/typeormconfig.ts` is deleted
+  - [x] `docker-compose.yml` no longer sets `DATABASE_USER` /
         `DATABASE_PASSWORD` on the app service
-  - [ ] App starts successfully with `make build` or compose up
-- **Status**: pending
+  - [x] App starts successfully with `make build` or compose up
+- **Status**: done
 
 ### Milestone 8: Integration Test Fixes + Final Verification
 
@@ -440,12 +416,12 @@ for PostgreSQL itself, not our app).
   - Grep in `tests/` for `process.env.JWT_SECRET` — should only appear in legacy
     comments (if any), not in active test code
 - **Acceptance Criteria**:
-  - [ ] `make test-unit` passes (all unit tests green)
-  - [ ] `make typecheck` passes (no type errors)
-  - [ ] `make lint` passes (no lint errors)
-  - [ ] Zero `process.env.JWT_SECRET` reads in `src/`
-  - [ ] Zero `process.env.DATABASE_USER` reads in `src/`
-  - [ ] Zero `process.env.DATABASE_PASSWORD` reads in `src/`
-  - [ ] `loadDatabaseCredentials` no longer exists anywhere in `src/`
-  - [ ] `src/typeormconfig.ts` no longer exists
-- **Status**: pending
+  - [x] `make test-unit` passes (all unit tests green)
+  - [x] `make typecheck` passes (no type errors)
+  - [x] `make lint` passes (no lint errors)
+  - [x] Zero `process.env.JWT_SECRET` reads in `src/`
+  - [x] Zero `process.env.DATABASE_USER` reads in `src/`
+  - [x] Zero `process.env.DATABASE_PASSWORD` reads in `src/`
+  - [x] `loadDatabaseCredentials` no longer exists anywhere in `src/`
+  - [x] `src/typeormconfig.ts` no longer exists
+- **Status**: done
