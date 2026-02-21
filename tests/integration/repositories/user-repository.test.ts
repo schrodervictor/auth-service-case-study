@@ -88,6 +88,23 @@ describe('UserRepository integration', () => {
 
             await expect(repo.create(sampleUser)).rejects.toThrow();
         });
+
+        it('should ignore injected createdAt and updatedAt values', async () => {
+            const injectedDate = new Date('2000-01-01');
+            const beforeCreate = new Date();
+
+            const user = await repo.create({
+                ...sampleUser,
+                createdAt: injectedDate,
+                updatedAt: injectedDate,
+            } as any);
+
+            const tenSecondsAgo = new Date(beforeCreate.getTime() - 10_000);
+            expect(user.createdAt.getTime()).toBeGreaterThan(tenSecondsAgo.getTime());
+            expect(user.updatedAt.getTime()).toBeGreaterThan(tenSecondsAgo.getTime());
+            expect(user.createdAt.getFullYear()).not.toBe(2000);
+            expect(user.updatedAt.getFullYear()).not.toBe(2000);
+        });
     });
 
     describe('findByEmail', () => {
@@ -165,6 +182,51 @@ describe('UserRepository integration', () => {
             expect(updated!.lastName).toBe(sampleUser.lastName); // preserved
             expect(updated!.email).toBe(sampleUser.email); // preserved
             expect(updated!.password).toBe(sampleUser.password); // preserved
+        });
+
+        it('should preserve createdAt unchanged after update', async () => {
+            const created = await repo.create(sampleUser);
+
+            await new Promise((resolve) => setTimeout(resolve, 50));
+
+            const updated = await repo.update(created.id, { firstName: 'Changed' });
+
+            expect(updated).not.toBeNull();
+            expect(updated!.createdAt.getTime()).toBe(created.createdAt.getTime());
+        });
+
+        it('should set updatedAt strictly greater than original after update', async () => {
+            const created = await repo.create(sampleUser);
+
+            await new Promise((resolve) => setTimeout(resolve, 50));
+
+            const updated = await repo.update(created.id, { firstName: 'Changed' });
+
+            expect(updated).not.toBeNull();
+            expect(updated!.updatedAt.getTime()).toBeGreaterThan(
+                created.updatedAt.getTime(),
+            );
+        });
+
+        it('should ignore injected createdAt and updatedAt values on update', async () => {
+            const created = await repo.create(sampleUser);
+            const injectedDate = new Date('2000-01-01');
+
+            await new Promise((resolve) => setTimeout(resolve, 50));
+
+            const updated = await repo.update(created.id, {
+                firstName: 'X',
+                createdAt: injectedDate,
+                updatedAt: injectedDate,
+            } as any);
+
+            expect(updated).not.toBeNull();
+            // createdAt must remain unchanged from original
+            expect(updated!.createdAt.getTime()).toBe(created.createdAt.getTime());
+            // updatedAt must be recent, not the injected year-2000 date
+            expect(updated!.updatedAt.getFullYear()).not.toBe(2000);
+            const tenSecondsAgo = new Date(Date.now() - 10_000);
+            expect(updated!.updatedAt.getTime()).toBeGreaterThan(tenSecondsAgo.getTime());
         });
     });
 });
