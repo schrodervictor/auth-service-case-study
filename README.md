@@ -12,25 +12,32 @@ A microservice for user registration, authentication, and profile management.
 
 ## Getting Started
 
-```bash
-# Install dependencies
-npm install --omit optional
+The project is fully containerized — no local Node.js or npm required.
 
-# Start development server (uses config/default.json by default)
-npm run dev
+```bash
+# Build the Docker image
+make build
+
+# Start the development stack (app + PostgreSQL)
+make up
+
+# Stop everything
+make down
 ```
 
-## Scripts
+## Commands
 
-| Command             | Description             |
-| ------------------- | ----------------------- |
-| `npm run dev`       | Start dev server        |
-| `npm run build`     | Compile TypeScript      |
-| `npm start`         | Run compiled output     |
-| `npm test`          | Run tests               |
-| `npm run test:cov`  | Run tests with coverage |
-| `npm run lint`      | Lint check              |
-| `npm run typecheck` | Type check without emit |
+| Command                 | Description                                           |
+| ----------------------- | ----------------------------------------------------- |
+| `make build`            | Build the Docker image                                |
+| `make up`               | Start the dev stack (app + postgres)                  |
+| `make down`             | Stop all containers                                   |
+| `make test`             | Run all test layers (unit + integration + acceptance) |
+| `make test-unit`        | Run unit tests (no external deps)                     |
+| `make test-integration` | Run integration tests (with PostgreSQL)               |
+| `make test-acceptance`  | Run acceptance tests (full stack, black-box)          |
+| `make lint`             | ESLint check                                          |
+| `make typecheck`        | TypeScript type check                                 |
 
 ## Common Issues
 
@@ -38,18 +45,18 @@ npm run dev
 
 Files like `package.json`, `jest.config.json`, `tsconfig.json`, `.eslintrc`, and
 `prettierrc.json` are copied into the Docker image at build time. If you modify
-any of these, you must rebuild the image before running again:
+any of these, rebuild first:
 
 ```bash
-docker compose build app
+make build
 ```
 
 ### Docker Compose using a stale app image
 
-If `docker compose up` or `docker compose down && docker compose up` keeps
-running an old version of the app, remove the existing image first:
+If `make up` keeps running an old version of the app, remove the existing image
+first:
 
 ```bash
 docker image rm marta-app:latest
-docker compose up
+make up
 ```
