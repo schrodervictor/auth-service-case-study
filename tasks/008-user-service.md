@@ -1,6 +1,6 @@
 # Task: User Service
 
-## Status: in-progress
+## Status: done
 
 ## Context
 
@@ -241,59 +241,59 @@ const mockConfig: AppConfig = {
 - **Description**: Add `jsonwebtoken` and `@types/jsonwebtoken` packages to the
   project. Verify the build still passes after installation.
 - **Acceptance Criteria**:
-  - [ ] `jsonwebtoken` appears in `dependencies` in `package.json`
-  - [ ] `@types/jsonwebtoken` appears in `devDependencies` in `package.json`
-  - [ ] `make typecheck` passes
-  - [ ] `make test-unit` passes (no regressions)
-- **Status**: pending
+  - [x] `jsonwebtoken` appears in `dependencies` in `package.json`
+  - [x] `@types/jsonwebtoken` appears in `devDependencies` in `package.json`
+  - [x] `make typecheck` passes
+  - [x] `make test-unit` passes (no regressions)
+- **Status**: done
 
 ### Milestone 2: Unit tests for register method (Red phase)
 
 - **Description**: Write unit tests covering all paths of the `register` method.
 - **Acceptance Criteria**:
-  - [ ] Test: successful registration returns `UserResponseDto` without password
-  - [ ] Test: throws `ValidationError` for invalid email format
-  - [ ] Test: throws `ValidationError` for weak password (too short)
-  - [ ] Test: throws `ValidationError` for password missing uppercase
-  - [ ] Test: throws `ValidationError` for password missing lowercase
-  - [ ] Test: throws `ValidationError` for password missing number
-  - [ ] Test: throws `ValidationError` with multiple errors for multiple fields
-  - [ ] Test: throws `ValidationError` for empty firstName
-  - [ ] Test: throws `ValidationError` for empty lastName
-  - [ ] Test: throws `EmailAlreadyExistsError` when email is taken
-  - [ ] Test: calls `passwordManager.toHash` with the raw password
-  - [ ] Test: calls `userRepository.create` with the hashed password (not raw)
-  - [ ] Tests fail because `UserServiceImpl` does not exist yet
-- **Status**: pending
+  - [x] Test: successful registration returns `UserResponseDto` without password
+  - [x] Test: throws `ValidationError` for invalid email format
+  - [x] Test: throws `ValidationError` for weak password (too short)
+  - [x] Test: throws `ValidationError` for password missing uppercase
+  - [x] Test: throws `ValidationError` for password missing lowercase
+  - [x] Test: throws `ValidationError` for password missing number
+  - [x] Test: throws `ValidationError` with multiple errors for multiple fields
+  - [x] Test: throws `ValidationError` for empty firstName
+  - [x] Test: throws `ValidationError` for empty lastName
+  - [x] Test: throws `EmailAlreadyExistsError` when email is taken
+  - [x] Test: calls `passwordManager.toHash` with the raw password
+  - [x] Test: calls `userRepository.create` with the hashed password (not raw)
+  - [x] Tests fail because `UserServiceImpl` does not exist yet
+- **Status**: done
 
 ### Milestone 3: Unit tests for authenticate method (Red phase)
 
 - **Description**: Write unit tests covering all paths of the `authenticate`
   method.
 - **Acceptance Criteria**:
-  - [ ] Test: successful authentication returns `{ token }` (AuthResponseDto)
-  - [ ] Test: throws `InvalidCredentialsError` when email not found
-  - [ ] Test: throws `InvalidCredentialsError` when password does not match
-  - [ ] Test: calls `jwt.sign` with `{ userId }` payload, secret, and expiresIn
-  - [ ] Test: throws Error when `JWT_SECRET` env var is not set
-  - [ ] Tests fail because `UserServiceImpl` does not exist yet
-- **Status**: pending
+  - [x] Test: successful authentication returns `{ token }` (AuthResponseDto)
+  - [x] Test: throws `InvalidCredentialsError` when email not found
+  - [x] Test: throws `InvalidCredentialsError` when password does not match
+  - [x] Test: calls `jwt.sign` with `{ userId }` payload, secret, and expiresIn
+  - [x] Test: throws Error when `JWT_SECRET` env var is not set
+  - [x] Tests fail because `UserServiceImpl` does not exist yet
+- **Status**: done
 
 ### Milestone 4: Unit tests for getProfile and updateProfile (Red phase)
 
 - **Description**: Write unit tests covering all paths of `getProfile` and
   `updateProfile`.
 - **Acceptance Criteria**:
-  - [ ] Test: `getProfile` returns `UserResponseDto` for existing user
-  - [ ] Test: `getProfile` throws `UserNotFoundError` when user not found
-  - [ ] Test: `getProfile` response does not contain `password` field
-  - [ ] Test: `updateProfile` returns updated `UserResponseDto`
-  - [ ] Test: `updateProfile` throws `UserNotFoundError` when user not found
-  - [ ] Test: `updateProfile` throws `ValidationError` for empty firstName
-  - [ ] Test: `updateProfile` throws `ValidationError` for empty lastName
-  - [ ] Test: `updateProfile` passes only provided fields to repository
-  - [ ] Tests fail because `UserServiceImpl` does not exist yet
-- **Status**: pending
+  - [x] Test: `getProfile` returns `UserResponseDto` for existing user
+  - [x] Test: `getProfile` throws `UserNotFoundError` when user not found
+  - [x] Test: `getProfile` response does not contain `password` field
+  - [x] Test: `updateProfile` returns updated `UserResponseDto`
+  - [x] Test: `updateProfile` throws `UserNotFoundError` when user not found
+  - [x] Test: `updateProfile` throws `ValidationError` for empty firstName
+  - [x] Test: `updateProfile` throws `ValidationError` for empty lastName
+  - [x] Test: `updateProfile` passes only provided fields to repository
+  - [x] Tests fail because `UserServiceImpl` does not exist yet
+- **Status**: done
 
 ### Milestone 5: Implement UserServiceImpl (Green phase)
 
@@ -301,40 +301,40 @@ const mockConfig: AppConfig = {
   Add the class to `src/services/user-service.ts` below the existing interface
   and type definitions.
 - **Acceptance Criteria**:
-  - [ ] `UserServiceImpl` is `@injectable()` with three `@inject` dependencies
-  - [ ] All four methods implemented per the specification above
-  - [ ] `toUserResponse` private helper strips password from User entity
-  - [ ] Input validation throws `ValidationError` with structured field errors
-  - [ ] JWT signing uses `process.env.JWT_SECRET` and config expiresIn
-  - [ ] All unit tests pass (`make test-unit`)
-  - [ ] TypeScript compiles cleanly (`make typecheck`)
-  - [ ] Linting passes (`make lint`)
-- **Status**: pending
+  - [x] `UserServiceImpl` is `@injectable()` with three `@inject` dependencies
+  - [x] All four methods implemented per the specification above
+  - [x] `toUserResponse` private helper strips password from User entity
+  - [x] Input validation throws `ValidationError` with structured field errors
+  - [x] JWT signing uses `process.env.JWT_SECRET` and config expiresIn
+  - [x] All unit tests pass (`make test-unit`)
+  - [x] TypeScript compiles cleanly (`make typecheck`)
+  - [x] Linting passes (`make lint`)
+- **Status**: done
 
 ### Milestone 6: Wire DI container binding
 
 - **Description**: Add the `UserService` binding to the DI container so the
   UserController can resolve it at runtime.
 - **Acceptance Criteria**:
-  - [ ] `UserServiceImpl` imported in `src/inversify.config.ts`
-  - [ ] `container.bind<UserService>(TYPES.UserService).to(UserServiceImpl)`
+  - [x] `UserServiceImpl` imported in `src/inversify.config.ts`
+  - [x] `container.bind<UserService>(TYPES.UserService).to(UserServiceImpl)`
         added
-  - [ ] `make typecheck` passes
-  - [ ] `make test-unit` passes (including DI integration tests)
-- **Status**: pending
+  - [x] `make typecheck` passes
+  - [x] `make test-unit` passes (including DI integration tests)
+- **Status**: done
 
 ### Milestone 7: Review and refactor
 
 - **Description**: Review the implementation for code quality, refactoring
   opportunities, and adherence to project conventions.
 - **Acceptance Criteria**:
-  - [ ] No password data leaks in any return value
-  - [ ] Error messages match the specification exactly
-  - [ ] Validation collects all errors before throwing (not fail-fast per field)
-  - [ ] JWT secret access is fail-fast (throws immediately if missing)
-  - [ ] Code follows existing patterns (injectable, inject decorators,
+  - [x] No password data leaks in any return value
+  - [x] Error messages match the specification exactly
+  - [x] Validation collects all errors before throwing (not fail-fast per field)
+  - [x] JWT secret access is fail-fast (throws immediately if missing)
+  - [x] Code follows existing patterns (injectable, inject decorators,
         async/await)
-  - [ ] All tests pass: `make test-unit`
-  - [ ] TypeScript compiles: `make typecheck`
-  - [ ] Lint passes: `make lint`
-- **Status**: pending
+  - [x] All tests pass: `make test-unit`
+  - [x] TypeScript compiles: `make typecheck`
+  - [x] Lint passes: `make lint`
+- **Status**: done
