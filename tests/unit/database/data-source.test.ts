@@ -1,4 +1,5 @@
 import { DataSource } from 'typeorm';
+import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 import { User } from '../../../src/entities/user';
 import {
     createDataSource,
@@ -42,7 +43,7 @@ describe('createDataSource', () => {
             name: 'my_db',
         });
         const ds = createDataSource(config, makeCredentials());
-        const opts = ds.options as unknown as Record<string, unknown>;
+        const opts = ds.options as PostgresConnectionOptions;
 
         expect(opts.host).toBe('my-host');
         expect(opts.port).toBe(5433);
@@ -55,7 +56,7 @@ describe('createDataSource', () => {
             password: 's3cret',
         });
         const ds = createDataSource(makeConfig(), creds);
-        const opts = ds.options as unknown as Record<string, unknown>;
+        const opts = ds.options as PostgresConnectionOptions;
 
         expect(opts.username).toBe('admin');
         expect(opts.password).toBe('s3cret');
@@ -63,14 +64,14 @@ describe('createDataSource', () => {
 
     it('should set synchronize to false', () => {
         const ds = createDataSource(makeConfig(), makeCredentials());
-        const opts = ds.options as unknown as Record<string, unknown>;
+        const opts = ds.options as PostgresConnectionOptions;
 
         expect(opts.synchronize).toBe(false);
     });
 
     it('should include User in entities', () => {
         const ds = createDataSource(makeConfig(), makeCredentials());
-        const opts = ds.options as unknown as Record<string, unknown>;
+        const opts = ds.options as PostgresConnectionOptions;
         const entities = opts.entities as unknown[];
 
         expect(entities).toContain(User);
