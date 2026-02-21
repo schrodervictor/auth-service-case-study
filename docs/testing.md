@@ -71,12 +71,16 @@ tests/
 │   │   └── data-source.test.ts  # DataSource factory and credentials loader
 │   ├── entities/
 │   │   └── user.test.ts         # User entity metadata (TypeORM decorators)
+│   ├── repositories/
+│   │   └── user-repository.test.ts  # UserRepository methods (mocked TypeORM)
 │   ├── services/
 │   │   └── password-manager-service.test.ts  # Hashing and comparison logic
 │   └── example.test.ts
 ├── integration/                 # Requires PostgreSQL
 │   ├── database/
 │   │   └── connection.test.ts   # DB connectivity, migrations, CRUD roundtrip
+│   ├── repositories/
+│   │   └── user-repository.test.ts  # UserRepository CRUD against real DB
 │   └── example.test.ts
 ├── acceptance/                  # Separate Docker container (black-box)
 │   ├── Dockerfile

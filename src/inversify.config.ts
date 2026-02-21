@@ -18,7 +18,7 @@ import {
     PasswordManagerService,
     PasswordManagerServiceImpl,
 } from './services';
-// import { UserRepository, UserRepositoryImpl } from './repositories';
+import { UserRepository, UserRepositoryImpl } from './repositories';
 
 export function createContainer(config: AppConfig, dataSource: DataSource): Container {
     if (config == null) {
@@ -37,8 +37,8 @@ export function createContainer(config: AppConfig, dataSource: DataSource): Cont
         .bind<PasswordManagerService>(TYPES.PasswordManagerService)
         .to(PasswordManagerServiceImpl);
 
-    // // bind repositories
-    // container.bind<UserRepository>(TYPES.UserRepository).to(UserRepositoryImpl);
+    // bind repositories
+    container.bind<UserRepository>(TYPES.UserRepository).to(UserRepositoryImpl);
 
     return container;
 }
