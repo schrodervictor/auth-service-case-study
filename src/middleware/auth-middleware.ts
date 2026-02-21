@@ -33,7 +33,7 @@ export function createAuthMiddleware(): AuthMiddlewareFunction {
 
         const secret = process.env.JWT_SECRET;
         if (!secret) {
-            res.status(401).json({ message: 'Unauthorized' });
+            res.status(500).json({ message: 'Internal server error' });
             return;
         }
 
