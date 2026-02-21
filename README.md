@@ -16,10 +16,7 @@ A microservice for user registration, authentication, and profile management.
 # Install dependencies
 npm install --omit optional
 
-# Set up environment variables
-cp .env.example .env
-
-# Start development server
+# Start development server (uses config/default.json by default)
 npm run dev
 ```
 
