@@ -632,4 +632,22 @@ describe('UserServiceImpl', () => {
             expect(mockRepo.update).not.toHaveBeenCalled();
         });
     });
+
+    describe('logout', () => {
+        it('should call refreshTokenRepository.deleteAllByUserId with the given userId', async () => {
+            await service.logout('uuid-1');
+
+            expect(mockRefreshTokenRepo.deleteAllByUserId).toHaveBeenCalledWith('uuid-1');
+        });
+
+        it('should not throw', async () => {
+            await expect(service.logout('uuid-1')).resolves.toBeUndefined();
+        });
+
+        it('should not throw even if no tokens exist for the user', async () => {
+            mockRefreshTokenRepo.deleteAllByUserId.mockResolvedValue(undefined);
+
+            await expect(service.logout('uuid-1')).resolves.toBeUndefined();
+        });
+    });
 });
