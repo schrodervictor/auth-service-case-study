@@ -8,7 +8,7 @@ import { InversifyExpressServer } from 'inversify-express-utils';
 
 // import { getDataSource } from './typeormconfig';
 
-import { diContainer } from '../inversify.config';
+import { diContainer } from './inversify.config';
 // import { TYPES } from './lib';
 // import { exampleEventHandler } from './events/handlers';
 
