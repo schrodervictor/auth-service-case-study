@@ -129,3 +129,16 @@ POST /logout                        (auth middleware required)
   - [x] TYPES.RefreshTokenRepository bound to RefreshTokenRepositoryImpl
   - [x] DI integration tests pass
 - **Status**: done
+
+### Milestone 8: Integration tests
+
+- **Description**: Integration tests for RefreshTokenRepository against real
+  PostgreSQL
+- **Acceptance Criteria**:
+  - [x] save — inserts token with correct fields and auto-generated timestamps
+  - [x] save — FK constraint violation when userId doesn't exist
+  - [x] findByTokenHash — finds existing token, returns null for missing
+  - [x] deleteByTokenHash — removes token, no-op for missing hash
+  - [x] deleteAllByUserId — removes all tokens for user, preserves others
+  - [x] CASCADE — deleting user cascades to refresh tokens
+- **Status**: done
