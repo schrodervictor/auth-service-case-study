@@ -139,3 +139,16 @@ calls.
   - [x] All three test layers pass (`make test-unit`, `make test-integration`,
         `make test-acceptance`)
 - **Status**: done
+
+### Milestone 5: Config Immutability
+
+- **Description**: Ensure the config object is deeply frozen after loading so no
+  code can accidentally mutate it at runtime
+- **Acceptance Criteria**:
+  - [x] `loadConfig()` returns a deeply frozen object (all nested objects
+        frozen)
+  - [x] Attempting to modify any property at any nesting level throws a
+        `TypeError` (in strict mode)
+  - [x] Existing tests still pass — frozen config doesn't break reads
+  - [x] Unit tests verify immutability at top-level and nested levels
+- **Status**: done
