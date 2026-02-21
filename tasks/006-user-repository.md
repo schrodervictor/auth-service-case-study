@@ -1,6 +1,6 @@
 # Task: User Repository
 
-## Status: done
+## Status: in-progress
 
 ## Context
 
@@ -237,6 +237,16 @@ Follow the pattern in `tests/integration/database/connection.test.ts`:
     `updatedAt`
 24. `update` — returns `null` for a non-existent id
 25. `update` — partial update (only firstName) preserves other fields
+26. `update` — `createdAt` remains unchanged after update (immutable for row
+    lifetime)
+27. `update` — `updatedAt` is strictly greater than the original after update
+28. `create` — ignores injected `createdAt`/`updatedAt` values (DB manages
+    timestamps, not the caller). Pass extra timestamp fields via `as any` and
+    verify the returned timestamps differ from the injected ones.
+29. `update` — ignores injected `createdAt`/`updatedAt` values via
+    `Object.assign`. The `UpdateUserData` type already prevents this at compile
+    time, but a runtime test with `as any` proves the repository doesn't persist
+    injected timestamps.
 
 **Integration test setup/teardown pattern:**
 
@@ -262,6 +272,11 @@ Use the same `MIGRATION_UP` and `MIGRATION_DOWN` SQL strings as in
 - **UUID format for findById**: TypeORM will throw if the id is not a valid UUID
   (PostgreSQL rejects non-UUID strings in UUID columns). The repository does not
   pre-validate — this is a service/controller concern.
+- **Timestamp immutability**: `createdAt` must never change after initial
+  insert. `updatedAt` must always reflect the last save. Both are DB-managed via
+  `@CreateDateColumn` and `@UpdateDateColumn`. The repository must not allow
+  callers to inject timestamp values — the DTO types prevent this at compile
+  time, and integration tests verify it at runtime.
 
 ### Dependencies
 
@@ -337,3 +352,16 @@ installed.
   - [x] Partial update test verifies only specified fields change
   - [x] `make test-integration` passes with all tests green
 - **Status**: done
+
+### Milestone 5: Timestamp Immutability and Injection Prevention
+
+- **Description**: Add integration tests proving `createdAt` is immutable across
+  updates, `updatedAt` strictly advances, and injected timestamps are ignored
+- **Acceptance Criteria**:
+  - [ ] Test: `createdAt` remains unchanged after `update`
+  - [ ] Test: `updatedAt` is strictly greater after `update`
+  - [ ] Test: `create` ignores injected `createdAt`/`updatedAt` (via `as any`)
+  - [ ] Test: `update` ignores injected `createdAt`/`updatedAt` (via `as any`)
+  - [ ] `make test-integration` passes with all tests green
+  - [ ] If injection prevention requires implementation changes, those are made
+- **Status**: pending
