@@ -1,5 +1,5 @@
-RUN_ISOLATED := docker compose run --rm --no-deps -v ./src:/app/src -v ./tests:/app/tests app
-RUN_WITH_DEPS := docker compose run --rm -v ./src:/app/src -v ./tests:/app/tests app
+RUN_ISOLATED := docker compose run --rm --no-deps -v ./src:/app/src -v ./tests:/app/tests -v ./config:/app/config app
+RUN_WITH_DEPS := docker compose run --rm -v ./src:/app/src -v ./tests:/app/tests -v ./config:/app/config app
 
 .PHONY: build up down wait-for-app lint typecheck test test-unit test-integration test-acceptance
 

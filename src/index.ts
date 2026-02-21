@@ -1,21 +1,22 @@
 import { json } from 'body-parser';
 
 import 'reflect-metadata';
-import dotenv from 'dotenv';
 import { InversifyExpressServer } from 'inversify-express-utils';
 
 // import { createKafkaClient, Producer, Consumer } from '@marta/eventbus/dist';
 
 // import { getDataSource } from './typeormconfig';
 
-import { diContainer } from './inversify.config';
+import { loadConfig } from './config';
+import { createContainer } from './inversify.config';
 // import { TYPES } from './lib';
 // import { exampleEventHandler } from './events/handlers';
 
-dotenv.config();
-
 (async () => {
     try {
+        const config = loadConfig();
+        const diContainer = createContainer(config);
+
         // Create Kafka producer and consumer instance
         // const kafkaClient = await createKafkaClient();
         // const producer = new Producer(kafkaClient);
@@ -44,10 +45,8 @@ dotenv.config();
 
         const server = app.build();
 
-        const PORT = process.env.PORT || 9000;
-
-        server.listen(PORT, () => {
-            console.log(`Server listening on port ${PORT}`);
+        server.listen(config.server.port, () => {
+            console.log(`Server listening on port ${config.server.port}`);
         });
     } catch (err) {
         console.error(err);

@@ -75,7 +75,7 @@ tests/
 │   ├── tsconfig.json
 │   ├── jest.config.json
 │   └── *.test.ts
-├── setup.ts           # Shared setup (loads .env.test)
+├── setup.ts           # Shared setup (sets CONFIG_PATH to config/test.json)
 ├── teardown.ts        # Shared teardown
 └── helpers.ts         # Shared test utilities
 ```

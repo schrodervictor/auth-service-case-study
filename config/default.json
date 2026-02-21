@@ -1,0 +1,18 @@
+{
+    "server": {
+        "port": 9000
+    },
+    "database": {
+        "host": "postgres",
+        "port": 5432,
+        "name": "case_study_db"
+    },
+    "auth": {
+        "accessToken": {
+            "expiresIn": "15m"
+        },
+        "refreshToken": {
+            "expiresIn": "7d"
+        }
+    }
+}
