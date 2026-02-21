@@ -1,6 +1,6 @@
 # Task: Auth Middleware
 
-## Status: pending
+## Status: done
 
 ## Context
 
@@ -278,58 +278,58 @@ const createMockNext = (): NextFunction => jest.fn();
   factory function covering all happy and error paths. Tests should fail because
   `createAuthMiddleware` does not exist yet.
 - **Acceptance Criteria**:
-  - [ ] Test: valid Bearer token sets `req.user.id` and calls `next()`
-  - [ ] Test: missing Authorization header returns 401
-  - [ ] Test: empty Authorization header returns 401
-  - [ ] Test: non-Bearer Authorization header returns 401
-  - [ ] Test: Bearer with empty token returns 401
-  - [ ] Test: invalid token (jwt.verify throws) returns 401
-  - [ ] Test: expired token (jwt.verify throws) returns 401
-  - [ ] Test: missing JWT_SECRET env var returns 401
-  - [ ] Test: all error responses use `{ message: 'Unauthorized' }`
-  - [ ] Test: `next()` is never called on error paths
-  - [ ] Tests fail because `createAuthMiddleware` does not exist yet
-- **Status**: pending
+  - [x] Test: valid Bearer token sets `req.user.id` and calls `next()`
+  - [x] Test: missing Authorization header returns 401
+  - [x] Test: empty Authorization header returns 401
+  - [x] Test: non-Bearer Authorization header returns 401
+  - [x] Test: Bearer with empty token returns 401
+  - [x] Test: invalid token (jwt.verify throws) returns 401
+  - [x] Test: expired token (jwt.verify throws) returns 401
+  - [x] Test: missing JWT_SECRET env var returns 401
+  - [x] Test: all error responses use `{ message: 'Unauthorized' }`
+  - [x] Test: `next()` is never called on error paths
+  - [x] Tests fail because `createAuthMiddleware` does not exist yet
+- **Status**: done
 
 ### Milestone 2: Implement createAuthMiddleware (Green phase)
 
 - **Description**: Implement the `createAuthMiddleware` factory function in
   `src/middleware/auth-middleware.ts` to make all tests pass.
 - **Acceptance Criteria**:
-  - [ ] `createAuthMiddleware` exported from `src/middleware/auth-middleware.ts`
-  - [ ] Parses Bearer token from Authorization header
-  - [ ] Verifies token with `jwt.verify` using `process.env.JWT_SECRET`
-  - [ ] Sets `req.user = { id: payload.userId }` on success
-  - [ ] Returns 401 with `{ message: 'Unauthorized' }` for all error conditions
-  - [ ] All unit tests pass (`make test-unit`)
-  - [ ] TypeScript compiles cleanly (`make typecheck`)
-  - [ ] Linting passes (`make lint`)
-- **Status**: pending
+  - [x] `createAuthMiddleware` exported from `src/middleware/auth-middleware.ts`
+  - [x] Parses Bearer token from Authorization header
+  - [x] Verifies token with `jwt.verify` using `process.env.JWT_SECRET`
+  - [x] Sets `req.user = { id: payload.userId }` on success
+  - [x] Returns 401 with `{ message: 'Unauthorized' }` for all error conditions
+  - [x] All unit tests pass (`make test-unit`)
+  - [x] TypeScript compiles cleanly (`make typecheck`)
+  - [x] Linting passes (`make lint`)
+- **Status**: done
 
 ### Milestone 3: Wire DI container binding
 
 - **Description**: Bind the auth middleware in the DI container so
   inversify-express-utils can resolve it for protected routes.
 - **Acceptance Criteria**:
-  - [ ] `createAuthMiddleware` imported in `src/inversify.config.ts`
-  - [ ] `container.bind<AuthMiddlewareFunction>(TYPES.AuthMiddleware).toConstantValue(createAuthMiddleware())`
+  - [x] `createAuthMiddleware` imported in `src/inversify.config.ts`
+  - [x] `container.bind<AuthMiddlewareFunction>(TYPES.AuthMiddleware).toConstantValue(createAuthMiddleware())`
         added
-  - [ ] `make typecheck` passes
-  - [ ] `make test-unit` passes (no regressions)
-- **Status**: pending
+  - [x] `make typecheck` passes
+  - [x] `make test-unit` passes (no regressions)
+- **Status**: done
 
 ### Milestone 4: Review and refactor
 
 - **Description**: Review the implementation for code quality, security, and
   adherence to project conventions.
 - **Acceptance Criteria**:
-  - [ ] Uses `jwt.verify` (NOT `jwt.decode`)
-  - [ ] No information leakage in error responses (all say "Unauthorized")
-  - [ ] No database lookup in middleware
-  - [ ] Token payload correctly mapped to `req.user.id`
-  - [ ] Consistent with UserServiceImpl JWT signing (`{ userId }` payload)
-  - [ ] Code follows existing patterns (4-space indent, single quotes, const)
-  - [ ] All tests pass: `make test-unit`
-  - [ ] TypeScript compiles: `make typecheck`
-  - [ ] Lint passes: `make lint`
-- **Status**: pending
+  - [x] Uses `jwt.verify` (NOT `jwt.decode`)
+  - [x] No information leakage in error responses (all say "Unauthorized")
+  - [x] No database lookup in middleware
+  - [x] Token payload correctly mapped to `req.user.id`
+  - [x] Consistent with UserServiceImpl JWT signing (`{ userId }` payload)
+  - [x] Code follows existing patterns (4-space indent, single quotes, const)
+  - [x] All tests pass: `make test-unit`
+  - [x] TypeScript compiles: `make typecheck`
+  - [x] Lint passes: `make lint`
+- **Status**: done
