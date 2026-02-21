@@ -30,24 +30,18 @@ describe('configSchema — secrets injection fields', () => {
 
     describe('secretsPath field', () => {
         it('should accept config with secretsPath string', () => {
-            const result = configSchema.safeParse({
+            const result = configSchema.parse({
                 ...MINIMAL_CONFIG,
                 secretsPath: '/run/secrets/app-secrets.json',
             });
 
-            expect(result.success).toBe(true);
-            if (result.success) {
-                expect(result.data.secretsPath).toBe('/run/secrets/app-secrets.json');
-            }
+            expect(result.secretsPath).toBe('/run/secrets/app-secrets.json');
         });
 
         it('should allow secretsPath to be omitted (undefined)', () => {
-            const result = configSchema.safeParse(MINIMAL_CONFIG);
+            const result = configSchema.parse(MINIMAL_CONFIG);
 
-            expect(result.success).toBe(true);
-            if (result.success) {
-                expect(result.data.secretsPath).toBeUndefined();
-            }
+            expect(result.secretsPath).toBeUndefined();
         });
     });
 
@@ -62,24 +56,18 @@ describe('configSchema — secrets injection fields', () => {
         };
 
         it('should accept config with ssm section', () => {
-            const result = configSchema.safeParse({
+            const result = configSchema.parse({
                 ...MINIMAL_CONFIG,
                 ssm: SSM_SECTION,
             });
 
-            expect(result.success).toBe(true);
-            if (result.success) {
-                expect(result.data.ssm).toEqual(SSM_SECTION);
-            }
+            expect(result.ssm).toEqual(SSM_SECTION);
         });
 
         it('should allow ssm to be omitted (undefined)', () => {
-            const result = configSchema.safeParse(MINIMAL_CONFIG);
+            const result = configSchema.parse(MINIMAL_CONFIG);
 
-            expect(result.success).toBe(true);
-            if (result.success) {
-                expect(result.data.ssm).toBeUndefined();
-            }
+            expect(result.ssm).toBeUndefined();
         });
 
         it('should reject ssm without region', () => {
@@ -122,7 +110,7 @@ describe('configSchema — secrets injection fields', () => {
 
     describe('secretsPath and ssm coexistence', () => {
         it('should accept config with both secretsPath and ssm', () => {
-            const result = configSchema.safeParse({
+            const result = configSchema.parse({
                 ...MINIMAL_CONFIG,
                 secretsPath: '/run/secrets/app-secrets.json',
                 ssm: {
@@ -135,11 +123,8 @@ describe('configSchema — secrets injection fields', () => {
                 },
             });
 
-            expect(result.success).toBe(true);
-            if (result.success) {
-                expect(result.data.secretsPath).toBe('/run/secrets/app-secrets.json');
-                expect(result.data.ssm).toBeDefined();
-            }
+            expect(result.secretsPath).toBe('/run/secrets/app-secrets.json');
+            expect(result.ssm).toBeDefined();
         });
     });
 });

@@ -43,7 +43,7 @@ describe('loadSecrets', () => {
     describe('priority logic', () => {
         it('should use SSM backend when both ssm and secretsPath are configured', async () => {
             // Import the mocked SSM module so we can set up return values
-            const { SSMClient, GetParametersCommand } = await import('@aws-sdk/client-ssm');
+            const { SSMClient } = await import('@aws-sdk/client-ssm');
             const mockSend = jest.fn().mockResolvedValue({
                 Parameters: [
                     { Name: '/app/jwt-secret', Value: VALID_SECRETS.jwtSecret },
