@@ -1,5 +1,4 @@
 import type { Request, Response, NextFunction } from 'express';
-import type Redis from 'ioredis';
 
 export type RateLimitMiddlewareFunction = (
     req: Request,
@@ -12,13 +11,21 @@ export interface RateLimitConfig {
     windowSeconds: number;
 }
 
+interface RedisLike {
+    incr(key: string): Promise<number>;
+    expire(key: string, seconds: number): Promise<number>;
+    ttl(key: string): Promise<number>;
+}
+
 export function createRateLimitMiddleware(
-    redisClient: Redis | null,
+    redisClient: RedisLike | null | unknown,
     endpointKey: string,
     config: RateLimitConfig,
 ): RateLimitMiddlewareFunction {
+    const client = redisClient as RedisLike | null;
+
     return ((req: Request, res: Response, next: NextFunction): void | Promise<void> => {
-        if (redisClient == null) {
+        if (client == null) {
             next();
             return;
         }
@@ -26,15 +33,15 @@ export function createRateLimitMiddleware(
         const ip = req.ip ?? 'unknown';
         const key = `rateLimit:${endpointKey}:${ip}`;
 
-        return redisClient
+        return client
             .incr(key)
             .then(async (count) => {
                 if (count === 1) {
-                    await redisClient.expire(key, config.windowSeconds);
+                    await client.expire(key, config.windowSeconds);
                 }
 
                 if (count > config.maxAttempts) {
-                    const ttl = await redisClient.ttl(key);
+                    const ttl = await client.ttl(key);
                     const retryAfter = ttl > 0 ? ttl : config.windowSeconds;
                     res.set('Retry-After', String(retryAfter));
                     res.status(429).json({

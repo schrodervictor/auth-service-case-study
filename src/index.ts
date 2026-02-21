@@ -9,6 +9,7 @@ import { loadConfig } from './config';
 import { loadSecrets } from './config/secrets-loader';
 import { createContainer } from './inversify.config';
 import { createDataSource } from './database';
+import { createRedisClient } from './redis/redis-client-factory';
 // import { exampleEventHandler } from './events/handlers';
 
 (async () => {
@@ -24,7 +25,9 @@ import { createDataSource } from './database';
         await dataSource.runMigrations();
         console.log('Database migrations executed');
 
-        const diContainer = createContainer(config, dataSource, secrets);
+        const redisClient = await createRedisClient(config);
+
+        const diContainer = createContainer(config, dataSource, secrets, redisClient);
 
         // Create Kafka producer and consumer instance
         // const kafkaClient = await createKafkaClient();
