@@ -1,0 +1,50 @@
+services:
+  app:
+    build:
+      context: .
+      target: dev
+      ssh:
+        - default
+    ports:
+      - "9000:9000"
+    environment:
+      PORT: 9000
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: case_study_db
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: marta-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: case_study_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  acceptance:
+    build:
+      context: ./tests/acceptance
+    environment:
+      API_URL: http://app:9000
+    volumes:
+      - ./tests/acceptance/specs:/app/specs
+    depends_on:
+      app:
+        condition: service_started
