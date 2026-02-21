@@ -1,6 +1,6 @@
-import { json } from 'body-parser';
-
 import 'reflect-metadata';
+
+import { json } from 'body-parser';
 import { InversifyExpressServer } from 'inversify-express-utils';
 
 // import { createKafkaClient, Producer, Consumer } from '@marta/eventbus/dist';

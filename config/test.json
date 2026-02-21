@@ -14,5 +14,9 @@
         "refreshToken": {
             "expiresIn": "7d"
         }
+    },
+    "redis": {
+        "host": "localhost",
+        "port": 6379
     }
 }
