@@ -15,11 +15,10 @@ dependency requirements.
 
 ### Unit tests
 
-No external services needed. Can run locally or inside a Docker container with
-mounted source code.
+No external services needed.
 
 ```bash
-npm run test:unit
+make test-unit
 ```
 
 ### Integration tests
@@ -27,8 +26,7 @@ npm run test:unit
 Require a running PostgreSQL instance (provided by docker-compose).
 
 ```bash
-docker compose up -d postgres
-npm run test:integration
+make test-integration
 ```
 
 ### Acceptance tests
@@ -55,26 +53,36 @@ from the main application's `node_modules` and `src/`.
 ### All tests (unit + integration)
 
 ```bash
-npm test
+make test
 ```
 
-Note: `npm test` runs unit and integration tests only. Acceptance tests are
+Note: `make test` runs unit and integration tests only. Acceptance tests are
 excluded because they require the full stack and run in a separate container.
 
 ## Directory Structure
 
 ```
 tests/
-├── unit/              # No external dependencies
-│   └── *.test.ts
-├── integration/       # Requires database
-│   └── *.test.ts
-├── acceptance/        # Separate Docker container (black-box)
+├── unit/                        # No external dependencies
+│   ├── config/
+│   │   ├── loader.test.ts       # Config loading and Zod validation
+│   │   └── di-integration.test.ts  # DI container bindings
+│   ├── database/
+│   │   └── data-source.test.ts  # DataSource factory and credentials loader
+│   ├── entities/
+│   │   └── user.test.ts         # User entity metadata (TypeORM decorators)
+│   └── example.test.ts
+├── integration/                 # Requires PostgreSQL
+│   ├── database/
+│   │   └── connection.test.ts   # DB connectivity, migrations, CRUD roundtrip
+│   └── example.test.ts
+├── acceptance/                  # Separate Docker container (black-box)
 │   ├── Dockerfile
 │   ├── package.json
 │   ├── tsconfig.json
 │   ├── jest.config.json
-│   └── *.test.ts
+│   └── specs/
+│       └── example.test.ts
 ├── setup.ts           # Shared setup (sets CONFIG_PATH to config/test.json)
 ├── teardown.ts        # Shared teardown
 └── helpers.ts         # Shared test utilities

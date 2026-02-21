@@ -1,6 +1,6 @@
 # Task: Database Initialization and User Entity
 
-## Status: pending
+## Status: done
 
 ## Context
 
@@ -208,60 +208,60 @@ Down migration: `DROP TABLE "users";`
 - **Description**: Complete the User entity with all required fields and TypeORM
   decorators
 - **Acceptance Criteria**:
-  - [ ] `src/entities/user.ts` defines the `User` class with `@Entity`,
+  - [x] `src/entities/user.ts` defines the `User` class with `@Entity`,
         `@PrimaryGeneratedColumn('uuid')`, `@Column`, `@CreateDateColumn`,
         `@UpdateDateColumn` decorators
-  - [ ] Table name is `users`, columns use `snake_case` in DB
-  - [ ] `email` column has `unique: true`
-  - [ ] Unit tests verify entity metadata is correctly registered
-  - [ ] `make typecheck` passes
-- **Status**: pending
+  - [x] Table name is `users`, columns use `snake_case` in DB
+  - [x] `email` column has `unique: true`
+  - [x] Unit tests verify entity metadata is correctly registered
+  - [x] `make typecheck` passes
+- **Status**: done
 
 ### Milestone 2: DataSource Factory and Credentials
 
 - **Description**: Create the DataSource factory function and credentials loader
 - **Acceptance Criteria**:
-  - [ ] `src/database/data-source.ts` exports
+  - [x] `src/database/data-source.ts` exports
         `createDataSource(config,     credentials)` returning a non-initialized
         `DataSource`
-  - [ ] `src/database/data-source.ts` exports `loadDatabaseCredentials()`
+  - [x] `src/database/data-source.ts` exports `loadDatabaseCredentials()`
         reading from `process.env`
-  - [ ] `DatabaseCredentials` interface exported
-  - [ ] `src/database/index.ts` barrel export
-  - [ ] `synchronize` is `false`, entities include `User`
-  - [ ] Credentials loader throws clear errors for missing env vars
-  - [ ] Unit tests cover factory output and credentials loader
-  - [ ] `make typecheck` passes
-- **Status**: pending
+  - [x] `DatabaseCredentials` interface exported
+  - [x] `src/database/index.ts` barrel export
+  - [x] `synchronize` is `false`, entities include `User`
+  - [x] Credentials loader throws clear errors for missing env vars
+  - [x] Unit tests cover factory output and credentials loader
+  - [x] `make typecheck` passes
+- **Status**: done
 
 ### Milestone 3: Initial Migration
 
 - **Description**: Create the first TypeORM migration that creates the `users`
   table
 - **Acceptance Criteria**:
-  - [ ] Migration file in `src/migrations/` with timestamp prefix
-  - [ ] `up` creates `users` table with all columns, UUID primary key, unique
+  - [x] Migration file in `src/migrations/` with timestamp prefix
+  - [x] `up` creates `users` table with all columns, UUID primary key, unique
         email index
-  - [ ] `down` drops the `users` table
-  - [ ] `package.json` has a `typeorm` script for CLI usage
-  - [ ] Integration test: DataSource initializes and runs migrations
+  - [x] `down` drops the `users` table
+  - [x] `package.json` has a `typeorm` script for CLI usage
+  - [x] Integration test: DataSource initializes and runs migrations
         successfully against real PostgreSQL
-  - [ ] Integration test: `users` table exists after migrations
-- **Status**: pending
+  - [x] Integration test: `users` table exists after migrations
+- **Status**: done
 
 ### Milestone 4: DI Wiring and Startup Integration
 
 - **Description**: Wire the DataSource into the DI container and update the
   application startup sequence
 - **Acceptance Criteria**:
-  - [ ] `TYPES.DataSource` symbol added to `src/lib/types.ts`
-  - [ ] `createContainer(config, dataSource)` accepts and binds DataSource
-  - [ ] `src/index.ts` startup: load config → load credentials → create
+  - [x] `TYPES.DataSource` symbol added to `src/lib/types.ts`
+  - [x] `createContainer(config, dataSource)` accepts and binds DataSource
+  - [x] `src/index.ts` startup: load config → load credentials → create
         DataSource → initialize → run migrations → create container → start
         server
-  - [ ] Startup logs connection success or fails fast with clear error
-  - [ ] Existing DI integration tests updated to pass mock DataSource
-  - [ ] Integration test: full DataSource → DI → entity insert roundtrip
-  - [ ] `make test-unit` passes
-  - [ ] `make test-integration` passes
-- **Status**: pending
+  - [x] Startup logs connection success or fails fast with clear error
+  - [x] Existing DI integration tests updated to pass mock DataSource
+  - [x] Integration test: full DataSource → DI → entity insert roundtrip
+  - [x] `make test-unit` passes
+  - [x] `make test-integration` passes
+- **Status**: done
