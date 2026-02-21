@@ -1,6 +1,6 @@
 # Task: User Controller (Outside-In TDD)
 
-## Status: in-progress
+## Status: done
 
 ## Context
 
@@ -714,18 +714,18 @@ No new npm packages required. All imports are from existing dependencies:
 - **Description**: Enhance ValidationError to carry per-field structured errors.
   Update the controller's handleError to include them in 422 responses.
 - **Acceptance Criteria**:
-  - [ ] `ValidationError` constructor accepts `errors: Record<string, string[]>`
+  - [x] `ValidationError` constructor accepts `errors: Record<string, string[]>`
         in addition to `message`
-  - [ ] `ValidationError` exposes a public `readonly errors` property
-  - [ ] Controller's `handleError` returns `{ message, errors }` for
+  - [x] `ValidationError` exposes a public `readonly errors` property
+  - [x] Controller's `handleError` returns `{ message, errors }` for
         `ValidationError` (not just `{ message }`)
-  - [ ] Test: 422 response includes both `message` and `errors` with per-field
+  - [x] Test: 422 response includes both `message` and `errors` with per-field
         violations
-  - [ ] Test: `errors` object has field names as keys and string arrays as
+  - [x] Test: `errors` object has field names as keys and string arrays as
         values
-  - [ ] Existing ValidationError tests still pass (backward compatible)
-  - [ ] `make test-unit` and `make typecheck` pass
-- **Status**: pending
+  - [x] Existing ValidationError tests still pass (backward compatible)
+  - [x] `make test-unit` and `make typecheck` pass
+- **Status**: done
 
 ### Milestone 7: Profile Routes Return 401 for UserNotFoundError
 
@@ -733,12 +733,12 @@ No new npm packages required. All imports are from existing dependencies:
   `UserNotFoundError`, return 401 Unauthorized instead of 404. This prevents
   leaking information about user existence in the database.
 - **Acceptance Criteria**:
-  - [ ] `getProfile` catches `UserNotFoundError` and returns 401 with generic
+  - [x] `getProfile` catches `UserNotFoundError` and returns 401 with generic
         "Unauthorized" message
-  - [ ] `updateProfile` catches `UserNotFoundError` and returns 401 with generic
+  - [x] `updateProfile` catches `UserNotFoundError` and returns 401 with generic
         "Unauthorized" message
-  - [ ] Test: GET /profile with UserNotFoundError returns 401 (not 404)
-  - [ ] Test: PUT /profile with UserNotFoundError returns 401 (not 404)
-  - [ ] Test: response message is generic "Unauthorized" (no user ID leaked)
-  - [ ] `make test-unit` and `make typecheck` pass
-- **Status**: pending
+  - [x] Test: GET /profile with UserNotFoundError returns 401 (not 404)
+  - [x] Test: PUT /profile with UserNotFoundError returns 401 (not 404)
+  - [x] Test: response message is generic "Unauthorized" (no user ID leaked)
+  - [x] `make test-unit` and `make typecheck` pass
+- **Status**: done
