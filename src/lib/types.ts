@@ -7,8 +7,11 @@ export const TYPES = {
 
     // // Services
     // ExampleService: Symbol.for('ExampleService'),
-    // UserService: Symbol.for('UserService'),
+    UserService: Symbol.for('UserService'),
     PasswordManagerService: Symbol.for('PasswordManagerService'),
+
+    // Middleware
+    AuthMiddleware: Symbol.for('AuthMiddleware'),
 
     // Repositories
     UserRepository: Symbol.for('UserRepository'),

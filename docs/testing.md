@@ -67,6 +67,8 @@ tests/
 │   ├── config/
 │   │   ├── loader.test.ts       # Config loading and Zod validation
 │   │   └── di-integration.test.ts  # DI container bindings
+│   ├── controllers/
+│   │   └── user-controller.test.ts  # UserController routes (mocked UserService)
 │   ├── database/
 │   │   └── data-source.test.ts  # DataSource factory and credentials loader
 │   ├── entities/
