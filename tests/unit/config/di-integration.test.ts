@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { Container } from 'inversify';
+import type { DataSource } from 'typeorm';
 
 import { createContainer } from '../../../src/inversify.config';
 import { TYPES } from '../../../src/lib/types';
@@ -14,22 +15,24 @@ const VALID_CONFIG: AppConfig = {
     },
 };
 
+const MOCK_DATA_SOURCE = { options: {} } as unknown as DataSource;
+
 describe('DI container config integration', () => {
     describe('config binding', () => {
         it('should return a Container instance', () => {
-            const container = createContainer(VALID_CONFIG);
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE);
 
             expect(container).toBeInstanceOf(Container);
         });
 
         it('should bind config under TYPES.Config', () => {
-            const container = createContainer(VALID_CONFIG);
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE);
 
             expect(container.isBound(TYPES.Config)).toBe(true);
         });
 
         it('should retrieve the config object with correct values', () => {
-            const container = createContainer(VALID_CONFIG);
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE);
 
             const config = container.get<AppConfig>(TYPES.Config);
 
@@ -37,7 +40,7 @@ describe('DI container config integration', () => {
         });
 
         it('should bind config as a constant (same reference on multiple gets)', () => {
-            const container = createContainer(VALID_CONFIG);
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE);
 
             const first = container.get<AppConfig>(TYPES.Config);
             const second = container.get<AppConfig>(TYPES.Config);
@@ -48,11 +51,11 @@ describe('DI container config integration', () => {
 
     describe('invalid config', () => {
         it('should throw when config is null', () => {
-            expect(() => createContainer(null as unknown as AppConfig)).toThrow();
+            expect(() => createContainer(null as unknown as AppConfig, MOCK_DATA_SOURCE)).toThrow();
         });
 
         it('should throw when config is undefined', () => {
-            expect(() => createContainer(undefined as unknown as AppConfig)).toThrow();
+            expect(() => createContainer(undefined as unknown as AppConfig, MOCK_DATA_SOURCE)).toThrow();
         });
     });
 });

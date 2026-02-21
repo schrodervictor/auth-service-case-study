@@ -1,4 +1,5 @@
 import { Container } from 'inversify';
+import type { DataSource } from 'typeorm';
 
 import './lib/base-controller';
 import './controllers/health-check-controller';
@@ -17,7 +18,7 @@ import { TYPES } from './lib/types';
 // } from './services';
 // import { UserRepository, UserRepositoryImpl } from './repositories';
 
-export function createContainer(config: AppConfig): Container {
+export function createContainer(config: AppConfig, dataSource: DataSource): Container {
     if (config == null) {
         throw new Error('Config is required to create the DI container');
     }
@@ -25,6 +26,7 @@ export function createContainer(config: AppConfig): Container {
     const container = new Container();
 
     container.bind<AppConfig>(TYPES.Config).toConstantValue(config);
+    container.bind<DataSource>(TYPES.DataSource).toConstantValue(dataSource);
 
     // // bind services
     // container.bind<ExampleService>(TYPES.ExampleService).to(ExampleServiceImpl);

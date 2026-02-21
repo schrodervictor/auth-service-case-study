@@ -15,7 +15,8 @@
     "test:integration": "jest -c ./jest.config.json --testPathPatterns=tests/integration",
     "test:watch": "jest -c ./jest.config.json --watchAll=true",
     "test:cov": "jest -c ./jest.config.json --coverage",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "typeorm": "tsx node_modules/typeorm/cli.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.27.0",

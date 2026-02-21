@@ -5,17 +5,24 @@ import { InversifyExpressServer } from 'inversify-express-utils';
 
 // import { createKafkaClient, Producer, Consumer } from '@marta/eventbus/dist';
 
-// import { getDataSource } from './typeormconfig';
-
 import { loadConfig } from './config';
 import { createContainer } from './inversify.config';
-// import { TYPES } from './lib';
+import { createDataSource, loadDatabaseCredentials } from './database';
 // import { exampleEventHandler } from './events/handlers';
 
 (async () => {
     try {
         const config = loadConfig();
-        const diContainer = createContainer(config);
+        const credentials = loadDatabaseCredentials();
+        const dataSource = createDataSource(config, credentials);
+
+        await dataSource.initialize();
+        console.log('Database connection established');
+
+        await dataSource.runMigrations();
+        console.log('Database migrations executed');
+
+        const diContainer = createContainer(config, dataSource);
 
         // Create Kafka producer and consumer instance
         // const kafkaClient = await createKafkaClient();
@@ -29,11 +36,6 @@ import { createContainer } from './inversify.config';
 
         // Bind producer instance to the DI container so it can be accessed from anywhere
         // diContainer.bind(TYPES.producer).toConstantValue(producer);
-
-        // DB setup
-        // const dataSource = await getDataSource();
-        // await dataSource.initialize();
-        // diContainer.bind(TYPES.DB).toConstantValue(dataSource);
 
         // Create app server
         const app = new InversifyExpressServer(diContainer, null, {
@@ -49,6 +51,7 @@ import { createContainer } from './inversify.config';
             console.log(`Server listening on port ${config.server.port}`);
         });
     } catch (err) {
-        console.error(err);
+        console.error('Failed to start application:', err);
+        process.exit(1);
     }
 })();
