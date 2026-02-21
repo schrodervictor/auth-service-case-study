@@ -15,25 +15,24 @@ async function loadFromFile(path: string): Promise<AppSecrets> {
 async function loadFromSSM(config: NonNullable<AppConfig['ssm']>): Promise<AppSecrets> {
     const client = new SSMClient({ region: config.region });
 
-    const parameterNames = Object.values(config.parameters);
+    const uniqueNames = [...new Set(Object.values(config.parameters))];
     const command = new GetParametersCommand({
-        Names: parameterNames,
+        Names: uniqueNames,
         WithDecryption: true,
     });
 
     const response = await client.send(command);
 
-    // Build reverse map: SSM parameter name → AppSecrets key
-    const nameToKey = new Map<string, keyof AppSecrets>();
-    for (const [key, name] of Object.entries(config.parameters)) {
-        nameToKey.set(name, key as keyof AppSecrets);
+    const paramsByName = new Map<string, string>();
+    for (const param of response.Parameters ?? []) {
+        paramsByName.set(param.Name!, param.Value!);
     }
 
     const result: Record<string, string> = {};
-    for (const param of response.Parameters ?? []) {
-        const key = nameToKey.get(param.Name!);
-        if (key) {
-            result[key] = param.Value!;
+    for (const [key, ssmName] of Object.entries(config.parameters)) {
+        const value = paramsByName.get(ssmName);
+        if (value !== undefined) {
+            result[key] = value;
         }
     }
 
