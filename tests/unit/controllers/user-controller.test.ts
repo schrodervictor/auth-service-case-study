@@ -184,7 +184,6 @@ describe('UserController', () => {
 
         it('should return 422 when service throws ValidationError', async () => {
             mockService.register.mockRejectedValue(
-                // @ts-expect-error ValidationError will accept (message, errors) after implementation
                 new ValidationError('Validation failed', {
                     password: ['Must be at least 8 characters', 'Must contain uppercase'],
                     email: ['Invalid email format'],
@@ -216,7 +215,6 @@ describe('UserController', () => {
                 email: ['Invalid email format', 'Email domain not allowed'],
             };
             mockService.register.mockRejectedValue(
-                // @ts-expect-error ValidationError will accept (message, errors) after implementation
                 new ValidationError('Validation failed', fieldErrors),
             );
             const req = createMockRequest({

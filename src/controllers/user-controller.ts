@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import { inject } from 'inversify';
 import { controller, httpGet, httpPost, httpPut } from 'inversify-express-utils';
 
-import { AppError } from '../errors';
+import { AppError, UserNotFoundError, ValidationError } from '../errors';
 import { BaseController } from '../lib/base-controller';
 import { TYPES } from '../lib/types';
 import type { AuthenticatedRequest } from '../middleware/auth-middleware';
@@ -21,7 +21,7 @@ export class UserController extends BaseController {
         try {
             const { email, password, firstName, lastName } = req.body ?? {};
 
-            if (!email || !password || !firstName || !lastName) {
+            if (email == null || password == null || firstName == null || lastName == null) {
                 res.status(400).json({ message: 'Missing required fields' });
                 return;
             }
@@ -65,6 +65,10 @@ export class UserController extends BaseController {
 
             res.status(200).json(user);
         } catch (error) {
+            if (error instanceof UserNotFoundError) {
+                res.status(401).json({ message: 'Unauthorized' });
+                return;
+            }
             this.handleError(res, error);
         }
     }
@@ -90,12 +94,18 @@ export class UserController extends BaseController {
 
             res.status(200).json(user);
         } catch (error) {
+            if (error instanceof UserNotFoundError) {
+                res.status(401).json({ message: 'Unauthorized' });
+                return;
+            }
             this.handleError(res, error);
         }
     }
 
     private handleError(res: Response, error: unknown): void {
-        if (error instanceof AppError) {
+        if (error instanceof ValidationError) {
+            res.status(error.statusCode).json({ message: error.message, errors: error.errors });
+        } else if (error instanceof AppError) {
             res.status(error.statusCode).json({ message: error.message });
         } else {
             res.status(500).json({ message: 'Internal server error' });
