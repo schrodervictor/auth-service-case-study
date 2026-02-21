@@ -1,6 +1,6 @@
 # Task: Auth Middleware
 
-## Status: in-progress
+## Status: done
 
 ## Context
 
@@ -390,13 +390,13 @@ const createMockNext = (): NextFunction => jest.fn();
   - `tests/unit/services/user-service.test.ts` — verify the existing JWT_SECRET
     test already expects an Error throw (should be fine, but confirm)
 - **Acceptance Criteria**:
-  - [ ] Middleware returns 500 with `{ message: 'Internal server error' }` when
+  - [x] Middleware returns 500 with `{ message: 'Internal server error' }` when
         `JWT_SECRET` is missing
-  - [ ] UserServiceImpl still throws Error when `JWT_SECRET` is missing
+  - [x] UserServiceImpl still throws Error when `JWT_SECRET` is missing
         (controller handles as 500)
-  - [ ] Tests updated to assert 500 for missing JWT_SECRET
-  - [ ] All other 401 cases unchanged (missing/invalid/expired token)
-  - [ ] `make test-unit` passes
-  - [ ] `make typecheck` passes
-  - [ ] `make lint` passes
-- **Status**: pending
+  - [x] Tests updated to assert 500 for missing JWT_SECRET
+  - [x] All other 401 cases unchanged (missing/invalid/expired token)
+  - [x] `make test-unit` passes
+  - [x] `make typecheck` passes
+  - [x] `make lint` passes
+- **Status**: done
