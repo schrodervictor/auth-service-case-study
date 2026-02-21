@@ -43,7 +43,7 @@ const createSampleUser = (overrides?: Partial<User>): User => {
     const user = new User();
     user.id = 'uuid-1';
     user.email = 'test@example.com';
-    user.password = 'hashed-password';
+    user.passwordHash = 'hashed-password';
     user.firstName = 'John';
     user.lastName = 'Doe';
     user.createdAt = new Date('2024-01-01');
@@ -97,7 +97,7 @@ describe('UserServiceImpl', () => {
             lastName: 'Doe',
         };
 
-        it('should return UserResponseDto without password on successful registration', async () => {
+        it('should return UserResponseDto without passwordHash on successful registration', async () => {
             const createdUser = createSampleUser();
             mockRepo.findByEmail.mockResolvedValue(null);
             mockPasswordManager.toHash.mockResolvedValue('hashed-password');
@@ -106,7 +106,7 @@ describe('UserServiceImpl', () => {
             const result = await service.register(validRegisterData);
 
             expect(result).toEqual(sampleUserResponse);
-            expect(result).not.toHaveProperty('password');
+            expect(result).not.toHaveProperty('passwordHash');
         });
 
         it('should call passwordManager.toHash with the raw password', async () => {
@@ -128,7 +128,7 @@ describe('UserServiceImpl', () => {
 
             expect(mockRepo.create).toHaveBeenCalledWith({
                 email: 'test@example.com',
-                password: 'the-hashed-pw',
+                passwordHash: 'the-hashed-pw',
                 firstName: 'John',
                 lastName: 'Doe',
             });
@@ -343,7 +343,7 @@ describe('UserServiceImpl', () => {
         });
 
         it('should call passwordManager.compare with stored hash and supplied password', async () => {
-            const user = createSampleUser({ password: 'stored-hash' });
+            const user = createSampleUser({ passwordHash: 'stored-hash' });
             mockRepo.findByEmail.mockResolvedValue(user);
             mockPasswordManager.compare.mockResolvedValue(true);
 
@@ -373,12 +373,12 @@ describe('UserServiceImpl', () => {
             );
         });
 
-        it('should not include password field in the response', async () => {
+        it('should not include passwordHash field in the response', async () => {
             mockRepo.findById.mockResolvedValue(createSampleUser());
 
             const result = await service.getProfile('uuid-1');
 
-            expect(result).not.toHaveProperty('password');
+            expect(result).not.toHaveProperty('passwordHash');
         });
 
         it('should call userRepository.findById with the correct userId', async () => {
@@ -473,7 +473,7 @@ describe('UserServiceImpl', () => {
             expect(callArgs).not.toHaveProperty('lastName');
         });
 
-        it('should not include password in the response', async () => {
+        it('should not include passwordHash in the response', async () => {
             const updatedUser = createSampleUser({ firstName: 'Jane' });
             mockRepo.update.mockResolvedValue(updatedUser);
 
@@ -481,7 +481,7 @@ describe('UserServiceImpl', () => {
                 firstName: 'Jane',
             });
 
-            expect(result).not.toHaveProperty('password');
+            expect(result).not.toHaveProperty('passwordHash');
         });
 
         it('should not call repository.update when validation fails', async () => {

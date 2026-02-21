@@ -46,7 +46,7 @@ describe('UserRepositoryImpl', () => {
             const user = {
                 id: 'uuid-1',
                 email: 'test@example.com',
-                password: 'hashed',
+                passwordHash: 'hashed',
                 firstName: 'Test',
                 lastName: 'User',
                 createdAt: new Date(),
@@ -81,7 +81,7 @@ describe('UserRepositoryImpl', () => {
             const user = {
                 id: 'uuid-1',
                 email: 'test@example.com',
-                password: 'hashed',
+                passwordHash: 'hashed',
                 firstName: 'Test',
                 lastName: 'User',
                 createdAt: new Date(),
@@ -106,7 +106,7 @@ describe('UserRepositoryImpl', () => {
     describe('create', () => {
         const createData: CreateUserData = {
             email: 'new@example.com',
-            password: 'hashed_password',
+            passwordHash: 'hashed_password',
             firstName: 'New',
             lastName: 'User',
         };
@@ -157,7 +157,7 @@ describe('UserRepositoryImpl', () => {
         const existingUser = {
             id: 'uuid-1',
             email: 'test@example.com',
-            password: 'hashed',
+            passwordHash: 'hashed',
             firstName: 'Test',
             lastName: 'User',
             createdAt: new Date('2024-01-01'),

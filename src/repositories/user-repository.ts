@@ -6,7 +6,7 @@ import { TYPES } from '../lib/types';
 
 export type CreateUserData = {
     email: string;
-    password: string;
+    passwordHash: string;
     firstName: string;
     lastName: string;
 };
