@@ -1,6 +1,6 @@
 # Task: Auth Middleware
 
-## Status: in-progress
+## Status: done
 
 ## Context
 
@@ -359,13 +359,13 @@ const createMockNext = (): NextFunction => jest.fn();
   - All test files referencing `password` on mock User entities or
     CreateUserData objects must be updated
 - **Acceptance Criteria**:
-  - [ ] Entity field renamed to `passwordHash` with column `password_hash`
-  - [ ] Migration uses `password_hash` column name
-  - [ ] `CreateUserData` type uses `passwordHash`
-  - [ ] Service layer stores hash as `passwordHash`, reads `user.passwordHash`
-  - [ ] `toUserResponse` does not leak `passwordHash`
-  - [ ] All tests updated and passing (`make test-unit`,
+  - [x] Entity field renamed to `passwordHash` with column `password_hash`
+  - [x] Migration uses `password_hash` column name
+  - [x] `CreateUserData` type uses `passwordHash`
+  - [x] Service layer stores hash as `passwordHash`, reads `user.passwordHash`
+  - [x] `toUserResponse` does not leak `passwordHash`
+  - [x] All tests updated and passing (`make test-unit`,
         `make test-integration`)
-  - [ ] `make typecheck` passes
-  - [ ] `make lint` passes
-- **Status**: pending
+  - [x] `make typecheck` passes
+  - [x] `make lint` passes
+- **Status**: done
