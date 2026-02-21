@@ -158,7 +158,7 @@ describe('createAuthMiddleware', () => {
     });
 
     describe('missing JWT_SECRET', () => {
-        it('should return 401 when JWT_SECRET env var is not set', () => {
+        it('should return 500 when JWT_SECRET env var is not set', () => {
             delete process.env.JWT_SECRET;
             const req = createMockRequest('Bearer valid-token');
             const res = createMockResponse();
@@ -166,8 +166,8 @@ describe('createAuthMiddleware', () => {
 
             middleware(req as Request, res as Response, next);
 
-            expect(res.statusCode).toBe(401);
-            expect(res.body).toEqual({ message: 'Unauthorized' });
+            expect(res.statusCode).toBe(500);
+            expect(res.body).toEqual({ message: 'Internal server error' });
             expect(next).not.toHaveBeenCalled();
             expect(mockVerify).not.toHaveBeenCalled();
         });
