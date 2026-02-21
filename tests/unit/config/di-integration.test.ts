@@ -6,6 +6,7 @@ import { createContainer } from '../../../src/inversify.config';
 import { TYPES } from '../../../src/lib/types';
 import type { AppConfig } from '../../../src/config/schema';
 import { PasswordManagerServiceImpl } from '../../../src/services/password-manager-service';
+import { UserRepositoryImpl } from '../../../src/repositories/user-repository';
 
 const VALID_CONFIG: AppConfig = {
     server: { port: 9000 },
@@ -16,7 +17,14 @@ const VALID_CONFIG: AppConfig = {
     },
 };
 
-const MOCK_DATA_SOURCE = { options: {} } as unknown as DataSource;
+const MOCK_DATA_SOURCE = {
+    options: {},
+    getRepository: jest.fn().mockReturnValue({
+        findOneBy: jest.fn(),
+        create: jest.fn(),
+        save: jest.fn(),
+    }),
+} as unknown as DataSource;
 
 describe('DI container config integration', () => {
     describe('config binding', () => {
@@ -63,6 +71,22 @@ describe('DI container config integration', () => {
             const service = container.get(TYPES.PasswordManagerService);
 
             expect(service).toBeInstanceOf(PasswordManagerServiceImpl);
+        });
+    });
+
+    describe('UserRepository binding', () => {
+        it('should bind TYPES.UserRepository in the container', () => {
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE);
+
+            expect(container.isBound(TYPES.UserRepository)).toBe(true);
+        });
+
+        it('should resolve UserRepository to a UserRepositoryImpl instance', () => {
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE);
+
+            const repository = container.get(TYPES.UserRepository);
+
+            expect(repository).toBeInstanceOf(UserRepositoryImpl);
         });
     });
 
