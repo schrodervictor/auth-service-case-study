@@ -85,4 +85,17 @@ describe('PUT /users/profile', () => {
 
         expect(res.status).toBe(401);
     });
+
+    it('should return 415 when Content-Type is not application/json', async () => {
+        const user = await registerAndLogin();
+
+        const res = await request
+            .put(`${BASE}/users/profile`)
+            .set('Authorization', `Bearer ${user.accessToken}`)
+            .set('Content-Type', 'text/plain')
+            .send('not json');
+
+        expect(res.status).toBe(415);
+        expect(res.body).toEqual({ message: 'Content-Type must be application/json' });
+    });
 });
