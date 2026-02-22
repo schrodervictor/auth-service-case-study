@@ -25,6 +25,11 @@ All routes are prefixed with `/partner-app/api`.
 | GET    | `/users/profile`  | Yes  | Get current user profile (200)        |
 | PUT    | `/users/profile`  | Yes  | Update profile fields (200)           |
 
+Interactive API documentation is available at `/partner-app/api/docs` (Swagger
+UI) when the service is running. The raw spec can be downloaded as
+[JSON](/partner-app/api/docs/spec.json) or
+[YAML](/partner-app/api/docs/spec.yaml).
+
 ## Features
 
 - **JWT Authentication**: Access + refresh token pair with token rotation
