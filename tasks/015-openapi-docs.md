@@ -1,6 +1,6 @@
 # Task: OpenAPI / Swagger Documentation
 
-## Status: pending
+## Status: done
 
 ## Context
 
@@ -197,31 +197,31 @@ returns HTML (status 200 or 301 redirect). This would go in
   that documents all 7 endpoints with request/response schemas, auth
   requirements, rate limiting notes, and error responses.
 - **Acceptance Criteria**:
-  - [ ] `src/openapi/spec.ts` exports an `openApiSpec` object
-  - [ ] `src/openapi/index.ts` barrel re-exports the spec
-  - [ ] Spec covers all 7 endpoints (health-check, register, login, refresh,
-        logout, GET profile, PUT profile)
-  - [ ] Each endpoint documents all possible status codes and response shapes
-  - [ ] Protected endpoints annotated with `bearerAuth` security scheme
-  - [ ] Rate-limited endpoints note the limits in their description
-  - [ ] Components/schemas defined for reusable types (UserResponse,
-        AuthResponse, error shapes)
-  - [ ] Unit tests in `tests/unit/openapi/spec.test.ts` validate spec structure
-  - [ ] `make test-unit` passes
-  - [ ] `make typecheck` passes
-- **Status**: pending
+  - [x]`src/openapi/spec.ts` exports an `openApiSpec` object
+  - [x]`src/openapi/index.ts` barrel re-exports the spec
+  - [x]Spec covers all 7 endpoints (health-check, register, login, refresh,
+    logout, GET profile, PUT profile)
+  - [x]Each endpoint documents all possible status codes and response shapes
+  - [x]Protected endpoints annotated with `bearerAuth` security scheme
+  - [x]Rate-limited endpoints note the limits in their description
+  - [x]Components/schemas defined for reusable types (UserResponse,
+    AuthResponse, error shapes)
+  - [x]Unit tests in `tests/unit/openapi/spec.test.ts` validate spec structure
+  - [x]`make test-unit` passes
+  - [x]`make typecheck` passes
+- **Status**: done
 
 ### Milestone 2: Swagger UI Middleware
 
 - **Description**: Install `swagger-ui-express`, mount it at
   `/partner-app/api/docs`, and verify the endpoint serves the Swagger UI.
 - **Acceptance Criteria**:
-  - [ ] `swagger-ui-express` added to `dependencies` in `package.json`
-  - [ ] `@types/swagger-ui-express` added to `devDependencies` in `package.json`
-  - [ ] Middleware mounted in `app.setConfig()` in `src/index.ts`
-  - [ ] `GET /partner-app/api/docs` serves Swagger UI HTML (verifiable manually
-        or via acceptance test)
-  - [ ] Existing endpoints unaffected — `make test-unit` and
-        `make test-acceptance` still pass
-  - [ ] `make typecheck` passes
-- **Status**: pending
+  - [x]`swagger-ui-express` added to `dependencies` in `package.json`
+  - [x]`@types/swagger-ui-express` added to `devDependencies` in `package.json`
+  - [x]Middleware mounted in `app.setConfig()` in `src/index.ts`
+  - [x]`GET /partner-app/api/docs` serves Swagger UI HTML (verifiable manually
+    or via acceptance test)
+  - [x]Existing endpoints unaffected — `make test-unit` and
+    `make test-acceptance` still pass
+  - [x]`make typecheck` passes
+- **Status**: done
