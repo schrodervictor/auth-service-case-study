@@ -94,6 +94,3 @@ export function createContainer(
 
     return container;
 }
-
-// Keep backward-compatible default export for existing code
-export const diContainer = new Container();

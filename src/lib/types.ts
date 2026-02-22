@@ -4,8 +4,7 @@ export const TYPES = {
 
     Producer: Symbol.for('Producer'),
 
-    // // Services
-    // ExampleService: Symbol.for('ExampleService'),
+    // Services
     UserService: Symbol.for('UserService'),
     PasswordManagerService: Symbol.for('PasswordManagerService'),
 
