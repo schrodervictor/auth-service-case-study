@@ -40,20 +40,22 @@ export const openApiSpec: OpenApiSpec = {
             get: {
                 tags: ['Health'],
                 summary: 'Health check',
-                description: 'Returns the service health status.',
+                description: 'Returns the service health status including dependency availability.',
                 operationId: 'healthCheck',
                 responses: {
                     '200': {
-                        description: 'Service is healthy',
+                        description: 'Service is healthy or degraded (cache unavailable)',
                         content: {
                             'application/json': {
-                                schema: {
-                                    type: 'object',
-                                    properties: {
-                                        message: { type: 'string', example: 'Service is up and running' },
-                                    },
-                                    required: ['message'],
-                                },
+                                schema: { $ref: '#/components/schemas/HealthCheckResponse' },
+                            },
+                        },
+                    },
+                    '503': {
+                        description: 'Service is unhealthy (database unavailable)',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/HealthCheckResponse' },
                             },
                         },
                     },
@@ -482,6 +484,17 @@ export const openApiSpec: OpenApiSpec = {
                     firstName: { type: 'string', example: 'Jane' },
                     lastName: { type: 'string', example: 'Smith' },
                 },
+            },
+            HealthCheckResponse: {
+                type: 'object',
+                properties: {
+                    status: {
+                        type: 'string',
+                        enum: ['healthy', 'degraded', 'unhealthy'],
+                        example: 'healthy',
+                    },
+                },
+                required: ['status'],
             },
             ChangePasswordRequest: {
                 type: 'object',
