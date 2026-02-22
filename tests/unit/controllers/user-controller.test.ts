@@ -23,28 +23,11 @@ import {
     UpdateProfileRequestSchema,
     ChangePasswordRequestSchema,
 } from '../../../src/schemas/user-schemas';
-import { createMockResponse } from '../../helpers/mock-express';
-
-const createMockUserService = (): jest.Mocked<UserService> => ({
-    register: jest.fn(),
-    authenticate: jest.fn(),
-    refreshAccessToken: jest.fn(),
-    logout: jest.fn(),
-    getProfile: jest.fn(),
-    updateProfile: jest.fn(),
-    changePassword: jest.fn(),
-    requestPasswordReset: jest.fn(),
-    validateResetKey: jest.fn(),
-    resetPassword: jest.fn(),
-});
-
-const createMockRequest = (
-    body?: Record<string, unknown>,
-    user?: { id: string },
-): Partial<Request> => ({
-    body,
-    ...(user ? { user } : {}),
-});
+import {
+    createMockResponse,
+    createMockRequest,
+    createMockUserService,
+} from '../../helpers/mock-express';
 
 const sampleUser: UserResponseDto = {
     id: 'uuid-1',
