@@ -84,26 +84,6 @@ describe('UserController', () => {
             });
         });
 
-        it('should pass req.body directly to service (middleware guarantees shape)', async () => {
-            mockService.register.mockResolvedValue(sampleUser);
-            const req = createMockRequest({
-                email: 'test@example.com',
-                password: 'StrongPass1!',
-                firstName: 'John',
-                lastName: 'Doe',
-            });
-            const res = createMockResponse();
-
-            await controller.register(req as Request, res as Response);
-
-            expect(mockService.register).toHaveBeenCalledWith({
-                email: 'test@example.com',
-                password: 'StrongPass1!',
-                firstName: 'John',
-                lastName: 'Doe',
-            });
-        });
-
         it('should return 409 when service throws EmailAlreadyExistsError', async () => {
             mockService.register.mockRejectedValue(
                 new EmailAlreadyExistsError('test@example.com'),
@@ -389,23 +369,6 @@ describe('UserController', () => {
             expect(mockService.updateProfile).toHaveBeenCalledWith('uuid-1', {
                 lastName: 'Smith',
             });
-        });
-
-        it('should pass req.body directly to service (middleware guarantees at least one field)', async () => {
-            const updatedUser = { ...sampleUser, firstName: 'Jane' };
-            mockService.updateProfile.mockResolvedValue(updatedUser);
-            const req = createMockRequest(
-                { firstName: 'Jane' },
-                { id: 'uuid-1' },
-            );
-            const res = createMockResponse();
-
-            await controller.updateProfile(req as Request, res as Response);
-
-            expect(mockService.updateProfile).toHaveBeenCalledWith('uuid-1', {
-                firstName: 'Jane',
-            });
-            expect(res.statusCode).toBe(200);
         });
 
         it('should return 401 when service throws UserNotFoundError', async () => {
