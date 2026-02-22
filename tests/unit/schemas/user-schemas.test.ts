@@ -6,6 +6,11 @@ import {
     ChangePasswordRequestSchema,
 } from '../../../src/schemas/user-schemas';
 
+/** Minimal shape of a Zod safeParse failure result, for casting. */
+interface ParseFailure {
+    error: { issues: Array<{ path: Array<string | number>; message: string }> };
+}
+
 /** Helper to extract field paths from Zod error issues. */
 const getIssuePaths = (issues: Array<{ path: Array<string | number> }>): Array<string | number> =>
     issues.map((i) => i.path[0]);
@@ -34,7 +39,7 @@ describe('RegisterRequestSchema', () => {
         const { email: _email, ...input } = validInput;
         const result = RegisterRequestSchema.safeParse(input);
         expect(result.success).toBe(false);
-        expect(hasIssueForField((result as { error: { issues: [] } }).error.issues, 'email')).toBe(
+        expect(hasIssueForField((result as unknown as ParseFailure).error.issues, 'email')).toBe(
             true,
         );
     });
@@ -44,7 +49,7 @@ describe('RegisterRequestSchema', () => {
         const result = RegisterRequestSchema.safeParse(input);
         expect(result.success).toBe(false);
         expect(
-            hasIssueForField((result as { error: { issues: [] } }).error.issues, 'password'),
+            hasIssueForField((result as unknown as ParseFailure).error.issues, 'password'),
         ).toBe(true);
     });
 
@@ -53,7 +58,7 @@ describe('RegisterRequestSchema', () => {
         const result = RegisterRequestSchema.safeParse(input);
         expect(result.success).toBe(false);
         expect(
-            hasIssueForField((result as { error: { issues: [] } }).error.issues, 'firstName'),
+            hasIssueForField((result as unknown as ParseFailure).error.issues, 'firstName'),
         ).toBe(true);
     });
 
@@ -62,7 +67,7 @@ describe('RegisterRequestSchema', () => {
         const result = RegisterRequestSchema.safeParse(input);
         expect(result.success).toBe(false);
         expect(
-            hasIssueForField((result as { error: { issues: [] } }).error.issues, 'lastName'),
+            hasIssueForField((result as unknown as ParseFailure).error.issues, 'lastName'),
         ).toBe(true);
     });
 
@@ -124,7 +129,7 @@ describe('RegisterRequestSchema', () => {
     it('should report all missing fields at once', () => {
         const result = RegisterRequestSchema.safeParse({});
         expect(result.success).toBe(false);
-        const paths = getIssuePaths((result as { error: { issues: [] } }).error.issues);
+        const paths = getIssuePaths((result as unknown as ParseFailure).error.issues);
         expect(paths).toContain('email');
         expect(paths).toContain('password');
         expect(paths).toContain('firstName');
@@ -184,7 +189,7 @@ describe('RefreshRequestSchema', () => {
         const result = RefreshRequestSchema.safeParse({});
         expect(result.success).toBe(false);
         expect(
-            hasIssueForField((result as { error: { issues: [] } }).error.issues, 'refreshToken'),
+            hasIssueForField((result as unknown as ParseFailure).error.issues, 'refreshToken'),
         ).toBe(true);
     });
 
@@ -228,9 +233,9 @@ describe('UpdateProfileRequestSchema', () => {
     it('should reject when both fields are missing (refine fails)', () => {
         const result = UpdateProfileRequestSchema.safeParse({});
         expect(result.success).toBe(false);
-        const messages = (
-            result as { error: { issues: Array<{ message: string }> } }
-        ).error.issues.map((i: { message: string }) => i.message);
+        const messages = (result as unknown as ParseFailure).error.issues.map(
+            (i) => i.message,
+        );
         expect(messages).toContain('At least one field (firstName or lastName) is required');
     });
 
@@ -294,7 +299,7 @@ describe('ChangePasswordRequestSchema', () => {
         expect(result.success).toBe(false);
         expect(
             hasIssueForField(
-                (result as { error: { issues: [] } }).error.issues,
+                (result as unknown as ParseFailure).error.issues,
                 'currentPassword',
             ),
         ).toBe(true);
@@ -306,7 +311,7 @@ describe('ChangePasswordRequestSchema', () => {
         });
         expect(result.success).toBe(false);
         expect(
-            hasIssueForField((result as { error: { issues: [] } }).error.issues, 'newPassword'),
+            hasIssueForField((result as unknown as ParseFailure).error.issues, 'newPassword'),
         ).toBe(true);
     });
 
@@ -329,7 +334,7 @@ describe('ChangePasswordRequestSchema', () => {
     it('should report both missing fields at once', () => {
         const result = ChangePasswordRequestSchema.safeParse({});
         expect(result.success).toBe(false);
-        const paths = getIssuePaths((result as { error: { issues: [] } }).error.issues);
+        const paths = getIssuePaths((result as unknown as ParseFailure).error.issues);
         expect(paths).toContain('currentPassword');
         expect(paths).toContain('newPassword');
     });
