@@ -63,3 +63,30 @@ export const ChangePasswordRequestSchema = z.object({
 });
 
 export type ChangePasswordRequest = z.infer<typeof ChangePasswordRequestSchema>;
+
+export const ResetKeyRequestSchema = z.object({
+    email: z
+        .string({ error: 'Email is required' })
+        .min(1, 'Email is required'),
+});
+
+export type ResetKeyRequest = z.infer<typeof ResetKeyRequestSchema>;
+
+export const ValidateResetKeyRequestSchema = z.object({
+    resetKey: z
+        .string({ error: 'Reset key is required' })
+        .min(1, 'Reset key is required'),
+});
+
+export type ValidateResetKeyRequest = z.infer<typeof ValidateResetKeyRequestSchema>;
+
+export const ResetPasswordRequestSchema = z.object({
+    resetKey: z
+        .string({ error: 'Reset key is required' })
+        .min(1, 'Reset key is required'),
+    newPassword: z
+        .string({ error: 'New password is required' })
+        .min(1, 'New password is required'),
+});
+
+export type ResetPasswordRequest = z.infer<typeof ResetPasswordRequestSchema>;

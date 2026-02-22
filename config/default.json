@@ -13,6 +13,9 @@
         },
         "refreshToken": {
             "expiresIn": "7d"
+        },
+        "resetKey": {
+            "expiresIn": "15m"
         }
     },
     "redis": {
@@ -26,6 +29,18 @@
         },
         "refresh": {
             "maxAttempts": 10,
+            "windowSeconds": 900
+        },
+        "resetKey": {
+            "maxAttempts": 3,
+            "windowSeconds": 900
+        },
+        "validateResetKey": {
+            "maxAttempts": 10,
+            "windowSeconds": 900
+        },
+        "resetPassword": {
+            "maxAttempts": 5,
             "windowSeconds": 900
         }
     },

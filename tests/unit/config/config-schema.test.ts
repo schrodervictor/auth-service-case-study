@@ -222,6 +222,9 @@ describe('configSchema — rateLimit section', () => {
             expect(result.rateLimit).toEqual({
                 login: { maxAttempts: 5, windowSeconds: 900 },
                 refresh: { maxAttempts: 10, windowSeconds: 900 },
+                resetKey: { maxAttempts: 3, windowSeconds: 900 },
+                validateResetKey: { maxAttempts: 10, windowSeconds: 900 },
+                resetPassword: { maxAttempts: 5, windowSeconds: 900 },
             });
         });
 
