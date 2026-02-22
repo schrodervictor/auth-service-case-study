@@ -11,21 +11,19 @@ export interface RateLimitConfig {
     windowSeconds: number;
 }
 
-interface RedisLike {
+export interface RedisLike {
     incr(key: string): Promise<number>;
     expire(key: string, seconds: number): Promise<number>;
     ttl(key: string): Promise<number>;
 }
 
 export function createRateLimitMiddleware(
-    redisClient: RedisLike | null | unknown,
+    redisClient: RedisLike | null,
     endpointKey: string,
     config: RateLimitConfig,
 ): RateLimitMiddlewareFunction {
-    const client = redisClient as RedisLike | null;
-
     return ((req: Request, res: Response, next: NextFunction): void | Promise<void> => {
-        if (client == null) {
+        if (redisClient == null) {
             next();
             return;
         }
@@ -33,15 +31,15 @@ export function createRateLimitMiddleware(
         const ip = req.ip ?? 'unknown';
         const key = `rateLimit:${endpointKey}:${ip}`;
 
-        return client
+        return redisClient
             .incr(key)
             .then(async (count) => {
                 if (count === 1) {
-                    await client.expire(key, config.windowSeconds);
+                    await redisClient.expire(key, config.windowSeconds);
                 }
 
                 if (count > config.maxAttempts) {
-                    const ttl = await client.ttl(key);
+                    const ttl = await redisClient.ttl(key);
                     const retryAfter = ttl > 0 ? ttl : config.windowSeconds;
                     res.set('Retry-After', String(retryAfter));
                     res.status(429).json({
