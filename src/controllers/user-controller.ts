@@ -115,6 +115,27 @@ export class UserController extends BaseController {
         }
     }
 
+    @httpPut('/password', TYPES.AuthMiddleware, TYPES.JsonContentType)
+    async changePassword(req: Request, res: Response): Promise<void> {
+        try {
+            const userId = (req as AuthenticatedRequest).user.id;
+            const { currentPassword, newPassword } = req.body ?? {};
+
+            await this.userService.changePassword(userId, {
+                currentPassword,
+                newPassword,
+            });
+
+            res.status(204).send();
+        } catch (error) {
+            if (error instanceof UserNotFoundError) {
+                res.status(401).json({ message: 'Unauthorized' });
+                return;
+            }
+            this.handleError(res, error);
+        }
+    }
+
     private handleError(res: Response, error: unknown): void {
         if (error instanceof ValidationError) {
             res.status(error.statusCode).json({ message: error.message, errors: error.errors });
