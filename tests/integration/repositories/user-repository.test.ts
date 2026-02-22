@@ -35,7 +35,7 @@ const MIGRATION_UP = `
     );
 `;
 
-const MIGRATION_DOWN = `DROP TABLE IF EXISTS "users";`;
+const MIGRATION_DOWN = `DROP TABLE IF EXISTS "users" CASCADE;`;
 
 const sampleUser: CreateUserData = {
     email: 'integration@example.com',
