@@ -10,7 +10,7 @@ import { PasswordManagerServiceImpl } from '../../../src/services/password-manag
 import { UserRepositoryImpl } from '../../../src/repositories/user-repository';
 import { RefreshTokenRepositoryImpl } from '../../../src/repositories/refresh-token-repository';
 import { createAuthMiddleware } from '../../../src/middleware/auth-middleware';
-import { createRateLimitMiddleware } from '../../../src/middleware/rate-limit-middleware';
+import { createRateLimitMiddleware, type RedisLike } from '../../../src/middleware/rate-limit-middleware';
 
 jest.mock('../../../src/middleware/auth-middleware', () => ({
     createAuthMiddleware: jest.fn().mockReturnValue(jest.fn()),
@@ -50,13 +50,11 @@ const MOCK_DATA_SOURCE = {
     }),
 } as unknown as DataSource;
 
-const MOCK_REDIS_CLIENT = {
+const MOCK_REDIS_CLIENT: RedisLike = {
     incr: jest.fn(),
     expire: jest.fn(),
     ttl: jest.fn(),
-    ping: jest.fn(),
-    quit: jest.fn(),
-} as unknown;
+};
 
 describe('DI container config integration', () => {
     describe('config binding', () => {
