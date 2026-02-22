@@ -67,7 +67,7 @@ describe('PUT /users/profile', () => {
         expect(res.body.firstName).toBe(user.firstName);
     });
 
-    it('should return 400 when no fields are provided', async () => {
+    it('should return 422 when no fields are provided', async () => {
         const user = await registerAndLogin();
 
         const res = await request
@@ -75,7 +75,49 @@ describe('PUT /users/profile', () => {
             .set('Authorization', `Bearer ${user.accessToken}`)
             .send({});
 
-        expect(res.status).toBe(400);
+        expect(res.status).toBe(422);
+        expect(res.body).toHaveProperty('message', 'Validation failed');
+        expect(res.body).toHaveProperty('errors');
+        expect(res.body.errors).toHaveProperty('_');
+    });
+
+    it('should strip extra fields and not persist them', async () => {
+        const user = await registerAndLogin();
+
+        const res = await request
+            .put(`${BASE}/users/profile`)
+            .set('Authorization', `Bearer ${user.accessToken}`)
+            .send({ firstName: 'Updated', admin: true, role: 'superuser' });
+
+        expect(res.status).toBe(200);
+        expect(res.body.firstName).toBe('Updated');
+        expect(res.body).not.toHaveProperty('admin');
+        expect(res.body).not.toHaveProperty('role');
+    });
+
+    it('should return 422 when firstName is empty string', async () => {
+        const user = await registerAndLogin();
+
+        const res = await request
+            .put(`${BASE}/users/profile`)
+            .set('Authorization', `Bearer ${user.accessToken}`)
+            .send({ firstName: '' });
+
+        expect(res.status).toBe(422);
+        expect(res.body).toHaveProperty('message', 'Validation failed');
+        expect(res.body).toHaveProperty('errors');
+    });
+
+    it('should return 422 when lastName is empty string', async () => {
+        const user = await registerAndLogin();
+
+        const res = await request
+            .put(`${BASE}/users/profile`)
+            .set('Authorization', `Bearer ${user.accessToken}`)
+            .send({ lastName: '' });
+
+        expect(res.status).toBe(422);
+        expect(res.body).toHaveProperty('message', 'Validation failed');
     });
 
     it('should return 401 when no Authorization header is provided', async () => {
