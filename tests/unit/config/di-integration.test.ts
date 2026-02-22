@@ -6,6 +6,7 @@ import { createContainer } from '../../../src/inversify.config';
 import { TYPES } from '../../../src/lib/types';
 import type { AppConfig } from '../../../src/config/schema';
 import type { AppSecrets } from '../../../src/config/secrets-schema';
+import { makeTestConfig } from '../../helpers/test-config';
 import { PasswordManagerServiceImpl } from '../../../src/services/password-manager-service';
 import { UserRepositoryImpl } from '../../../src/repositories/user-repository';
 import { RefreshTokenRepositoryImpl } from '../../../src/repositories/refresh-token-repository';
@@ -27,24 +28,7 @@ const MOCK_SECRETS: AppSecrets = {
     databasePassword: 'testpass',
 };
 
-const VALID_CONFIG: AppConfig = {
-    server: { port: 9000 },
-    database: { host: 'localhost', port: 5432, name: 'testdb' },
-    auth: {
-        accessToken: { expiresIn: '15m' },
-        refreshToken: { expiresIn: '7d' },
-        resetKey: { expiresIn: '15m' },
-    },
-    redis: { host: 'redis', port: 6379 },
-    rateLimit: {
-        login: { maxAttempts: 5, windowSeconds: 900 },
-        refresh: { maxAttempts: 10, windowSeconds: 900 },
-        resetKey: { maxAttempts: 3, windowSeconds: 900 },
-        validateResetKey: { maxAttempts: 10, windowSeconds: 900 },
-        resetPassword: { maxAttempts: 5, windowSeconds: 900 },
-    },
-    eventbus: { mode: 'emulated' as const },
-};
+const VALID_CONFIG = makeTestConfig();
 
 const MOCK_DATA_SOURCE = {
     options: {},

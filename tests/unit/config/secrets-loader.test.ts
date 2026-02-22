@@ -2,6 +2,7 @@ import fs from 'node:fs';
 
 import type { AppConfig } from '../../../src/config/schema';
 import { loadSecrets } from '../../../src/config/secrets-loader';
+import { makeTestConfig } from '../../helpers/test-config';
 
 jest.mock('node:fs');
 jest.mock('@aws-sdk/client-ssm');
@@ -14,26 +15,9 @@ const VALID_SECRETS = {
     databasePassword: 'p@ssw0rd!',
 };
 
-const BASE_CONFIG: AppConfig = {
-    server: { port: 9000 },
-    database: { host: 'localhost', port: 5432, name: 'testdb' },
-    auth: {
-        accessToken: { expiresIn: '15m' },
-        refreshToken: { expiresIn: '7d' },
-        resetKey: { expiresIn: '15m' },
-    },
-    redis: { host: 'redis', port: 6379 },
-    rateLimit: {
-        login: { maxAttempts: 5, windowSeconds: 900 },
-        refresh: { maxAttempts: 10, windowSeconds: 900 },
-        resetKey: { maxAttempts: 3, windowSeconds: 900 },
-        validateResetKey: { maxAttempts: 10, windowSeconds: 900 },
-        resetPassword: { maxAttempts: 5, windowSeconds: 900 },
-    },
-    eventbus: { mode: 'emulated' as const },
-};
+const BASE_CONFIG = makeTestConfig();
 
-function configWith(overrides: Partial<AppConfig>): AppConfig {
+function configWith(overrides: Record<string, unknown>) {
     return { ...BASE_CONFIG, ...overrides };
 }
 

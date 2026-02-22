@@ -5,8 +5,8 @@ import type { UserRepository } from '../../../src/repositories/user-repository';
 import type { RefreshTokenRepository } from '../../../src/repositories/refresh-token-repository';
 import type { PasswordResetKeyRepository } from '../../../src/repositories/password-reset-key-repository';
 import type { PasswordManagerService } from '../../../src/services/password-manager-service';
-import type { AppConfig } from '../../../src/config/schema';
 import type { AppSecrets } from '../../../src/config/secrets-schema';
+import { makeTestConfig } from '../../helpers/test-config';
 import { UserServiceImpl } from '../../../src/services/user-service';
 import { User } from '../../../src/entities/user';
 import { PasswordResetKey } from '../../../src/entities/password-reset-key';
@@ -49,24 +49,7 @@ const createMockProducer = (): jest.Mocked<Pick<Producer, 'publish'>> => ({
     publish: jest.fn(),
 });
 
-const mockConfig: AppConfig = {
-    server: { port: 9000 },
-    database: { host: 'localhost', port: 5432, name: 'test' },
-    auth: {
-        accessToken: { expiresIn: '15m' },
-        refreshToken: { expiresIn: '7d' },
-        resetKey: { expiresIn: '15m' },
-    },
-    redis: { host: 'redis', port: 6379 },
-    rateLimit: {
-        login: { maxAttempts: 5, windowSeconds: 900 },
-        refresh: { maxAttempts: 10, windowSeconds: 900 },
-        resetKey: { maxAttempts: 3, windowSeconds: 900 },
-        validateResetKey: { maxAttempts: 10, windowSeconds: 900 },
-        resetPassword: { maxAttempts: 5, windowSeconds: 900 },
-    },
-    eventbus: { mode: 'emulated' as const },
-};
+const mockConfig = makeTestConfig();
 
 const mockSecrets: AppSecrets = {
     jwtSecret: 'test-jwt-secret',

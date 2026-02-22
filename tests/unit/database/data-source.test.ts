@@ -5,31 +5,7 @@ import {
     createDataSource,
     DatabaseCredentials,
 } from '../../../src/database/data-source';
-import { AppConfig } from '../../../src/config/schema';
-
-const makeConfig = (overrides?: Partial<AppConfig['database']>): AppConfig => ({
-    server: { port: 9000 },
-    database: {
-        host: 'test-host',
-        port: 5432,
-        name: 'test_db',
-        ...overrides,
-    },
-    auth: {
-        accessToken: { expiresIn: '15m' },
-        refreshToken: { expiresIn: '7d' },
-        resetKey: { expiresIn: '15m' },
-    },
-    redis: { host: 'redis', port: 6379 },
-    rateLimit: {
-        login: { maxAttempts: 5, windowSeconds: 900 },
-        refresh: { maxAttempts: 10, windowSeconds: 900 },
-        resetKey: { maxAttempts: 3, windowSeconds: 900 },
-        validateResetKey: { maxAttempts: 10, windowSeconds: 900 },
-        resetPassword: { maxAttempts: 5, windowSeconds: 900 },
-    },
-    eventbus: { mode: 'emulated' as const },
-});
+import { makeTestConfig } from '../../helpers/test-config';
 
 const makeCredentials = (
     overrides?: Partial<DatabaseCredentials>,
@@ -41,15 +17,13 @@ const makeCredentials = (
 
 describe('createDataSource', () => {
     it('should return a DataSource instance', () => {
-        const ds = createDataSource(makeConfig(), makeCredentials());
+        const ds = createDataSource(makeTestConfig(), makeCredentials());
         expect(ds).toBeInstanceOf(DataSource);
     });
 
     it('should use host, port, and database from config', () => {
-        const config = makeConfig({
-            host: 'my-host',
-            port: 5433,
-            name: 'my_db',
+        const config = makeTestConfig({
+            database: { host: 'my-host', port: 5433, name: 'my_db' },
         });
         const ds = createDataSource(config, makeCredentials());
         const opts = ds.options as PostgresConnectionOptions;
@@ -64,7 +38,7 @@ describe('createDataSource', () => {
             username: 'admin',
             password: 's3cret',
         });
-        const ds = createDataSource(makeConfig(), creds);
+        const ds = createDataSource(makeTestConfig(), creds);
         const opts = ds.options as PostgresConnectionOptions;
 
         expect(opts.username).toBe('admin');
@@ -72,14 +46,14 @@ describe('createDataSource', () => {
     });
 
     it('should set synchronize to false', () => {
-        const ds = createDataSource(makeConfig(), makeCredentials());
+        const ds = createDataSource(makeTestConfig(), makeCredentials());
         const opts = ds.options as PostgresConnectionOptions;
 
         expect(opts.synchronize).toBe(false);
     });
 
     it('should include User in entities', () => {
-        const ds = createDataSource(makeConfig(), makeCredentials());
+        const ds = createDataSource(makeTestConfig(), makeCredentials());
         const opts = ds.options as PostgresConnectionOptions;
         const entities = opts.entities as unknown[];
 

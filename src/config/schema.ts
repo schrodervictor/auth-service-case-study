@@ -1,36 +1,36 @@
 import { z } from 'zod';
 
 const serverSchema = z.object({
-    port: z.number().default(9000),
+    port: z.number(),
 });
 
 const databaseSchema = z.object({
     host: z.string(),
-    port: z.number().default(5432),
+    port: z.number(),
     name: z.string(),
 });
 
 const accessTokenSchema = z.object({
-    expiresIn: z.string().default('15m'),
+    expiresIn: z.string(),
 });
 
 const refreshTokenSchema = z.object({
-    expiresIn: z.string().default('7d'),
+    expiresIn: z.string(),
 });
 
 const resetKeySchema = z.object({
-    expiresIn: z.string().default('15m'),
+    expiresIn: z.string(),
 });
 
 const authSchema = z.object({
-    accessToken: accessTokenSchema.default({ expiresIn: '15m' }),
-    refreshToken: refreshTokenSchema.default({ expiresIn: '7d' }),
-    resetKey: resetKeySchema.default({ expiresIn: '15m' }),
+    accessToken: accessTokenSchema,
+    refreshToken: refreshTokenSchema,
+    resetKey: resetKeySchema,
 });
 
 const redisSchema = z.object({
-    host: z.string().default('redis'),
-    port: z.number().default(6379),
+    host: z.string(),
+    port: z.number(),
     password: z.string().optional(),
 });
 
@@ -40,26 +40,11 @@ const rateLimitEndpointSchema = z.object({
 });
 
 const rateLimitSchema = z.object({
-    login: rateLimitEndpointSchema.default({
-        maxAttempts: 5,
-        windowSeconds: 900,
-    }),
-    refresh: rateLimitEndpointSchema.default({
-        maxAttempts: 10,
-        windowSeconds: 900,
-    }),
-    resetKey: rateLimitEndpointSchema.default({
-        maxAttempts: 3,
-        windowSeconds: 900,
-    }),
-    validateResetKey: rateLimitEndpointSchema.default({
-        maxAttempts: 10,
-        windowSeconds: 900,
-    }),
-    resetPassword: rateLimitEndpointSchema.default({
-        maxAttempts: 5,
-        windowSeconds: 900,
-    }),
+    login: rateLimitEndpointSchema,
+    refresh: rateLimitEndpointSchema,
+    resetKey: rateLimitEndpointSchema,
+    validateResetKey: rateLimitEndpointSchema,
+    resetPassword: rateLimitEndpointSchema,
 });
 
 const ssmParametersSchema = z.object({
@@ -80,29 +65,19 @@ const emulatedEventbusSchema = z.object({
 
 const realEventbusSchema = z.object({
     mode: z.literal('real'),
-    kafka: z.record(z.string(), z.unknown()).default({}),
+    kafka: z.record(z.string(), z.unknown()),
 });
 
 const eventbusSchema = z.union([emulatedEventbusSchema, realEventbusSchema]);
 
 export const configSchema = z.object({
-    server: serverSchema.default({ port: 9000 }),
+    server: serverSchema,
     database: databaseSchema,
-    auth: authSchema.default({
-        accessToken: { expiresIn: '15m' },
-        refreshToken: { expiresIn: '7d' },
-        resetKey: { expiresIn: '15m' },
-    }),
-    redis: redisSchema.default({ host: 'redis', port: 6379 }),
-    rateLimit: rateLimitSchema.default({
-        login: { maxAttempts: 5, windowSeconds: 900 },
-        refresh: { maxAttempts: 10, windowSeconds: 900 },
-        resetKey: { maxAttempts: 3, windowSeconds: 900 },
-        validateResetKey: { maxAttempts: 10, windowSeconds: 900 },
-        resetPassword: { maxAttempts: 5, windowSeconds: 900 },
-    }),
+    auth: authSchema,
+    redis: redisSchema,
+    rateLimit: rateLimitSchema,
     ssm: ssmSchema.optional(),
-    eventbus: eventbusSchema.default({ mode: 'real', kafka: {} }),
+    eventbus: eventbusSchema,
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
