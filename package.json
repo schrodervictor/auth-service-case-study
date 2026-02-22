@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "dev": "tsx watch src/index.ts",
     "build": "rimraf ./dist && tsc",
-    "start": "node ./dist/src/index.js",
+    "start": "node ./dist/index.js",
     "test": "jest -c ./jest.config.json --testPathPatterns='tests/(unit|integration)'",
     "test:unit": "jest -c ./jest.config.json --testPathPatterns=tests/unit",
     "test:integration": "jest -c ./jest.config.json --testPathPatterns=tests/integration --runInBand",
