@@ -1,29 +1,12 @@
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response } from 'express';
 import { z } from 'zod';
 
 import { validate } from '../../../src/middleware/validate-middleware';
+import { createMockResponse, createMockNext } from '../../helpers/mock-express';
 
 const createMockRequest = (body: unknown): Partial<Request> => ({
     body,
 });
-
-const createMockResponse = (): Partial<Response> & {
-    statusCode?: number;
-    body?: unknown;
-} => {
-    const res: Partial<Response> & { statusCode?: number; body?: unknown } = {};
-    res.status = jest.fn().mockImplementation((code: number) => {
-        res.statusCode = code;
-        return res;
-    });
-    res.json = jest.fn().mockImplementation((data: unknown) => {
-        res.body = data;
-        return res;
-    });
-    return res;
-};
-
-const createMockNext = (): jest.Mock<NextFunction> => jest.fn();
 
 const testSchema = z.object({
     name: z.string({ error: 'Name is required' }).min(1, 'Name is required'),

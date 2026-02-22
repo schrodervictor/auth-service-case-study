@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import type { Request, Response, NextFunction } from 'express';
+import type { Request } from 'express';
 import jwt from 'jsonwebtoken';
 
 import {
@@ -7,6 +7,7 @@ import {
     type AuthenticatedRequest,
     type AuthMiddlewareFunction,
 } from '../../../src/middleware/auth-middleware';
+import { createMockResponse, createMockNext } from '../../helpers/mock-express';
 
 jest.mock('jsonwebtoken');
 const mockVerify = jwt.verify as jest.Mock;
@@ -16,24 +17,6 @@ const JWT_SECRET = 'test-jwt-secret';
 const createMockRequest = (authHeader?: string): Partial<Request> => ({
     headers: authHeader !== undefined ? { authorization: authHeader } : {},
 });
-
-const createMockResponse = (): Partial<Response> & {
-    statusCode?: number;
-    body?: unknown;
-} => {
-    const res: Partial<Response> & { statusCode?: number; body?: unknown } = {};
-    res.status = jest.fn().mockImplementation((code: number) => {
-        res.statusCode = code;
-        return res;
-    });
-    res.json = jest.fn().mockImplementation((data: unknown) => {
-        res.body = data;
-        return res;
-    });
-    return res;
-};
-
-const createMockNext = (): jest.Mock<NextFunction> => jest.fn();
 
 describe('createAuthMiddleware', () => {
     let middleware: AuthMiddlewareFunction;
@@ -56,7 +39,7 @@ describe('createAuthMiddleware', () => {
             const res = createMockResponse();
             const next = createMockNext();
 
-            middleware(req as Request, res as Response, next);
+            middleware(req as Request, res, next);
 
             expect(mockVerify).toHaveBeenCalledWith('valid-token', JWT_SECRET);
             expect((req as AuthenticatedRequest).user).toEqual({
@@ -73,7 +56,7 @@ describe('createAuthMiddleware', () => {
             const res = createMockResponse();
             const next = createMockNext();
 
-            middleware(req as Request, res as Response, next);
+            middleware(req as Request, res, next);
 
             expect(res.statusCode).toBe(401);
             expect(res.body).toEqual({ message: 'Unauthorized' });
@@ -85,7 +68,7 @@ describe('createAuthMiddleware', () => {
             const res = createMockResponse();
             const next = createMockNext();
 
-            middleware(req as Request, res as Response, next);
+            middleware(req as Request, res, next);
 
             expect(res.statusCode).toBe(401);
             expect(res.body).toEqual({ message: 'Unauthorized' });
@@ -97,7 +80,7 @@ describe('createAuthMiddleware', () => {
             const res = createMockResponse();
             const next = createMockNext();
 
-            middleware(req as Request, res as Response, next);
+            middleware(req as Request, res, next);
 
             expect(res.statusCode).toBe(401);
             expect(res.body).toEqual({ message: 'Unauthorized' });
@@ -109,7 +92,7 @@ describe('createAuthMiddleware', () => {
             const res = createMockResponse();
             const next = createMockNext();
 
-            middleware(req as Request, res as Response, next);
+            middleware(req as Request, res, next);
 
             expect(res.statusCode).toBe(401);
             expect(res.body).toEqual({ message: 'Unauthorized' });
@@ -128,7 +111,7 @@ describe('createAuthMiddleware', () => {
             const res = createMockResponse();
             const next = createMockNext();
 
-            middleware(req as Request, res as Response, next);
+            middleware(req as Request, res, next);
 
             expect(res.statusCode).toBe(401);
             expect(res.body).toEqual({ message: 'Unauthorized' });
@@ -145,7 +128,7 @@ describe('createAuthMiddleware', () => {
             const res = createMockResponse();
             const next = createMockNext();
 
-            middleware(req as Request, res as Response, next);
+            middleware(req as Request, res, next);
 
             expect(res.statusCode).toBe(401);
             expect(res.body).toEqual({ message: 'Unauthorized' });
@@ -160,7 +143,7 @@ describe('createAuthMiddleware', () => {
             const res = createMockResponse();
             const next = createMockNext();
 
-            middleware(req as Request, res as Response, next);
+            middleware(req as Request, res, next);
 
             expect(res.statusCode).toBe(401);
             expect(res.body).toEqual({ message: 'Unauthorized' });
@@ -181,7 +164,7 @@ describe('createAuthMiddleware', () => {
                 const res = createMockResponse();
                 const next = createMockNext();
 
-                middleware(req as Request, res as Response, next);
+                middleware(req as Request, res, next);
 
                 expect(res.statusCode).toBe(401);
                 expect(res.body).toEqual({ message: 'Unauthorized' });
@@ -198,7 +181,7 @@ describe('createAuthMiddleware', () => {
             const res = createMockResponse();
             const next = createMockNext();
 
-            middleware(req as Request, res as Response, next);
+            middleware(req as Request, res, next);
 
             expect(next).not.toHaveBeenCalled();
         });

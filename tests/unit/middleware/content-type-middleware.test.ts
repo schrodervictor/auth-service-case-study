@@ -1,6 +1,7 @@
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response } from 'express';
 
 import { requireJsonContentType } from '../../../src/middleware/content-type-middleware';
+import { createMockResponse, createMockNext } from '../../helpers/mock-express';
 
 const createMockRequest = (isJson: string | false): Partial<Request> => ({
     is: jest.fn().mockImplementation((type: string) => {
@@ -8,24 +9,6 @@ const createMockRequest = (isJson: string | false): Partial<Request> => ({
         return false;
     }),
 });
-
-const createMockResponse = (): Partial<Response> & {
-    statusCode?: number;
-    body?: unknown;
-} => {
-    const res: Partial<Response> & { statusCode?: number; body?: unknown } = {};
-    res.status = jest.fn().mockImplementation((code: number) => {
-        res.statusCode = code;
-        return res;
-    });
-    res.json = jest.fn().mockImplementation((data: unknown) => {
-        res.body = data;
-        return res;
-    });
-    return res;
-};
-
-const createMockNext = (): jest.Mock<NextFunction> => jest.fn();
 
 describe('requireJsonContentType', () => {
     it('should return 415 when Content-Type is not JSON', () => {

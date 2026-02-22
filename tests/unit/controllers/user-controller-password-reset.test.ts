@@ -12,6 +12,7 @@ import {
     ValidateResetKeyRequestSchema,
     ResetPasswordRequestSchema,
 } from '../../../src/schemas/user-schemas';
+import { createMockResponse } from '../../helpers/mock-express';
 
 const createMockUserService = (): jest.Mocked<UserService> => ({
     register: jest.fn(),
@@ -33,24 +34,6 @@ const createMockRequest = (
     body,
     ...(user ? { user } : {}),
 });
-
-const createMockResponse = (): Partial<Response> & {
-    statusCode?: number;
-    body?: unknown;
-} => {
-    const res: Partial<Response> & { statusCode?: number; body?: unknown } = {};
-    res.status = jest.fn().mockImplementation((code: number) => {
-        res.statusCode = code;
-        return res;
-    });
-    res.json = jest.fn().mockImplementation((data: unknown) => {
-        res.body = data;
-        return res;
-    });
-    res.send = jest.fn().mockImplementation(() => res);
-    res.end = jest.fn().mockImplementation(() => res);
-    return res;
-};
 
 describe('UserController — Password Reset', () => {
     let mockService: jest.Mocked<UserService>;
