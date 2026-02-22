@@ -110,4 +110,43 @@ describe('POST /users/register', () => {
 
         expect(res.status).toBe(422);
     });
+
+    it('should strip extra fields and not include them in the response', async () => {
+        const data = { ...validUserData(), admin: true, role: 'superuser' };
+        const res = await request.post(`${BASE}/users/register`).send(data);
+
+        expect(res.status).toBe(201);
+        expect(res.body).not.toHaveProperty('admin');
+        expect(res.body).not.toHaveProperty('role');
+    });
+
+    it('should return 422 when email is an empty string', async () => {
+        const data = validUserData({ email: '' });
+        const res = await request.post(`${BASE}/users/register`).send(data);
+
+        expect(res.status).toBe(422);
+        expect(res.body).toHaveProperty('message', 'Validation failed');
+        expect(res.body.errors).toHaveProperty('email');
+    });
+
+    it('should return 422 when firstName is an empty string', async () => {
+        const data = validUserData({ firstName: '' });
+        const res = await request.post(`${BASE}/users/register`).send(data);
+
+        expect(res.status).toBe(422);
+        expect(res.body.errors).toHaveProperty('firstName');
+    });
+
+    it('should return 422 when a number is sent as email (type error)', async () => {
+        const res = await request.post(`${BASE}/users/register`).send({
+            email: 12345,
+            password: 'StrongPass1',
+            firstName: 'Test',
+            lastName: 'User',
+        });
+
+        expect(res.status).toBe(422);
+        expect(res.body).toHaveProperty('message', 'Validation failed');
+        expect(res.body.errors).toHaveProperty('email');
+    });
 });

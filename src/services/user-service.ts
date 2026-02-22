@@ -77,20 +77,13 @@ export class UserServiceImpl implements UserService {
     async register(data: RegisterUserDto): Promise<UserResponseDto> {
         const errors: Record<string, string[]> = {};
 
-        // Validate email
-        if (!data.email) {
-            errors.email = ['Email is required'];
-        } else if (!EMAIL_REGEX.test(data.email)) {
+        // Validate email format
+        if (!EMAIL_REGEX.test(data.email)) {
             errors.email = ['Invalid email format'];
         }
 
-        // Validate password
-        const passwordErrors: string[] = [];
-        if (!data.password) {
-            passwordErrors.push('Password is required');
-        } else {
-            passwordErrors.push(...this.validatePasswordStrength(data.password));
-        }
+        // Validate password strength
+        const passwordErrors = this.validatePasswordStrength(data.password);
         if (passwordErrors.length > 0) {
             errors.password = passwordErrors;
         }
@@ -127,13 +120,6 @@ export class UserServiceImpl implements UserService {
     }
 
     async authenticate(email: string, password: string): Promise<AuthResponseDto> {
-        const errors: Record<string, string[]> = {};
-        if (!email) errors.email = ['Email is required'];
-        if (!password) errors.password = ['Password is required'];
-        if (Object.keys(errors).length > 0) {
-            throw new ValidationError('Validation failed', errors);
-        }
-
         const user = await this.userRepository.findByEmail(email);
         if (!user) {
             throw new InvalidCredentialsError();
@@ -148,10 +134,6 @@ export class UserServiceImpl implements UserService {
     }
 
     async refreshAccessToken(token: string): Promise<AuthResponseDto> {
-        if (!token) {
-            throw new ValidationError('Validation failed', { refreshToken: ['Refresh token is required'] });
-        }
-
         const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
         const stored = await this.refreshTokenRepository.findByTokenHash(tokenHash);
 
@@ -184,20 +166,6 @@ export class UserServiceImpl implements UserService {
     }
 
     async updateProfile(userId: string, data: UpdateProfileDto): Promise<UserResponseDto> {
-        const errors: Record<string, string[]> = {};
-
-        if ('firstName' in data && (!data.firstName || data.firstName.trim().length === 0)) {
-            errors.firstName = ['First name cannot be empty'];
-        }
-
-        if ('lastName' in data && (!data.lastName || data.lastName.trim().length === 0)) {
-            errors.lastName = ['Last name cannot be empty'];
-        }
-
-        if (Object.keys(errors).length > 0) {
-            throw new ValidationError('Validation failed', errors);
-        }
-
         const updatedUser = await this.userRepository.update(userId, data);
         if (!updatedUser) {
             throw new UserNotFoundError(userId);
@@ -207,24 +175,9 @@ export class UserServiceImpl implements UserService {
     }
 
     async changePassword(userId: string, data: ChangePasswordDto): Promise<void> {
-        const errors: Record<string, string[]> = {};
-
-        if (!data.currentPassword) {
-            errors.currentPassword = ['Current password is required'];
-        }
-
-        const newPasswordErrors: string[] = [];
-        if (!data.newPassword) {
-            newPasswordErrors.push('New password is required');
-        } else {
-            newPasswordErrors.push(...this.validatePasswordStrength(data.newPassword));
-        }
-        if (newPasswordErrors.length > 0) {
-            errors.newPassword = newPasswordErrors;
-        }
-
-        if (Object.keys(errors).length > 0) {
-            throw new ValidationError('Validation failed', errors);
+        const passwordErrors = this.validatePasswordStrength(data.newPassword);
+        if (passwordErrors.length > 0) {
+            throw new ValidationError('Validation failed', { newPassword: passwordErrors });
         }
 
         const user = await this.userRepository.findById(userId);

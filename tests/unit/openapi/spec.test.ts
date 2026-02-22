@@ -206,12 +206,12 @@ describe('OpenAPI Spec', () => {
             expect(responses['401']).toBeDefined();
         });
 
-        it('should define 200, 400, 401, 422 for PUT /users/profile', () => {
+        it('should define 200, 401, 422 for PUT /users/profile (no 400)', () => {
             const responses = openApiSpec.paths['/users/profile'].put.responses;
             expect(responses['200']).toBeDefined();
-            expect(responses['400']).toBeDefined();
             expect(responses['401']).toBeDefined();
             expect(responses['422']).toBeDefined();
+            expect(responses['400']).toBeUndefined();
         });
 
         it('should define 204, 401, 415, 422 for PUT /users/password', () => {

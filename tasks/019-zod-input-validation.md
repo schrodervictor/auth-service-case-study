@@ -1,6 +1,6 @@
 # Task: Zod Input Validation Middleware
 
-## Status: in-progress
+## Status: done
 
 ## Context
 
@@ -317,17 +317,17 @@ Remove these blocks from `UserServiceImpl`:
 - **Description**: Create the generic `validate()` middleware and all Zod
   request schemas. Unit tests for both.
 - **Acceptance Criteria**:
-  - [ ] `src/middleware/validate-middleware.ts` exists with `validate(schema)`
+  - [x] `src/middleware/validate-middleware.ts` exists with `validate(schema)`
         factory
-  - [ ] `src/schemas/user-schemas.ts` exists with all 5 schemas
-  - [ ] Unit tests for validate middleware: success path (calls next, sets
+  - [x] `src/schemas/user-schemas.ts` exists with all 5 schemas
+  - [x] Unit tests for validate middleware: success path (calls next, sets
         req.body), failure path (returns 422 with correct shape), multiple
         errors, nested path handling
-  - [ ] Unit tests for each schema: valid input passes, missing required fields
+  - [x] Unit tests for each schema: valid input passes, missing required fields
         fail, empty strings fail, trim behavior for name fields, UpdateProfile
         refine logic
-  - [ ] All existing tests still pass (`make test-unit`)
-- **Status**: pending
+  - [x] All existing tests still pass (`make test-unit`)
+- **Status**: done
 
 ### Milestone 2: Wire into Controllers + Remove Service Validation
 
@@ -336,42 +336,42 @@ Remove these blocks from `UserServiceImpl`:
   controller methods to remove `?? {}` fallbacks and the manual 400 check in
   `updateProfile`.
 - **Acceptance Criteria**:
-  - [ ] All 5 endpoints use `validate(XxxRequestSchema)` in their decorator
+  - [x] All 5 endpoints use `validate(XxxRequestSchema)` in their decorator
         chains
-  - [ ] Service layer no longer checks for null/empty required fields (those
+  - [x] Service layer no longer checks for null/empty required fields (those
         blocks are removed)
-  - [ ] Service layer still validates: email format, password strength, email
+  - [x] Service layer still validates: email format, password strength, email
         uniqueness, token validity
-  - [ ] `updateProfile` controller no longer has the manual
+  - [x] `updateProfile` controller no longer has the manual
         `if (!firstName && !lastName)` check
-  - [ ] Controller unit tests updated to reflect new validation flow
-  - [ ] Service unit tests updated — remove tests for null/empty field
+  - [x] Controller unit tests updated to reflect new validation flow
+  - [x] Service unit tests updated — remove tests for null/empty field
         validation that's now handled by middleware
-  - [ ] All tests pass (`make test-unit`)
-- **Status**: pending
+  - [x] All tests pass (`make test-unit`)
+- **Status**: done
 
 ### Milestone 3: OpenAPI Spec Update
 
 - **Description**: Update the OpenAPI spec to reflect the 400 → 422 change for
   updateProfile's "at least one field" error. Verify spec consistency.
 - **Acceptance Criteria**:
-  - [ ] `PUT /users/profile` no longer lists a 400 response
-  - [ ] 422 response example for `PUT /users/profile` updated to include "at
+  - [x] `PUT /users/profile` no longer lists a 400 response
+  - [x] 422 response example for `PUT /users/profile` updated to include "at
         least one field" case
-  - [ ] OpenAPI unit tests updated and passing
-  - [ ] Spec is consistent with actual API behavior
-- **Status**: pending
+  - [x] OpenAPI unit tests updated and passing
+  - [x] Spec is consistent with actual API behavior
+- **Status**: done
 
 ### Milestone 4: Acceptance Tests
 
 - **Description**: Update existing acceptance tests and add new ones to verify
   the Zod validation layer works end-to-end.
 - **Acceptance Criteria**:
-  - [ ] Existing acceptance tests pass without modification (or are updated for
+  - [x] Existing acceptance tests pass without modification (or are updated for
         the 400→422 change)
-  - [ ] New acceptance test cases for: extra fields are stripped, type coercion
+  - [x] New acceptance test cases for: extra fields are stripped, type coercion
         doesn't happen (number sent as email fails), empty-string fields
         rejected
-  - [ ] `make test-acceptance` passes
-  - [ ] `make test-unit` and `make test-integration` still pass
-- **Status**: pending
+  - [x] `make test-acceptance` passes
+  - [x] `make test-unit` and `make test-integration` still pass
+- **Status**: done
