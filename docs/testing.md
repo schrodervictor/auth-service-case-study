@@ -92,6 +92,8 @@ tests/
 │   ├── services/
 │   │   ├── password-manager-service.test.ts  # Hashing and comparison
 │   │   └── user-service.test.ts       # Register, auth, profile, refresh, logout
+│   ├── openapi/
+│   │   └── spec.test.ts               # OpenAPI spec structure and coverage
 │   └── shutdown.test.ts               # Graceful shutdown handler
 ├── integration/                   # Requires PostgreSQL + Redis
 │   ├── database/
