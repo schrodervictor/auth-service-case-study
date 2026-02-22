@@ -28,5 +28,8 @@
             "maxAttempts": 10,
             "windowSeconds": 900
         }
+    },
+    "eventbus": {
+        "mode": "emulated"
     }
 }

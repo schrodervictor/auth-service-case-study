@@ -382,6 +382,41 @@ describe('configSchema — rateLimit section', () => {
     });
 });
 
+describe('configSchema — eventbus section', () => {
+    it('should apply default eventbus config when section is omitted', () => {
+        const result = configSchema.parse(MINIMAL_CONFIG);
+
+        expect(result.eventbus).toEqual({ mode: 'real' });
+    });
+
+    it('should accept explicit emulated mode', () => {
+        const result = configSchema.parse({
+            ...MINIMAL_CONFIG,
+            eventbus: { mode: 'emulated' },
+        });
+
+        expect(result.eventbus.mode).toBe('emulated');
+    });
+
+    it('should accept explicit real mode', () => {
+        const result = configSchema.parse({
+            ...MINIMAL_CONFIG,
+            eventbus: { mode: 'real' },
+        });
+
+        expect(result.eventbus.mode).toBe('real');
+    });
+
+    it('should reject invalid mode', () => {
+        const result = configSchema.safeParse({
+            ...MINIMAL_CONFIG,
+            eventbus: { mode: 'invalid' },
+        });
+
+        expect(result.success).toBe(false);
+    });
+});
+
 describe('configSchema — AppConfig type inference', () => {
     it('should include redis section in AppConfig type', () => {
         const config: AppConfig = configSchema.parse(MINIMAL_CONFIG);

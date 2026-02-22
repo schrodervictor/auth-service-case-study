@@ -26,6 +26,7 @@ const BASE_CONFIG: AppConfig = {
         login: { maxAttempts: 5, windowSeconds: 900 },
         refresh: { maxAttempts: 10, windowSeconds: 900 },
     },
+    eventbus: { mode: 'emulated' as const },
 };
 
 function configWith(overrides: Partial<AppConfig>): AppConfig {

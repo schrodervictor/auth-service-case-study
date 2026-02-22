@@ -2,8 +2,7 @@ export const TYPES = {
     Config: Symbol.for('Config'),
     DataSource: Symbol.for('DataSource'),
 
-    // DB: Symbol.for('DB'),
-    // producer: Symbol.for('producer'),
+    Producer: Symbol.for('Producer'),
 
     // // Services
     // ExampleService: Symbol.for('ExampleService'),

@@ -56,6 +56,10 @@ const ssmSchema = z.object({
     parameters: ssmParametersSchema,
 });
 
+const eventbusSchema = z.object({
+    mode: z.enum(['real', 'emulated']).default('real'),
+});
+
 export const configSchema = z.object({
     server: serverSchema.default({ port: 9000 }),
     database: databaseSchema,
@@ -69,6 +73,7 @@ export const configSchema = z.object({
         refresh: { maxAttempts: 10, windowSeconds: 900 },
     }),
     ssm: ssmSchema.optional(),
+    eventbus: eventbusSchema.default({ mode: 'real' }),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
