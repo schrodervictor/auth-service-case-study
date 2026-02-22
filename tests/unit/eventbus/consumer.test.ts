@@ -1,19 +1,18 @@
+import { silenceConsole, type CapturedConsole } from '../../helpers/test-console';
 import { Consumer } from '../../../src/eventbus/consumer';
 import type { KafkaClient } from '../../../src/eventbus/types';
 
 describe('Consumer', () => {
     let consumer: Consumer;
-    let logSpy: jest.SpyInstance;
+    let captured: CapturedConsole;
 
     beforeEach(() => {
         const client: KafkaClient = { mode: 'emulated' };
         consumer = new Consumer(client, 'test-group');
-        logSpy = jest.spyOn(console, 'log').mockImplementation();
+        captured = silenceConsole('log');
     });
 
-    afterEach(() => {
-        logSpy.mockRestore();
-    });
+    afterEach(() => { captured.restore(); });
 
     it('should log subscribed topic names', async () => {
         const handler = jest.fn();
@@ -22,7 +21,7 @@ describe('Consumer', () => {
             { topic: 'topic-b', eventHandler: handler },
         ]);
 
-        expect(logSpy).toHaveBeenCalledWith(
+        expect(captured.log).toContainEqual(
             '[EVENTBUS] Emulated consumer (test-group) subscribed to: topic-a, topic-b',
         );
     });
@@ -33,7 +32,7 @@ describe('Consumer', () => {
             { topic: 'some-topic', eventHandler: jest.fn() },
         ]);
 
-        expect(logSpy).toHaveBeenCalledWith(
+        expect(captured.log).toContainEqual(
             expect.stringContaining('my-group'),
         );
     });
@@ -41,7 +40,7 @@ describe('Consumer', () => {
     it('should handle empty topic list', async () => {
         await consumer.subscribe([]);
 
-        expect(logSpy).toHaveBeenCalledWith(
+        expect(captured.log).toContainEqual(
             '[EVENTBUS] Emulated consumer (test-group) subscribed to: ',
         );
     });

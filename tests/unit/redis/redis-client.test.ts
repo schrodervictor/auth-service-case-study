@@ -1,3 +1,4 @@
+import { silenceConsole, type CapturedConsole } from '../../helpers/test-console';
 import { RedisClient } from '../../../src/redis/redis-client';
 
 const createMockIoredis = () => ({
@@ -68,52 +69,45 @@ describe('RedisClient', () => {
     });
 
     describe('error handling (fail-open)', () => {
+        let captured: CapturedConsole;
+
+        beforeEach(() => { captured = silenceConsole('error'); });
+        afterEach(() => { captured.restore(); });
+
         it('incr should return 0 and log error on failure', async () => {
-            const warnSpy = jest.spyOn(console, 'error').mockImplementation();
             const mock = createMockIoredis();
             mock.incr.mockRejectedValue(new Error('ECONNREFUSED'));
             const client = new RedisClient(mock as never);
 
             expect(await client.incr('key')).toBe(0);
-            expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('ECONNREFUSED'));
-
-            warnSpy.mockRestore();
+            expect(captured.error).toContainEqual(expect.stringContaining('ECONNREFUSED'));
         });
 
         it('expire should return 0 and log error on failure', async () => {
-            const warnSpy = jest.spyOn(console, 'error').mockImplementation();
             const mock = createMockIoredis();
             mock.expire.mockRejectedValue(new Error('timeout'));
             const client = new RedisClient(mock as never);
 
             expect(await client.expire('key', 60)).toBe(0);
-            expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('timeout'));
-
-            warnSpy.mockRestore();
+            expect(captured.error).toContainEqual(expect.stringContaining('timeout'));
         });
 
         it('ttl should return -1 and log error on failure', async () => {
-            const warnSpy = jest.spyOn(console, 'error').mockImplementation();
             const mock = createMockIoredis();
             mock.ttl.mockRejectedValue(new Error('connection lost'));
             const client = new RedisClient(mock as never);
 
             expect(await client.ttl('key')).toBe(-1);
-            expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('connection lost'));
-
-            warnSpy.mockRestore();
+            expect(captured.error).toContainEqual(expect.stringContaining('connection lost'));
         });
 
         it('ping should return false and log warning on failure', async () => {
-            const warnSpy = jest.spyOn(console, 'error').mockImplementation();
             const mock = createMockIoredis();
             mock.ping.mockRejectedValue(new Error('ECONNREFUSED'));
             const client = new RedisClient(mock as never);
 
             expect(await client.ping()).toBe(false);
-            expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('ECONNREFUSED'));
-
-            warnSpy.mockRestore();
+            expect(captured.error).toContainEqual(expect.stringContaining('ECONNREFUSED'));
         });
     });
 
@@ -135,15 +129,15 @@ describe('RedisClient', () => {
         });
 
         it('should swallow errors and log warning on failure', async () => {
-            const warnSpy = jest.spyOn(console, 'error').mockImplementation();
+            const captured = silenceConsole('error');
             const mock = createMockIoredis();
             mock.quit.mockRejectedValue(new Error('ECONNRESET'));
             const client = new RedisClient(mock as never);
 
             await expect(client.quit()).resolves.toBeUndefined();
-            expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('ECONNRESET'));
+            expect(captured.error).toContainEqual(expect.stringContaining('ECONNRESET'));
 
-            warnSpy.mockRestore();
+            captured.restore();
         });
     });
 });

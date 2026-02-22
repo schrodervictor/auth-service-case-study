@@ -58,6 +58,7 @@ const ssmSchema = z.object({
 
 const eventbusSchema = z.object({
     mode: z.enum(['real', 'emulated']).default('real'),
+    outputPath: z.string().optional(),
 });
 
 export const configSchema = z.object({

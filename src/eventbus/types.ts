@@ -1,5 +1,6 @@
 export interface KafkaClient {
     readonly mode: 'emulated';
+    readonly outputPath?: string;
 }
 
 export interface EventMessage {

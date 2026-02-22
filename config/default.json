@@ -30,6 +30,7 @@
         }
     },
     "eventbus": {
-        "mode": "emulated"
+        "mode": "emulated",
+        "outputPath": "/tmp/eventbus.jsonl"
     }
 }
