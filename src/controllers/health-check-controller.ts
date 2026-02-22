@@ -1,4 +1,4 @@
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { inject } from 'inversify';
 import { controller, httpGet } from 'inversify-express-utils';
 import type { DataSource } from 'typeorm';
@@ -17,7 +17,7 @@ export class HealthCheckController extends BaseController {
     }
 
     @httpGet('/')
-    async healthCheck(res: Response): Promise<void> {
+    async healthCheck(_req: Request, res: Response): Promise<void> {
         const [dbUp, cacheUp] = await Promise.all([
             this.checkDatabase(),
             this.redisClient.ping(),
