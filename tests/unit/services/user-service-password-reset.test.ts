@@ -28,20 +28,22 @@ const createMockPasswordManager = (): jest.Mocked<PasswordManagerService> => ({
     compare: jest.fn(),
 });
 
-const createMockRefreshTokenRepository = (): jest.Mocked<RefreshTokenRepository> => ({
-    save: jest.fn(),
-    findByTokenHash: jest.fn(),
-    deleteByTokenHash: jest.fn(),
-    deleteAllByUserId: jest.fn(),
-});
+const createMockRefreshTokenRepository =
+    (): jest.Mocked<RefreshTokenRepository> => ({
+        save: jest.fn(),
+        findByTokenHash: jest.fn(),
+        deleteByTokenHash: jest.fn(),
+        deleteAllByUserId: jest.fn(),
+    });
 
-const createMockPasswordResetKeyRepository = (): jest.Mocked<PasswordResetKeyRepository> => ({
-    save: jest.fn(),
-    findByKeyHash: jest.fn(),
-    deleteByKeyHash: jest.fn(),
-    deleteAllByUserId: jest.fn(),
-    deleteExpired: jest.fn(),
-});
+const createMockPasswordResetKeyRepository =
+    (): jest.Mocked<PasswordResetKeyRepository> => ({
+        save: jest.fn(),
+        findByKeyHash: jest.fn(),
+        deleteByKeyHash: jest.fn(),
+        deleteAllByUserId: jest.fn(),
+        deleteExpired: jest.fn(),
+    });
 
 const createMockProducer = (): jest.Mocked<Pick<Producer, 'publish'>> => ({
     publish: jest.fn(),
@@ -85,7 +87,9 @@ const createSampleUser = (overrides?: Partial<User>): User => {
     return user;
 };
 
-const createSampleResetKey = (overrides?: Partial<PasswordResetKey>): PasswordResetKey => {
+const createSampleResetKey = (
+    overrides?: Partial<PasswordResetKey>,
+): PasswordResetKey => {
     const key = new PasswordResetKey();
     key.id = 'reset-key-uuid-1';
     key.keyHash = 'stored-key-hash';
@@ -141,7 +145,8 @@ describe('UserServiceImpl — Password Reset', () => {
             mockUserRepo.findByEmail.mockResolvedValue(createSampleUser());
             mockResetKeyRepo.save.mockResolvedValue(createSampleResetKey());
 
-            const result = await service.requestPasswordReset('test@example.com');
+            const result =
+                await service.requestPasswordReset('test@example.com');
 
             expect(result).toBeUndefined();
         });
@@ -149,7 +154,9 @@ describe('UserServiceImpl — Password Reset', () => {
         it('should return void (resolve silently) when user is not found — no error thrown', async () => {
             mockUserRepo.findByEmail.mockResolvedValue(null);
 
-            const result = await service.requestPasswordReset('nonexistent@example.com');
+            const result = await service.requestPasswordReset(
+                'nonexistent@example.com',
+            );
 
             expect(result).toBeUndefined();
         });
@@ -159,7 +166,9 @@ describe('UserServiceImpl — Password Reset', () => {
 
             await service.requestPasswordReset('someone@example.com');
 
-            expect(mockUserRepo.findByEmail).toHaveBeenCalledWith('someone@example.com');
+            expect(mockUserRepo.findByEmail).toHaveBeenCalledWith(
+                'someone@example.com',
+            );
         });
 
         it('should call passwordResetKeyRepository.save when user is found', async () => {
@@ -183,7 +192,9 @@ describe('UserServiceImpl — Password Reset', () => {
         });
 
         it('should save the reset key with the correct userId', async () => {
-            mockUserRepo.findByEmail.mockResolvedValue(createSampleUser({ id: 'user-42' }));
+            mockUserRepo.findByEmail.mockResolvedValue(
+                createSampleUser({ id: 'user-42' }),
+            );
             mockResetKeyRepo.save.mockResolvedValue(createSampleResetKey());
 
             await service.requestPasswordReset('test@example.com');
@@ -202,8 +213,12 @@ describe('UserServiceImpl — Password Reset', () => {
             const [, , savedExpiresAt] = mockResetKeyRepo.save.mock.calls[0];
             expect(savedExpiresAt).toBeInstanceOf(Date);
             // Should be roughly 15 minutes in the future (config.auth.resetKey.expiresIn = '15m')
-            expect(savedExpiresAt.getTime()).toBeGreaterThanOrEqual(beforeCall + 14 * 60 * 1000);
-            expect(savedExpiresAt.getTime()).toBeLessThanOrEqual(beforeCall + 16 * 60 * 1000);
+            expect(savedExpiresAt.getTime()).toBeGreaterThanOrEqual(
+                beforeCall + 14 * 60 * 1000,
+            );
+            expect(savedExpiresAt.getTime()).toBeLessThanOrEqual(
+                beforeCall + 16 * 60 * 1000,
+            );
         });
 
         it('should publish PASSWORD_RESET_REQUESTED event when user is found', async () => {
@@ -216,7 +231,9 @@ describe('UserServiceImpl — Password Reset', () => {
             const payload = mockProducer.publish.mock.calls[0][0];
             expect(payload.topic).toBe('user-events');
             expect(payload.events).toHaveLength(1);
-            expect(payload.events[0].type).toBe(DomainEvents.PASSWORD_RESET_REQUESTED);
+            expect(payload.events[0].type).toBe(
+                DomainEvents.PASSWORD_RESET_REQUESTED,
+            );
         });
 
         it('should publish event with email and plain (unhashed) reset key in the data', async () => {
@@ -226,7 +243,10 @@ describe('UserServiceImpl — Password Reset', () => {
             await service.requestPasswordReset('test@example.com');
 
             const payload = mockProducer.publish.mock.calls[0][0];
-            const eventData = payload.events[0].data as { email: string; resetKey: string };
+            const eventData = payload.events[0].data as {
+                email: string;
+                resetKey: string;
+            };
             expect(eventData.email).toBe('test@example.com');
             // The plain key should be a base64url string (not the hash)
             expect(typeof eventData.resetKey).toBe('string');
@@ -256,7 +276,10 @@ describe('UserServiceImpl — Password Reset', () => {
     describe('validateResetKey', () => {
         it('should return true for a valid non-expired key', async () => {
             const plainKey = crypto.randomBytes(32).toString('base64url');
-            const keyHash = crypto.createHash('sha256').update(plainKey).digest('hex');
+            const keyHash = crypto
+                .createHash('sha256')
+                .update(plainKey)
+                .digest('hex');
             const storedKey = createSampleResetKey({
                 keyHash,
                 expiresAt: new Date(Date.now() + 15 * 60 * 1000),
@@ -270,12 +293,17 @@ describe('UserServiceImpl — Password Reset', () => {
 
         it('should hash the incoming key with SHA-256 before looking up', async () => {
             const plainKey = 'test-plain-key';
-            const expectedHash = crypto.createHash('sha256').update(plainKey).digest('hex');
+            const expectedHash = crypto
+                .createHash('sha256')
+                .update(plainKey)
+                .digest('hex');
             mockResetKeyRepo.findByKeyHash.mockResolvedValue(null);
 
             await service.validateResetKey(plainKey);
 
-            expect(mockResetKeyRepo.findByKeyHash).toHaveBeenCalledWith(expectedHash);
+            expect(mockResetKeyRepo.findByKeyHash).toHaveBeenCalledWith(
+                expectedHash,
+            );
         });
 
         it('should return false when key hash is not found in DB', async () => {
@@ -288,7 +316,10 @@ describe('UserServiceImpl — Password Reset', () => {
 
         it('should return false when key is expired', async () => {
             const plainKey = 'expired-key';
-            const keyHash = crypto.createHash('sha256').update(plainKey).digest('hex');
+            const keyHash = crypto
+                .createHash('sha256')
+                .update(plainKey)
+                .digest('hex');
             const expiredKey = createSampleResetKey({
                 keyHash,
                 expiresAt: new Date(Date.now() - 1000), // 1 second in the past
@@ -306,7 +337,10 @@ describe('UserServiceImpl — Password Reset', () => {
 
         const setupValidReset = () => {
             const plainKey = crypto.randomBytes(32).toString('base64url');
-            const keyHash = crypto.createHash('sha256').update(plainKey).digest('hex');
+            const keyHash = crypto
+                .createHash('sha256')
+                .update(plainKey)
+                .digest('hex');
             const storedKey = createSampleResetKey({
                 keyHash,
                 userId: 'uuid-1',
@@ -365,7 +399,10 @@ describe('UserServiceImpl — Password Reset', () => {
 
         it('should throw InvalidResetKeyError when key is expired', async () => {
             const plainKey = 'expired-key';
-            const keyHash = crypto.createHash('sha256').update(plainKey).digest('hex');
+            const keyHash = crypto
+                .createHash('sha256')
+                .update(plainKey)
+                .digest('hex');
             const expiredKey = createSampleResetKey({
                 keyHash,
                 expiresAt: new Date(Date.now() - 1000),
@@ -391,7 +428,9 @@ describe('UserServiceImpl — Password Reset', () => {
 
             await service.resetPassword(plainKey, strongPassword);
 
-            expect(mockPasswordManager.toHash).toHaveBeenCalledWith(strongPassword);
+            expect(mockPasswordManager.toHash).toHaveBeenCalledWith(
+                strongPassword,
+            );
         });
 
         it('should call userRepository.updatePasswordHash with userId and new hash', async () => {
@@ -399,7 +438,10 @@ describe('UserServiceImpl — Password Reset', () => {
 
             await service.resetPassword(plainKey, strongPassword);
 
-            expect(mockUserRepo.updatePasswordHash).toHaveBeenCalledWith('uuid-1', 'new-hashed-pw');
+            expect(mockUserRepo.updatePasswordHash).toHaveBeenCalledWith(
+                'uuid-1',
+                'new-hashed-pw',
+            );
         });
 
         it('should delete the used reset key via deleteByKeyHash', async () => {
@@ -407,7 +449,9 @@ describe('UserServiceImpl — Password Reset', () => {
 
             await service.resetPassword(plainKey, strongPassword);
 
-            expect(mockResetKeyRepo.deleteByKeyHash).toHaveBeenCalledWith(keyHash);
+            expect(mockResetKeyRepo.deleteByKeyHash).toHaveBeenCalledWith(
+                keyHash,
+            );
         });
 
         it('should revoke all refresh tokens for the user', async () => {
@@ -415,25 +459,35 @@ describe('UserServiceImpl — Password Reset', () => {
 
             await service.resetPassword(plainKey, strongPassword);
 
-            expect(mockRefreshTokenRepo.deleteAllByUserId).toHaveBeenCalledWith('uuid-1');
+            expect(mockRefreshTokenRepo.deleteAllByUserId).toHaveBeenCalledWith(
+                'uuid-1',
+            );
         });
 
         it('should return void on success', async () => {
             const { plainKey } = setupValidReset();
 
-            const result = await service.resetPassword(plainKey, strongPassword);
+            const result = await service.resetPassword(
+                plainKey,
+                strongPassword,
+            );
 
             expect(result).toBeUndefined();
         });
 
         it('should hash the incoming key with SHA-256 before looking up', async () => {
             const plainKey = 'my-reset-key';
-            const expectedHash = crypto.createHash('sha256').update(plainKey).digest('hex');
+            const expectedHash = crypto
+                .createHash('sha256')
+                .update(plainKey)
+                .digest('hex');
             mockResetKeyRepo.findByKeyHash.mockResolvedValue(null);
 
             await catchError(service.resetPassword(plainKey, strongPassword));
 
-            expect(mockResetKeyRepo.findByKeyHash).toHaveBeenCalledWith(expectedHash);
+            expect(mockResetKeyRepo.findByKeyHash).toHaveBeenCalledWith(
+                expectedHash,
+            );
         });
     });
 });

@@ -11,7 +11,9 @@ const createMockRepository = () => ({
     delete: jest.fn(),
 });
 
-const createMockDataSource = (mockRepository: ReturnType<typeof createMockRepository>) =>
+const createMockDataSource = (
+    mockRepository: ReturnType<typeof createMockRepository>,
+) =>
     ({
         getRepository: jest.fn().mockReturnValue(mockRepository),
     }) as unknown as DataSource;
@@ -29,7 +31,9 @@ describe('RefreshTokenRepositoryImpl', () => {
 
     describe('constructor', () => {
         it('should call dataSource.getRepository(RefreshToken)', () => {
-            expect(mockDataSource.getRepository).toHaveBeenCalledWith(RefreshToken);
+            expect(mockDataSource.getRepository).toHaveBeenCalledWith(
+                RefreshToken,
+            );
         });
     });
 
@@ -91,7 +95,9 @@ describe('RefreshTokenRepositoryImpl', () => {
 
             await repo.findByTokenHash('some-hash');
 
-            expect(mockRepository.findOneBy).toHaveBeenCalledWith({ tokenHash: 'some-hash' });
+            expect(mockRepository.findOneBy).toHaveBeenCalledWith({
+                tokenHash: 'some-hash',
+            });
         });
 
         it('should return the RefreshToken when found', async () => {
@@ -124,7 +130,9 @@ describe('RefreshTokenRepositoryImpl', () => {
 
             await repo.deleteByTokenHash('some-hash');
 
-            expect(mockRepository.delete).toHaveBeenCalledWith({ tokenHash: 'some-hash' });
+            expect(mockRepository.delete).toHaveBeenCalledWith({
+                tokenHash: 'some-hash',
+            });
         });
     });
 
@@ -134,7 +142,9 @@ describe('RefreshTokenRepositoryImpl', () => {
 
             await repo.deleteAllByUserId('user-uuid-1');
 
-            expect(mockRepository.delete).toHaveBeenCalledWith({ userId: 'user-uuid-1' });
+            expect(mockRepository.delete).toHaveBeenCalledWith({
+                userId: 'user-uuid-1',
+            });
         });
     });
 });

@@ -59,7 +59,9 @@ describe('POST /users/refresh', () => {
             .send('not json');
 
         expect(res.status).toBe(415);
-        expect(res.body).toEqual({ message: 'Content-Type must be application/json' });
+        expect(res.body).toEqual({
+            message: 'Content-Type must be application/json',
+        });
     });
 
     it('should invalidate old refresh token after rotation', async () => {

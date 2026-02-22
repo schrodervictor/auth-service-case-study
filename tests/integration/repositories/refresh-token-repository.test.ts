@@ -51,7 +51,12 @@ const MIGRATION_DOWN = `
 
 async function createTestUser(
     dataSource: DataSource,
-    overrides: Partial<{ email: string; passwordHash: string; firstName: string; lastName: string }> = {},
+    overrides: Partial<{
+        email: string;
+        passwordHash: string;
+        firstName: string;
+        lastName: string;
+    }> = {},
 ): Promise<User> {
     const userRepo = new UserRepositoryImpl(dataSource);
     return userRepo.create({
@@ -95,7 +100,11 @@ describe('RefreshTokenRepository integration', () => {
             const user = await createTestUser(dataSource);
             const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-            const token = await repo.save('sha256_hash_value', user.id, expiresAt);
+            const token = await repo.save(
+                'sha256_hash_value',
+                user.id,
+                expiresAt,
+            );
 
             expect(token.id).toBeDefined();
             expect(token.id).toMatch(
@@ -122,7 +131,11 @@ describe('RefreshTokenRepository integration', () => {
         it('should find a previously saved token by its hash', async () => {
             const user = await createTestUser(dataSource);
             const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-            const saved = await repo.save('unique_hash_123', user.id, expiresAt);
+            const saved = await repo.save(
+                'unique_hash_123',
+                user.id,
+                expiresAt,
+            );
 
             const found = await repo.findByTokenHash('unique_hash_123');
 
@@ -177,8 +190,12 @@ describe('RefreshTokenRepository integration', () => {
         });
 
         it('should not affect tokens of other users', async () => {
-            const user1 = await createTestUser(dataSource, { email: 'user1@example.com' });
-            const user2 = await createTestUser(dataSource, { email: 'user2@example.com' });
+            const user1 = await createTestUser(dataSource, {
+                email: 'user1@example.com',
+            });
+            const user2 = await createTestUser(dataSource, {
+                email: 'user2@example.com',
+            });
             const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
             await repo.save('user1_hash', user1.id, expiresAt);
             await repo.save('user2_hash', user2.id, expiresAt);
@@ -201,7 +218,9 @@ describe('RefreshTokenRepository integration', () => {
             await repo.save('cascade_hash_2', user.id, expiresAt);
 
             // Delete user via raw SQL to trigger DB-level CASCADE
-            await dataSource.query('DELETE FROM "users" WHERE "id" = $1', [user.id]);
+            await dataSource.query('DELETE FROM "users" WHERE "id" = $1', [
+                user.id,
+            ]);
 
             const found1 = await repo.findByTokenHash('cascade_hash_1');
             const found2 = await repo.findByTokenHash('cascade_hash_2');

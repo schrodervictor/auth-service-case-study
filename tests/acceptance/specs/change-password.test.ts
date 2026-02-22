@@ -65,7 +65,10 @@ describe('PUT /users/password', () => {
             .send({ currentPassword: 'WrongP@ss1', newPassword });
 
         expect(res.status).toBe(401);
-        expect(res.body).toHaveProperty('message', 'Current password is incorrect');
+        expect(res.body).toHaveProperty(
+            'message',
+            'Current password is incorrect',
+        );
     });
 
     it('should return 422 with structured errors when new password is weak', async () => {
@@ -116,6 +119,8 @@ describe('PUT /users/password', () => {
             .send('not json');
 
         expect(res.status).toBe(415);
-        expect(res.body).toEqual({ message: 'Content-Type must be application/json' });
+        expect(res.body).toEqual({
+            message: 'Content-Type must be application/json',
+        });
     });
 });

@@ -1,4 +1,7 @@
-import { silenceConsole, type CapturedConsole } from '../../helpers/test-console';
+import {
+    silenceConsole,
+    type CapturedConsole,
+} from '../../helpers/test-console';
 import type { AppConfig } from '../../../src/config/schema';
 import { TYPES } from '../../../src/lib/types';
 import { createRedisClient } from '../../../src/redis/redis-client-factory';
@@ -113,7 +116,9 @@ describe('createRedisClient', () => {
 
     it('should return a RedisClient when Redis connection fails (fail-open)', async () => {
         const captured = silenceConsole('error');
-        mockRedisInstance.ping.mockRejectedValue(new Error('Connection refused'));
+        mockRedisInstance.ping.mockRejectedValue(
+            new Error('Connection refused'),
+        );
 
         const client = await createRedisClient(MOCK_CONFIG);
 
@@ -123,7 +128,9 @@ describe('createRedisClient', () => {
 
     it('should log an error when Redis connection fails', async () => {
         const captured = silenceConsole('error');
-        mockRedisInstance.ping.mockRejectedValue(new Error('Connection refused'));
+        mockRedisInstance.ping.mockRejectedValue(
+            new Error('Connection refused'),
+        );
 
         await createRedisClient(MOCK_CONFIG);
 

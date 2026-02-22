@@ -36,7 +36,9 @@ describe('requireJsonContentType', () => {
         requireJsonContentType(req as Request, res as Response, next);
 
         expect(res.statusCode).toBe(415);
-        expect(res.body).toEqual({ message: 'Content-Type must be application/json' });
+        expect(res.body).toEqual({
+            message: 'Content-Type must be application/json',
+        });
         expect(next).not.toHaveBeenCalled();
     });
 

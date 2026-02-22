@@ -42,7 +42,11 @@ export class UserRepositoryImpl implements UserRepository {
 
     async create(data: CreateUserData): Promise<User> {
         // Strip caller-supplied timestamps — these are managed by the database
-        const { createdAt: _createdAt, updatedAt: _updatedAt, ...safeData } = data as CreateUserData & Record<string, unknown>;
+        const {
+            createdAt: _createdAt,
+            updatedAt: _updatedAt,
+            ...safeData
+        } = data as CreateUserData & Record<string, unknown>;
         const entity = this.repository.create(safeData as CreateUserData);
         return this.repository.save(entity);
     }
@@ -53,12 +57,19 @@ export class UserRepositoryImpl implements UserRepository {
             return null;
         }
         // Strip caller-supplied timestamps — these are managed by the database
-        const { createdAt: _createdAt, updatedAt: _updatedAt, ...safeData } = data as UpdateUserData & Record<string, unknown>;
+        const {
+            createdAt: _createdAt,
+            updatedAt: _updatedAt,
+            ...safeData
+        } = data as UpdateUserData & Record<string, unknown>;
         Object.assign(user, safeData);
         return this.repository.save(user);
     }
 
-    async updatePasswordHash(id: string, passwordHash: string): Promise<boolean> {
+    async updatePasswordHash(
+        id: string,
+        passwordHash: string,
+    ): Promise<boolean> {
         const result = await this.repository.update(id, { passwordHash });
         return (result.affected ?? 0) > 0;
     }

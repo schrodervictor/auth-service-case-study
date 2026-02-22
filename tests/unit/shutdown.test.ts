@@ -19,7 +19,8 @@ const createMockDeps = (): MockDeps => ({
     logger: { log: jest.fn(), error: jest.fn() },
 });
 
-const toShutdownDeps = (deps: MockDeps): ShutdownDeps => deps as unknown as ShutdownDeps;
+const toShutdownDeps = (deps: MockDeps): ShutdownDeps =>
+    deps as unknown as ShutdownDeps;
 
 describe('createShutdownHandler', () => {
     beforeEach(() => {
@@ -62,8 +63,12 @@ describe('createShutdownHandler', () => {
         const handler = createShutdownHandler(toShutdownDeps(deps));
         await handler();
 
-        expect(callOrder.indexOf('server.close')).toBeLessThan(callOrder.indexOf('dataSource.destroy'));
-        expect(callOrder.indexOf('server.close')).toBeLessThan(callOrder.indexOf('redisClient.quit'));
+        expect(callOrder.indexOf('server.close')).toBeLessThan(
+            callOrder.indexOf('dataSource.destroy'),
+        );
+        expect(callOrder.indexOf('server.close')).toBeLessThan(
+            callOrder.indexOf('redisClient.quit'),
+        );
     });
 
     it('should be idempotent — second invocation is a no-op', async () => {
@@ -97,7 +102,9 @@ describe('createShutdownHandler', () => {
 
         await handler();
 
-        expect(deps.logger.error).toHaveBeenCalledWith(expect.stringContaining('destroy failed'));
+        expect(deps.logger.error).toHaveBeenCalledWith(
+            expect.stringContaining('destroy failed'),
+        );
         expect(deps.exit).toHaveBeenCalledWith(0);
     });
 
@@ -108,7 +115,9 @@ describe('createShutdownHandler', () => {
 
         await handler();
 
-        expect(deps.logger.error).toHaveBeenCalledWith(expect.stringContaining('quit failed'));
+        expect(deps.logger.error).toHaveBeenCalledWith(
+            expect.stringContaining('quit failed'),
+        );
         expect(deps.exit).toHaveBeenCalledWith(0);
     });
 
@@ -130,16 +139,27 @@ describe('createShutdownHandler', () => {
 
         await handler();
 
-        expect(deps.logger.log).toHaveBeenCalledWith(expect.stringContaining('Shutdown signal received'));
-        expect(deps.logger.log).toHaveBeenCalledWith(expect.stringContaining('Database connection closed'));
-        expect(deps.logger.log).toHaveBeenCalledWith(expect.stringContaining('Redis connection closed'));
-        expect(deps.logger.log).toHaveBeenCalledWith(expect.stringContaining('Shutdown complete'));
+        expect(deps.logger.log).toHaveBeenCalledWith(
+            expect.stringContaining('Shutdown signal received'),
+        );
+        expect(deps.logger.log).toHaveBeenCalledWith(
+            expect.stringContaining('Database connection closed'),
+        );
+        expect(deps.logger.log).toHaveBeenCalledWith(
+            expect.stringContaining('Redis connection closed'),
+        );
+        expect(deps.logger.log).toHaveBeenCalledWith(
+            expect.stringContaining('Shutdown complete'),
+        );
     });
 
     it('should set a force timer that calls exit(1) when drain timeout is exceeded', async () => {
         const deps = createMockDeps();
         deps.dataSource.destroy.mockReturnValue(new Promise(() => {}));
-        const handler = createShutdownHandler({ ...toShutdownDeps(deps), drainTimeoutMs: 5000 });
+        const handler = createShutdownHandler({
+            ...toShutdownDeps(deps),
+            drainTimeoutMs: 5000,
+        });
 
         // Start the handler but don't await (it will hang on destroy)
         const _handlerPromise = handler();
@@ -147,7 +167,9 @@ describe('createShutdownHandler', () => {
         // Advance timers past the drain timeout
         jest.advanceTimersByTime(5000);
 
-        expect(deps.logger.error).toHaveBeenCalledWith(expect.stringContaining('timeout'));
+        expect(deps.logger.error).toHaveBeenCalledWith(
+            expect.stringContaining('timeout'),
+        );
         expect(deps.exit).toHaveBeenCalledWith(1);
 
         // Clean up — avoid unhandled promise warning

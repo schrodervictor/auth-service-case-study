@@ -127,5 +127,4 @@ describe('PUT /users/profile', () => {
 
         expect(res.status).toBe(401);
     });
-
 });

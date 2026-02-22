@@ -41,22 +41,29 @@ export const openApiSpec: OpenApiSpec = {
             get: {
                 tags: ['Health'],
                 summary: 'Health check',
-                description: 'Returns the service health status including dependency availability.',
+                description:
+                    'Returns the service health status including dependency availability.',
                 operationId: 'healthCheck',
                 responses: {
                     '200': {
-                        description: 'Service is healthy or degraded (cache unavailable)',
+                        description:
+                            'Service is healthy or degraded (cache unavailable)',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/HealthCheckResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/HealthCheckResponse',
+                                },
                             },
                         },
                     },
                     '503': {
-                        description: 'Service is unhealthy (database unavailable)',
+                        description:
+                            'Service is unhealthy (database unavailable)',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/HealthCheckResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/HealthCheckResponse',
+                                },
                             },
                         },
                     },
@@ -67,13 +74,16 @@ export const openApiSpec: OpenApiSpec = {
             post: {
                 tags: ['Auth'],
                 summary: 'Register a new user',
-                description: 'Creates a new user account with the provided details.',
+                description:
+                    'Creates a new user account with the provided details.',
                 operationId: 'register',
                 requestBody: {
                     required: true,
                     content: {
                         'application/json': {
-                            schema: { $ref: '#/components/schemas/RegisterRequest' },
+                            schema: {
+                                $ref: '#/components/schemas/RegisterRequest',
+                            },
                         },
                     },
                 },
@@ -82,7 +92,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'User registered successfully',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/UserResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/UserResponse',
+                                },
                             },
                         },
                     },
@@ -90,7 +102,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Unsupported Media Type',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                     },
@@ -98,7 +112,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Email already registered',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                     },
@@ -106,10 +122,15 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Validation failed',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ValidationErrorResponse',
+                                },
                                 example: {
                                     message: 'Validation failed',
-                                    errors: { email: ['Email is required'], password: ['Password is required'] },
+                                    errors: {
+                                        email: ['Email is required'],
+                                        password: ['Password is required'],
+                                    },
                                 },
                             },
                         },
@@ -128,7 +149,9 @@ export const openApiSpec: OpenApiSpec = {
                     required: true,
                     content: {
                         'application/json': {
-                            schema: { $ref: '#/components/schemas/LoginRequest' },
+                            schema: {
+                                $ref: '#/components/schemas/LoginRequest',
+                            },
                         },
                     },
                 },
@@ -137,7 +160,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Login successful',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/AuthResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/AuthResponse',
+                                },
                             },
                         },
                     },
@@ -145,7 +170,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Invalid email or password',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                     },
@@ -153,7 +180,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Unsupported Media Type',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                     },
@@ -161,10 +190,15 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Validation failed',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ValidationErrorResponse',
+                                },
                                 example: {
                                     message: 'Validation failed',
-                                    errors: { email: ['Email is required'], password: ['Password is required'] },
+                                    errors: {
+                                        email: ['Email is required'],
+                                        password: ['Password is required'],
+                                    },
                                 },
                             },
                         },
@@ -173,12 +207,15 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Too many requests',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                         headers: {
                             'Retry-After': {
-                                description: 'Seconds until the rate limit resets',
+                                description:
+                                    'Seconds until the rate limit resets',
                                 schema: { type: 'integer' },
                             },
                         },
@@ -197,7 +234,9 @@ export const openApiSpec: OpenApiSpec = {
                     required: true,
                     content: {
                         'application/json': {
-                            schema: { $ref: '#/components/schemas/RefreshRequest' },
+                            schema: {
+                                $ref: '#/components/schemas/RefreshRequest',
+                            },
                         },
                     },
                 },
@@ -206,7 +245,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Token refreshed successfully',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/AuthResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/AuthResponse',
+                                },
                             },
                         },
                     },
@@ -214,7 +255,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Invalid or expired refresh token',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                     },
@@ -222,7 +265,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Unsupported Media Type',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                     },
@@ -230,10 +275,16 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Validation failed',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ValidationErrorResponse',
+                                },
                                 example: {
                                     message: 'Validation failed',
-                                    errors: { refreshToken: ['Refresh token is required'] },
+                                    errors: {
+                                        refreshToken: [
+                                            'Refresh token is required',
+                                        ],
+                                    },
                                 },
                             },
                         },
@@ -242,12 +293,15 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Too many requests',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                         headers: {
                             'Retry-After': {
-                                description: 'Seconds until the rate limit resets',
+                                description:
+                                    'Seconds until the rate limit resets',
                                 schema: { type: 'integer' },
                             },
                         },
@@ -259,7 +313,8 @@ export const openApiSpec: OpenApiSpec = {
             post: {
                 tags: ['Auth'],
                 summary: 'Log out',
-                description: 'Revokes the refresh token for the authenticated user.',
+                description:
+                    'Revokes the refresh token for the authenticated user.',
                 operationId: 'logout',
                 security: [{ bearerAuth: [] }],
                 responses: {
@@ -270,7 +325,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Unauthorized',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                     },
@@ -289,7 +346,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Profile retrieved successfully',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/UserResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/UserResponse',
+                                },
                             },
                         },
                     },
@@ -297,7 +356,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Unauthorized',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                     },
@@ -314,7 +375,9 @@ export const openApiSpec: OpenApiSpec = {
                     required: true,
                     content: {
                         'application/json': {
-                            schema: { $ref: '#/components/schemas/UpdateProfileRequest' },
+                            schema: {
+                                $ref: '#/components/schemas/UpdateProfileRequest',
+                            },
                         },
                     },
                 },
@@ -323,7 +386,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Profile updated successfully',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/UserResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/UserResponse',
+                                },
                             },
                         },
                     },
@@ -331,7 +396,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Unauthorized',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                     },
@@ -339,10 +406,16 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Validation failed',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ValidationErrorResponse',
+                                },
                                 example: {
                                     message: 'Validation failed',
-                                    errors: { firstName: ['First name cannot be empty'] },
+                                    errors: {
+                                        firstName: [
+                                            'First name cannot be empty',
+                                        ],
+                                    },
                                 },
                             },
                         },
@@ -362,7 +435,9 @@ export const openApiSpec: OpenApiSpec = {
                     required: true,
                     content: {
                         'application/json': {
-                            schema: { $ref: '#/components/schemas/ChangePasswordRequest' },
+                            schema: {
+                                $ref: '#/components/schemas/ChangePasswordRequest',
+                            },
                         },
                     },
                 },
@@ -371,10 +446,13 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Password changed successfully',
                     },
                     '401': {
-                        description: 'Unauthorized or incorrect current password',
+                        description:
+                            'Unauthorized or incorrect current password',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                     },
@@ -382,7 +460,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Unsupported Media Type',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                     },
@@ -390,10 +470,16 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Validation failed',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ValidationErrorResponse',
+                                },
                                 example: {
                                     message: 'Validation failed',
-                                    errors: { newPassword: ['Password must be at least 8 characters long'] },
+                                    errors: {
+                                        newPassword: [
+                                            'Password must be at least 8 characters long',
+                                        ],
+                                    },
                                 },
                             },
                         },
@@ -412,7 +498,9 @@ export const openApiSpec: OpenApiSpec = {
                     required: true,
                     content: {
                         'application/json': {
-                            schema: { $ref: '#/components/schemas/ResetKeyRequest' },
+                            schema: {
+                                $ref: '#/components/schemas/ResetKeyRequest',
+                            },
                         },
                     },
                 },
@@ -421,9 +509,12 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Reset key request accepted',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/MessageResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/MessageResponse',
+                                },
                                 example: {
-                                    message: 'If an account with that email exists, a reset key has been generated.',
+                                    message:
+                                        'If an account with that email exists, a reset key has been generated.',
                                 },
                             },
                         },
@@ -432,7 +523,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Unsupported Media Type',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                     },
@@ -440,7 +533,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Validation failed',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ValidationErrorResponse',
+                                },
                             },
                         },
                     },
@@ -448,12 +543,15 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Too many requests',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                         headers: {
                             'Retry-After': {
-                                description: 'Seconds until the rate limit resets',
+                                description:
+                                    'Seconds until the rate limit resets',
                                 schema: { type: 'integer' },
                             },
                         },
@@ -472,7 +570,9 @@ export const openApiSpec: OpenApiSpec = {
                     required: true,
                     content: {
                         'application/json': {
-                            schema: { $ref: '#/components/schemas/ValidateResetKeyRequest' },
+                            schema: {
+                                $ref: '#/components/schemas/ValidateResetKeyRequest',
+                            },
                         },
                     },
                 },
@@ -481,7 +581,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Validation result',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ValidateResetKeyResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ValidateResetKeyResponse',
+                                },
                             },
                         },
                     },
@@ -489,7 +591,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Unsupported Media Type',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                     },
@@ -497,7 +601,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Validation failed',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ValidationErrorResponse',
+                                },
                             },
                         },
                     },
@@ -505,12 +611,15 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Too many requests',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                         headers: {
                             'Retry-After': {
-                                description: 'Seconds until the rate limit resets',
+                                description:
+                                    'Seconds until the rate limit resets',
                                 schema: { type: 'integer' },
                             },
                         },
@@ -529,7 +638,9 @@ export const openApiSpec: OpenApiSpec = {
                     required: true,
                     content: {
                         'application/json': {
-                            schema: { $ref: '#/components/schemas/ResetPasswordRequest' },
+                            schema: {
+                                $ref: '#/components/schemas/ResetPasswordRequest',
+                            },
                         },
                     },
                 },
@@ -538,9 +649,12 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Password reset successfully',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/MessageResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/MessageResponse',
+                                },
                                 example: {
-                                    message: 'Password has been reset successfully.',
+                                    message:
+                                        'Password has been reset successfully.',
                                 },
                             },
                         },
@@ -549,7 +663,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Invalid or expired reset key',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                     },
@@ -557,7 +673,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Unsupported Media Type',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                     },
@@ -565,7 +683,9 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Validation failed (weak password)',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ValidationErrorResponse',
+                                },
                             },
                         },
                     },
@@ -573,12 +693,15 @@ export const openApiSpec: OpenApiSpec = {
                         description: 'Too many requests',
                         content: {
                             'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                                schema: {
+                                    $ref: '#/components/schemas/ErrorResponse',
+                                },
                             },
                         },
                         headers: {
                             'Retry-After': {
-                                description: 'Seconds until the rate limit resets',
+                                description:
+                                    'Seconds until the rate limit resets',
                                 schema: { type: 'integer' },
                             },
                         },
@@ -592,20 +715,41 @@ export const openApiSpec: OpenApiSpec = {
             UserResponse: {
                 type: 'object',
                 properties: {
-                    id: { type: 'string', format: 'uuid', example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' },
-                    email: { type: 'string', format: 'email', example: 'user@example.com' },
+                    id: {
+                        type: 'string',
+                        format: 'uuid',
+                        example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+                    },
+                    email: {
+                        type: 'string',
+                        format: 'email',
+                        example: 'user@example.com',
+                    },
                     firstName: { type: 'string', example: 'John' },
                     lastName: { type: 'string', example: 'Doe' },
                     createdAt: { type: 'string', format: 'date-time' },
                     updatedAt: { type: 'string', format: 'date-time' },
                 },
-                required: ['id', 'email', 'firstName', 'lastName', 'createdAt', 'updatedAt'],
+                required: [
+                    'id',
+                    'email',
+                    'firstName',
+                    'lastName',
+                    'createdAt',
+                    'updatedAt',
+                ],
             },
             AuthResponse: {
                 type: 'object',
                 properties: {
-                    accessToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
-                    refreshToken: { type: 'string', example: 'dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4...' },
+                    accessToken: {
+                        type: 'string',
+                        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+                    },
+                    refreshToken: {
+                        type: 'string',
+                        example: 'dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4...',
+                    },
                 },
                 required: ['accessToken', 'refreshToken'],
             },
@@ -634,8 +778,16 @@ export const openApiSpec: OpenApiSpec = {
             RegisterRequest: {
                 type: 'object',
                 properties: {
-                    email: { type: 'string', format: 'email', example: 'user@example.com' },
-                    password: { type: 'string', format: 'password', example: 'SecureP@ss1' },
+                    email: {
+                        type: 'string',
+                        format: 'email',
+                        example: 'user@example.com',
+                    },
+                    password: {
+                        type: 'string',
+                        format: 'password',
+                        example: 'SecureP@ss1',
+                    },
                     firstName: { type: 'string', example: 'John' },
                     lastName: { type: 'string', example: 'Doe' },
                 },
@@ -644,15 +796,26 @@ export const openApiSpec: OpenApiSpec = {
             LoginRequest: {
                 type: 'object',
                 properties: {
-                    email: { type: 'string', format: 'email', example: 'user@example.com' },
-                    password: { type: 'string', format: 'password', example: 'SecureP@ss1' },
+                    email: {
+                        type: 'string',
+                        format: 'email',
+                        example: 'user@example.com',
+                    },
+                    password: {
+                        type: 'string',
+                        format: 'password',
+                        example: 'SecureP@ss1',
+                    },
                 },
                 required: ['email', 'password'],
             },
             RefreshRequest: {
                 type: 'object',
                 properties: {
-                    refreshToken: { type: 'string', example: 'dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4...' },
+                    refreshToken: {
+                        type: 'string',
+                        example: 'dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4...',
+                    },
                 },
                 required: ['refreshToken'],
             },
@@ -677,22 +840,37 @@ export const openApiSpec: OpenApiSpec = {
             ChangePasswordRequest: {
                 type: 'object',
                 properties: {
-                    currentPassword: { type: 'string', format: 'password', example: 'OldP@ss1' },
-                    newPassword: { type: 'string', format: 'password', example: 'NewP@ss2' },
+                    currentPassword: {
+                        type: 'string',
+                        format: 'password',
+                        example: 'OldP@ss1',
+                    },
+                    newPassword: {
+                        type: 'string',
+                        format: 'password',
+                        example: 'NewP@ss2',
+                    },
                 },
                 required: ['currentPassword', 'newPassword'],
             },
             MessageResponse: {
                 type: 'object',
                 properties: {
-                    message: { type: 'string', example: 'Operation completed successfully.' },
+                    message: {
+                        type: 'string',
+                        example: 'Operation completed successfully.',
+                    },
                 },
                 required: ['message'],
             },
             ResetKeyRequest: {
                 type: 'object',
                 properties: {
-                    email: { type: 'string', format: 'email', example: 'user@example.com' },
+                    email: {
+                        type: 'string',
+                        format: 'email',
+                        example: 'user@example.com',
+                    },
                 },
                 required: ['email'],
             },
@@ -714,7 +892,11 @@ export const openApiSpec: OpenApiSpec = {
                 type: 'object',
                 properties: {
                     resetKey: { type: 'string', example: 'abc123-reset-key' },
-                    newPassword: { type: 'string', format: 'password', example: 'NewSecureP@ss1' },
+                    newPassword: {
+                        type: 'string',
+                        format: 'password',
+                        example: 'NewSecureP@ss1',
+                    },
                 },
                 required: ['resetKey', 'newPassword'],
             },

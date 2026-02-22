@@ -234,11 +234,16 @@ describe('configSchema — rateLimit password-reset entries', () => {
             const config: AppConfig = configSchema.parse(MINIMAL_CONFIG);
 
             const resetKeyMax: number = config.rateLimit.resetKey.maxAttempts;
-            const resetKeyWindow: number = config.rateLimit.resetKey.windowSeconds;
-            const validateMax: number = config.rateLimit.validateResetKey.maxAttempts;
-            const validateWindow: number = config.rateLimit.validateResetKey.windowSeconds;
-            const resetPasswordMax: number = config.rateLimit.resetPassword.maxAttempts;
-            const resetPasswordWindow: number = config.rateLimit.resetPassword.windowSeconds;
+            const resetKeyWindow: number =
+                config.rateLimit.resetKey.windowSeconds;
+            const validateMax: number =
+                config.rateLimit.validateResetKey.maxAttempts;
+            const validateWindow: number =
+                config.rateLimit.validateResetKey.windowSeconds;
+            const resetPasswordMax: number =
+                config.rateLimit.resetPassword.maxAttempts;
+            const resetPasswordWindow: number =
+                config.rateLimit.resetPassword.windowSeconds;
 
             expect(resetKeyMax).toBe(3);
             expect(resetKeyWindow).toBe(900);

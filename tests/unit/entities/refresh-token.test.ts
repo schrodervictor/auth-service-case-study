@@ -9,7 +9,7 @@ describe('RefreshToken Entity', () => {
     describe('table registration', () => {
         it('should be registered as an entity with table name "refresh_tokens"', () => {
             const tableMetadata = storage.tables.find(
-                (t) => t.target === RefreshToken,
+                t => t.target === RefreshToken,
             );
 
             expect(tableMetadata).toBeDefined();
@@ -20,7 +20,7 @@ describe('RefreshToken Entity', () => {
     describe('columns', () => {
         const getColumn = (propertyName: string) =>
             storage.columns.find(
-                (c) =>
+                c =>
                     c.target === RefreshToken &&
                     c.propertyName === propertyName,
             );
@@ -30,8 +30,7 @@ describe('RefreshToken Entity', () => {
             expect(idColumn).toBeDefined();
 
             const generation = storage.generations.find(
-                (g) =>
-                    g.target === RefreshToken && g.propertyName === 'id',
+                g => g.target === RefreshToken && g.propertyName === 'id',
             );
             expect(generation).toBeDefined();
             expect(generation!.strategy).toBe('uuid');
@@ -66,9 +65,7 @@ describe('RefreshToken Entity', () => {
     describe('relations', () => {
         it('should have a ManyToOne relation to User', () => {
             const relation = storage.relations.find(
-                (r) =>
-                    r.target === RefreshToken &&
-                    r.propertyName === 'user',
+                r => r.target === RefreshToken && r.propertyName === 'user',
             );
 
             expect(relation).toBeDefined();
@@ -83,9 +80,7 @@ describe('RefreshToken Entity', () => {
 
         it('should join on "user_id" column', () => {
             const joinColumn = storage.joinColumns.find(
-                (j) =>
-                    j.target === RefreshToken &&
-                    j.propertyName === 'user',
+                j => j.target === RefreshToken && j.propertyName === 'user',
             );
 
             expect(joinColumn).toBeDefined();

@@ -399,7 +399,9 @@ describe('configSchema — eventbus section', () => {
         });
 
         expect(result.eventbus.mode).toBe('emulated');
-        expect((result.eventbus as { outputPath?: string }).outputPath).toBe('/tmp/events.jsonl');
+        expect((result.eventbus as { outputPath?: string }).outputPath).toBe(
+            '/tmp/events.jsonl',
+        );
     });
 
     it('should accept explicit real mode with kafka settings', () => {
@@ -409,7 +411,9 @@ describe('configSchema — eventbus section', () => {
         });
 
         expect(result.eventbus.mode).toBe('real');
-        expect((result.eventbus as { kafka: Record<string, unknown> }).kafka).toEqual({ brokers: 'localhost:9092' });
+        expect(
+            (result.eventbus as { kafka: Record<string, unknown> }).kafka,
+        ).toEqual({ brokers: 'localhost:9092' });
     });
 
     it('should default kafka to empty object for real mode', () => {
@@ -418,7 +422,9 @@ describe('configSchema — eventbus section', () => {
             eventbus: { mode: 'real' },
         });
 
-        expect((result.eventbus as { kafka: Record<string, unknown> }).kafka).toEqual({});
+        expect(
+            (result.eventbus as { kafka: Record<string, unknown> }).kafka,
+        ).toEqual({});
     });
 
     it('should reject invalid mode', () => {

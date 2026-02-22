@@ -1,8 +1,18 @@
 import type { Request, Response } from 'express';
 import { inject } from 'inversify';
-import { controller, httpGet, httpPost, httpPut } from 'inversify-express-utils';
+import {
+    controller,
+    httpGet,
+    httpPost,
+    httpPut,
+} from 'inversify-express-utils';
 
-import { AppError, InvalidResetKeyError, UserNotFoundError, ValidationError } from '../errors';
+import {
+    AppError,
+    InvalidResetKeyError,
+    UserNotFoundError,
+    ValidationError,
+} from '../errors';
 import { BaseController } from '../lib/base-controller';
 import { TYPES } from '../lib/types';
 import type { AuthenticatedRequest } from '../middleware/auth-middleware';
@@ -27,7 +37,11 @@ export class UserController extends BaseController {
         super();
     }
 
-    @httpPost('/register', TYPES.JsonContentType, validate(RegisterRequestSchema))
+    @httpPost(
+        '/register',
+        TYPES.JsonContentType,
+        validate(RegisterRequestSchema),
+    )
     async register(req: Request, res: Response): Promise<void> {
         try {
             const { email, password, firstName, lastName } = req.body;
@@ -45,7 +59,12 @@ export class UserController extends BaseController {
         }
     }
 
-    @httpPost('/login', TYPES.JsonContentType, validate(LoginRequestSchema), TYPES.LoginRateLimiter)
+    @httpPost(
+        '/login',
+        TYPES.JsonContentType,
+        validate(LoginRequestSchema),
+        TYPES.LoginRateLimiter,
+    )
     async login(req: Request, res: Response): Promise<void> {
         try {
             const { email, password } = req.body;
@@ -58,12 +77,18 @@ export class UserController extends BaseController {
         }
     }
 
-    @httpPost('/refresh', TYPES.JsonContentType, validate(RefreshRequestSchema), TYPES.RefreshRateLimiter)
+    @httpPost(
+        '/refresh',
+        TYPES.JsonContentType,
+        validate(RefreshRequestSchema),
+        TYPES.RefreshRateLimiter,
+    )
     async refresh(req: Request, res: Response): Promise<void> {
         try {
             const { refreshToken } = req.body;
 
-            const result = await this.userService.refreshAccessToken(refreshToken);
+            const result =
+                await this.userService.refreshAccessToken(refreshToken);
             res.status(200).json(result);
         } catch (error) {
             this.handleError(res, error);
@@ -97,7 +122,11 @@ export class UserController extends BaseController {
         }
     }
 
-    @httpPut('/profile', TYPES.AuthMiddleware, validate(UpdateProfileRequestSchema))
+    @httpPut(
+        '/profile',
+        TYPES.AuthMiddleware,
+        validate(UpdateProfileRequestSchema),
+    )
     async updateProfile(req: Request, res: Response): Promise<void> {
         try {
             const userId = (req as AuthenticatedRequest).user.id;
@@ -114,7 +143,12 @@ export class UserController extends BaseController {
         }
     }
 
-    @httpPut('/password', TYPES.AuthMiddleware, TYPES.JsonContentType, validate(ChangePasswordRequestSchema))
+    @httpPut(
+        '/password',
+        TYPES.AuthMiddleware,
+        TYPES.JsonContentType,
+        validate(ChangePasswordRequestSchema),
+    )
     async changePassword(req: Request, res: Response): Promise<void> {
         try {
             const userId = (req as AuthenticatedRequest).user.id;
@@ -135,20 +169,31 @@ export class UserController extends BaseController {
         }
     }
 
-    @httpPost('/reset-key', TYPES.JsonContentType, validate(ResetKeyRequestSchema), TYPES.ResetKeyRateLimiter)
+    @httpPost(
+        '/reset-key',
+        TYPES.JsonContentType,
+        validate(ResetKeyRequestSchema),
+        TYPES.ResetKeyRateLimiter,
+    )
     async requestResetKey(req: Request, res: Response): Promise<void> {
         try {
             const { email } = req.body;
             await this.userService.requestPasswordReset(email);
             res.status(200).json({
-                message: 'If an account with that email exists, a reset key has been generated.',
+                message:
+                    'If an account with that email exists, a reset key has been generated.',
             });
         } catch (error) {
             this.handleError(res, error);
         }
     }
 
-    @httpPost('/validate-reset-key', TYPES.JsonContentType, validate(ValidateResetKeyRequestSchema), TYPES.ValidateResetKeyRateLimiter)
+    @httpPost(
+        '/validate-reset-key',
+        TYPES.JsonContentType,
+        validate(ValidateResetKeyRequestSchema),
+        TYPES.ValidateResetKeyRateLimiter,
+    )
     async validateResetKey(req: Request, res: Response): Promise<void> {
         try {
             const { resetKey } = req.body;
@@ -159,7 +204,12 @@ export class UserController extends BaseController {
         }
     }
 
-    @httpPost('/password/reset', TYPES.JsonContentType, validate(ResetPasswordRequestSchema), TYPES.ResetPasswordRateLimiter)
+    @httpPost(
+        '/password/reset',
+        TYPES.JsonContentType,
+        validate(ResetPasswordRequestSchema),
+        TYPES.ResetPasswordRateLimiter,
+    )
     async resetPassword(req: Request, res: Response): Promise<void> {
         try {
             const { resetKey, newPassword } = req.body;
@@ -178,7 +228,10 @@ export class UserController extends BaseController {
 
     private handleError(res: Response, error: unknown): void {
         if (error instanceof ValidationError) {
-            res.status(error.statusCode).json({ message: error.message, errors: error.errors });
+            res.status(error.statusCode).json({
+                message: error.message,
+                errors: error.errors,
+            });
         } else if (error instanceof AppError) {
             res.status(error.statusCode).json({ message: error.message });
         } else {

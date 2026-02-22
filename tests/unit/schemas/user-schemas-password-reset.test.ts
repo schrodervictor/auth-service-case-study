@@ -13,11 +13,12 @@ interface ParseFailure {
 const hasIssueForField = (
     issues: Array<{ path: Array<string | number> }>,
     field: string,
-): boolean => issues.some((i) => i.path.includes(field));
+): boolean => issues.some(i => i.path.includes(field));
 
 /** Helper to extract field paths from Zod error issues. */
-const getIssuePaths = (issues: Array<{ path: Array<string | number> }>): Array<string | number> =>
-    issues.map((i) => i.path[0]);
+const getIssuePaths = (
+    issues: Array<{ path: Array<string | number> }>,
+): Array<string | number> => issues.map(i => i.path[0]);
 
 describe('ResetKeyRequestSchema', () => {
     const validInput = { email: 'user@example.com' };
@@ -31,9 +32,12 @@ describe('ResetKeyRequestSchema', () => {
     it('should reject when email is missing', () => {
         const result = ResetKeyRequestSchema.safeParse({});
         expect(result.success).toBe(false);
-        expect(hasIssueForField((result as unknown as ParseFailure).error.issues, 'email')).toBe(
-            true,
-        );
+        expect(
+            hasIssueForField(
+                (result as unknown as ParseFailure).error.issues,
+                'email',
+            ),
+        ).toBe(true);
     });
 
     it('should reject empty email string', () => {
@@ -42,7 +46,10 @@ describe('ResetKeyRequestSchema', () => {
     });
 
     it('should strip extra fields', () => {
-        const result = ResetKeyRequestSchema.safeParse({ ...validInput, extra: 'data' });
+        const result = ResetKeyRequestSchema.safeParse({
+            ...validInput,
+            extra: 'data',
+        });
         expect(result.success).toBe(true);
         expect((result as { data: unknown }).data).toEqual(validInput);
     });
@@ -61,17 +68,25 @@ describe('ValidateResetKeyRequestSchema', () => {
         const result = ValidateResetKeyRequestSchema.safeParse({});
         expect(result.success).toBe(false);
         expect(
-            hasIssueForField((result as unknown as ParseFailure).error.issues, 'resetKey'),
+            hasIssueForField(
+                (result as unknown as ParseFailure).error.issues,
+                'resetKey',
+            ),
         ).toBe(true);
     });
 
     it('should reject empty resetKey string', () => {
-        const result = ValidateResetKeyRequestSchema.safeParse({ resetKey: '' });
+        const result = ValidateResetKeyRequestSchema.safeParse({
+            resetKey: '',
+        });
         expect(result.success).toBe(false);
     });
 
     it('should strip extra fields', () => {
-        const result = ValidateResetKeyRequestSchema.safeParse({ ...validInput, extra: true });
+        const result = ValidateResetKeyRequestSchema.safeParse({
+            ...validInput,
+            extra: true,
+        });
         expect(result.success).toBe(true);
         expect((result as { data: unknown }).data).toEqual(validInput);
     });
@@ -90,18 +105,28 @@ describe('ResetPasswordRequestSchema', () => {
     });
 
     it('should reject when resetKey is missing', () => {
-        const result = ResetPasswordRequestSchema.safeParse({ newPassword: 'NewSecure1!' });
+        const result = ResetPasswordRequestSchema.safeParse({
+            newPassword: 'NewSecure1!',
+        });
         expect(result.success).toBe(false);
         expect(
-            hasIssueForField((result as unknown as ParseFailure).error.issues, 'resetKey'),
+            hasIssueForField(
+                (result as unknown as ParseFailure).error.issues,
+                'resetKey',
+            ),
         ).toBe(true);
     });
 
     it('should reject when newPassword is missing', () => {
-        const result = ResetPasswordRequestSchema.safeParse({ resetKey: 'some-key' });
+        const result = ResetPasswordRequestSchema.safeParse({
+            resetKey: 'some-key',
+        });
         expect(result.success).toBe(false);
         expect(
-            hasIssueForField((result as unknown as ParseFailure).error.issues, 'newPassword'),
+            hasIssueForField(
+                (result as unknown as ParseFailure).error.issues,
+                'newPassword',
+            ),
         ).toBe(true);
     });
 
@@ -124,7 +149,9 @@ describe('ResetPasswordRequestSchema', () => {
     it('should report both missing fields at once', () => {
         const result = ResetPasswordRequestSchema.safeParse({});
         expect(result.success).toBe(false);
-        const paths = getIssuePaths((result as unknown as ParseFailure).error.issues);
+        const paths = getIssuePaths(
+            (result as unknown as ParseFailure).error.issues,
+        );
         expect(paths).toContain('resetKey');
         expect(paths).toContain('newPassword');
     });

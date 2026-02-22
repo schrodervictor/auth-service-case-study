@@ -21,7 +21,10 @@ import { TYPES } from './lib/types';
     try {
         const config = loadConfig();
         const secrets = await loadSecrets(config);
-        const credentials = { username: secrets.databaseUser, password: secrets.databasePassword };
+        const credentials = {
+            username: secrets.databaseUser,
+            password: secrets.databasePassword,
+        };
         const dataSource = createDataSource(config, credentials);
 
         await dataSource.initialize();
@@ -32,7 +35,12 @@ import { TYPES } from './lib/types';
 
         const redisClient = await createRedisClient(config);
 
-        const diContainer = createContainer(config, dataSource, secrets, redisClient);
+        const diContainer = createContainer(
+            config,
+            dataSource,
+            secrets,
+            redisClient,
+        );
 
         // Create eventbus producer and consumer
         const kafkaClient = await createKafkaClient();

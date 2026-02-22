@@ -72,7 +72,7 @@ export class RedisClient {
         const message = error instanceof Error ? error.message : String(error);
         console.error(
             `[RATE-LIMIT DEGRADED] Redis ${operation} failed — ` +
-            `rate limiting skipped for this request. Cause: ${message}`,
+                `rate limiting skipped for this request. Cause: ${message}`,
         );
     }
 }

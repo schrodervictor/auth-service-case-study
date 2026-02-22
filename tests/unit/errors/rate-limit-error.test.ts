@@ -17,7 +17,9 @@ describe('RateLimitError', () => {
     it('should have message "Too many requests. Please try again later."', () => {
         const error = new RateLimitError();
 
-        expect(error.message).toBe('Too many requests. Please try again later.');
+        expect(error.message).toBe(
+            'Too many requests. Please try again later.',
+        );
     });
 
     it('should have name "RateLimitError"', () => {

@@ -62,7 +62,7 @@ async function invokeMiddleware(
     // Use Promise.resolve to handle both sync and async returns.
     await Promise.resolve(middleware(req as Request, res as Response, next));
     // Small delay to ensure async chains resolve
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await new Promise(resolve => setTimeout(resolve, 10));
 }
 
 describe('Rate limit middleware integration (real Redis)', () => {
@@ -75,7 +75,9 @@ describe('Rate limit middleware integration (real Redis)', () => {
         // Verify connection
         const pong = await rawRedis.ping();
         if (pong !== 'PONG') {
-            throw new Error(`Redis connection failed: expected PONG, got ${pong}`);
+            throw new Error(
+                `Redis connection failed: expected PONG, got ${pong}`,
+            );
         }
     });
 
@@ -93,8 +95,15 @@ describe('Rate limit middleware integration (real Redis)', () => {
 
     describe('requests under the limit', () => {
         it('should allow requests under the limit through', async () => {
-            const config: RateLimitConfig = { maxAttempts: 5, windowSeconds: 60 };
-            const middleware = createRateLimitMiddleware(redisClient, 'login', config);
+            const config: RateLimitConfig = {
+                maxAttempts: 5,
+                windowSeconds: 60,
+            };
+            const middleware = createRateLimitMiddleware(
+                redisClient,
+                'login',
+                config,
+            );
 
             for (let i = 0; i < 5; i++) {
                 const req = createMockRequest('10.0.0.100');
@@ -111,8 +120,15 @@ describe('Rate limit middleware integration (real Redis)', () => {
 
     describe('requests over the limit', () => {
         it('should return 429 when exceeding maxAttempts', async () => {
-            const config: RateLimitConfig = { maxAttempts: 3, windowSeconds: 60 };
-            const middleware = createRateLimitMiddleware(redisClient, 'login', config);
+            const config: RateLimitConfig = {
+                maxAttempts: 3,
+                windowSeconds: 60,
+            };
+            const middleware = createRateLimitMiddleware(
+                redisClient,
+                'login',
+                config,
+            );
             const ip = '10.0.0.101';
 
             // Make 3 allowed requests
@@ -138,8 +154,15 @@ describe('Rate limit middleware integration (real Redis)', () => {
         });
 
         it('should include Retry-After header with a positive numeric value', async () => {
-            const config: RateLimitConfig = { maxAttempts: 1, windowSeconds: 60 };
-            const middleware = createRateLimitMiddleware(redisClient, 'login', config);
+            const config: RateLimitConfig = {
+                maxAttempts: 1,
+                windowSeconds: 60,
+            };
+            const middleware = createRateLimitMiddleware(
+                redisClient,
+                'login',
+                config,
+            );
             const ip = '10.0.0.102';
 
             // First request allowed
@@ -164,8 +187,15 @@ describe('Rate limit middleware integration (real Redis)', () => {
 
     describe('counter reset after window expires', () => {
         it('should allow requests again after the window expires', async () => {
-            const config: RateLimitConfig = { maxAttempts: 2, windowSeconds: 2 };
-            const middleware = createRateLimitMiddleware(redisClient, 'login', config);
+            const config: RateLimitConfig = {
+                maxAttempts: 2,
+                windowSeconds: 2,
+            };
+            const middleware = createRateLimitMiddleware(
+                redisClient,
+                'login',
+                config,
+            );
             const ip = '10.0.0.103';
 
             // Use up all attempts
@@ -181,11 +211,16 @@ describe('Rate limit middleware integration (real Redis)', () => {
             const reqBlocked = createMockRequest(ip);
             const resBlocked = createMockResponse();
             const nextBlocked = createMockNext();
-            await invokeMiddleware(middleware, reqBlocked, resBlocked, nextBlocked);
+            await invokeMiddleware(
+                middleware,
+                reqBlocked,
+                resBlocked,
+                nextBlocked,
+            );
             expect(resBlocked.statusCode).toBe(429);
 
             // Wait for window to expire
-            await new Promise((resolve) => setTimeout(resolve, 2500));
+            await new Promise(resolve => setTimeout(resolve, 2500));
 
             // Should be allowed again
             const reqAfter = createMockRequest(ip);
@@ -200,8 +235,15 @@ describe('Rate limit middleware integration (real Redis)', () => {
 
     describe('independent counters', () => {
         it('should track different IPs independently', async () => {
-            const config: RateLimitConfig = { maxAttempts: 2, windowSeconds: 60 };
-            const middleware = createRateLimitMiddleware(redisClient, 'login', config);
+            const config: RateLimitConfig = {
+                maxAttempts: 2,
+                windowSeconds: 60,
+            };
+            const middleware = createRateLimitMiddleware(
+                redisClient,
+                'login',
+                config,
+            );
 
             // IP A uses up all attempts
             for (let i = 0; i < 2; i++) {
@@ -228,9 +270,20 @@ describe('Rate limit middleware integration (real Redis)', () => {
         });
 
         it('should track different endpoint keys independently', async () => {
-            const config: RateLimitConfig = { maxAttempts: 2, windowSeconds: 60 };
-            const loginMiddleware = createRateLimitMiddleware(redisClient, 'login', config);
-            const refreshMiddleware = createRateLimitMiddleware(redisClient, 'refresh', config);
+            const config: RateLimitConfig = {
+                maxAttempts: 2,
+                windowSeconds: 60,
+            };
+            const loginMiddleware = createRateLimitMiddleware(
+                redisClient,
+                'login',
+                config,
+            );
+            const refreshMiddleware = createRateLimitMiddleware(
+                redisClient,
+                'refresh',
+                config,
+            );
             const ip = '10.0.0.202';
 
             // Use up login attempts
@@ -245,14 +298,24 @@ describe('Rate limit middleware integration (real Redis)', () => {
             const reqLogin = createMockRequest(ip);
             const resLogin = createMockResponse();
             const nextLogin = createMockNext();
-            await invokeMiddleware(loginMiddleware, reqLogin, resLogin, nextLogin);
+            await invokeMiddleware(
+                loginMiddleware,
+                reqLogin,
+                resLogin,
+                nextLogin,
+            );
             expect(resLogin.statusCode).toBe(429);
 
             // Refresh for same IP should still be allowed
             const reqRefresh = createMockRequest(ip);
             const resRefresh = createMockResponse();
             const nextRefresh = createMockNext();
-            await invokeMiddleware(refreshMiddleware, reqRefresh, resRefresh, nextRefresh);
+            await invokeMiddleware(
+                refreshMiddleware,
+                reqRefresh,
+                resRefresh,
+                nextRefresh,
+            );
             expect(nextRefresh).toHaveBeenCalled();
             expect(resRefresh.status).not.toHaveBeenCalled();
         });
@@ -260,8 +323,15 @@ describe('Rate limit middleware integration (real Redis)', () => {
 
     describe('TTL verification', () => {
         it('should set correct TTL on first request in window', async () => {
-            const config: RateLimitConfig = { maxAttempts: 10, windowSeconds: 30 };
-            const middleware = createRateLimitMiddleware(redisClient, 'login', config);
+            const config: RateLimitConfig = {
+                maxAttempts: 10,
+                windowSeconds: 30,
+            };
+            const middleware = createRateLimitMiddleware(
+                redisClient,
+                'login',
+                config,
+            );
             const ip = '10.0.0.250';
 
             const req = createMockRequest(ip);

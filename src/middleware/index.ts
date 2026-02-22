@@ -1,1 +1,4 @@
-export type { AuthenticatedRequest, AuthMiddlewareFunction } from './auth-middleware';
+export type {
+    AuthenticatedRequest,
+    AuthMiddlewareFunction,
+} from './auth-middleware';

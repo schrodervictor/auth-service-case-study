@@ -9,13 +9,17 @@ import type { AppConfig } from './config/schema';
 import type { AppSecrets } from './config/secrets-schema';
 import { TYPES } from './lib/types';
 
-import {
-    PasswordManagerService,
-    PasswordManagerServiceImpl,
-} from './services';
+import { PasswordManagerService, PasswordManagerServiceImpl } from './services';
 import type { UserService } from './services/user-service';
 import { UserServiceImpl } from './services/user-service';
-import { UserRepository, UserRepositoryImpl, RefreshTokenRepository, RefreshTokenRepositoryImpl, PasswordResetKeyRepository, PasswordResetKeyRepositoryImpl } from './repositories';
+import {
+    UserRepository,
+    UserRepositoryImpl,
+    RefreshTokenRepository,
+    RefreshTokenRepositoryImpl,
+    PasswordResetKeyRepository,
+    PasswordResetKeyRepositoryImpl,
+} from './repositories';
 import { createAuthMiddleware } from './middleware/auth-middleware';
 import type { AuthMiddlewareFunction } from './middleware/auth-middleware';
 import { requireJsonContentType } from './middleware/content-type-middleware';
@@ -23,7 +27,12 @@ import { createRateLimitMiddleware } from './middleware/rate-limit-middleware';
 import type { RateLimitMiddlewareFunction } from './middleware/rate-limit-middleware';
 import type { RedisClient } from './redis/redis-client';
 
-export function createContainer(config: AppConfig, dataSource: DataSource, secrets: AppSecrets, redisClient: RedisClient): Container {
+export function createContainer(
+    config: AppConfig,
+    dataSource: DataSource,
+    secrets: AppSecrets,
+    redisClient: RedisClient,
+): Container {
     if (config == null) {
         throw new Error('Config is required to create the DI container');
     }
@@ -59,29 +68,63 @@ export function createContainer(config: AppConfig, dataSource: DataSource, secre
 
     container
         .bind<RateLimitMiddlewareFunction>(TYPES.LoginRateLimiter)
-        .toConstantValue(createRateLimitMiddleware(redisClient, 'login', config.rateLimit.login));
+        .toConstantValue(
+            createRateLimitMiddleware(
+                redisClient,
+                'login',
+                config.rateLimit.login,
+            ),
+        );
 
     container
         .bind<RateLimitMiddlewareFunction>(TYPES.RefreshRateLimiter)
-        .toConstantValue(createRateLimitMiddleware(redisClient, 'refresh', config.rateLimit.refresh));
+        .toConstantValue(
+            createRateLimitMiddleware(
+                redisClient,
+                'refresh',
+                config.rateLimit.refresh,
+            ),
+        );
 
     // bind repositories
     container.bind<UserRepository>(TYPES.UserRepository).to(UserRepositoryImpl);
-    container.bind<RefreshTokenRepository>(TYPES.RefreshTokenRepository).to(RefreshTokenRepositoryImpl);
-    container.bind<PasswordResetKeyRepository>(TYPES.PasswordResetKeyRepository).to(PasswordResetKeyRepositoryImpl);
+    container
+        .bind<RefreshTokenRepository>(TYPES.RefreshTokenRepository)
+        .to(RefreshTokenRepositoryImpl);
+    container
+        .bind<PasswordResetKeyRepository>(TYPES.PasswordResetKeyRepository)
+        .to(PasswordResetKeyRepositoryImpl);
 
     // bind rate limiters (password reset)
     container
         .bind<RateLimitMiddlewareFunction>(TYPES.ResetKeyRateLimiter)
-        .toConstantValue(createRateLimitMiddleware(redisClient, 'resetKey', config.rateLimit.resetKey));
+        .toConstantValue(
+            createRateLimitMiddleware(
+                redisClient,
+                'resetKey',
+                config.rateLimit.resetKey,
+            ),
+        );
 
     container
         .bind<RateLimitMiddlewareFunction>(TYPES.ValidateResetKeyRateLimiter)
-        .toConstantValue(createRateLimitMiddleware(redisClient, 'validateResetKey', config.rateLimit.validateResetKey));
+        .toConstantValue(
+            createRateLimitMiddleware(
+                redisClient,
+                'validateResetKey',
+                config.rateLimit.validateResetKey,
+            ),
+        );
 
     container
         .bind<RateLimitMiddlewareFunction>(TYPES.ResetPasswordRateLimiter)
-        .toConstantValue(createRateLimitMiddleware(redisClient, 'resetPassword', config.rateLimit.resetPassword));
+        .toConstantValue(
+            createRateLimitMiddleware(
+                redisClient,
+                'resetPassword',
+                config.rateLimit.resetPassword,
+            ),
+        );
 
     return container;
 }

@@ -1,6 +1,9 @@
 import fs from 'node:fs';
 
-import { silenceConsole, type CapturedConsole } from '../../helpers/test-console';
+import {
+    silenceConsole,
+    type CapturedConsole,
+} from '../../helpers/test-console';
 import { Producer } from '../../../src/eventbus/producer';
 import type { KafkaClient } from '../../../src/eventbus/types';
 
@@ -16,7 +19,9 @@ describe('Producer', () => {
         mockedFs.appendFileSync.mockClear();
     });
 
-    afterEach(() => { captured.restore(); });
+    afterEach(() => {
+        captured.restore();
+    });
 
     describe('without outputPath', () => {
         let producer: Producer;
@@ -60,7 +65,10 @@ describe('Producer', () => {
         });
 
         it('should not write to file when outputPath is not set', async () => {
-            await producer.publish({ topic: 'any', events: [{ type: 'E', data: null }] });
+            await producer.publish({
+                topic: 'any',
+                events: [{ type: 'E', data: null }],
+            });
 
             expect(mockedFs.appendFileSync).not.toHaveBeenCalled();
         });
@@ -70,7 +78,10 @@ describe('Producer', () => {
         let producer: Producer;
 
         beforeEach(() => {
-            const client: KafkaClient = { mode: 'emulated', outputPath: '/tmp/eventbus.jsonl' };
+            const client: KafkaClient = {
+                mode: 'emulated',
+                outputPath: '/tmp/eventbus.jsonl',
+            };
             producer = new Producer(client);
         });
 
@@ -94,7 +105,10 @@ describe('Producer', () => {
         });
 
         it('should write to the configured path', async () => {
-            await producer.publish({ topic: 'any', events: [{ type: 'E', data: null }] });
+            await producer.publish({
+                topic: 'any',
+                events: [{ type: 'E', data: null }],
+            });
 
             expect(mockedFs.appendFileSync).toHaveBeenCalledWith(
                 '/tmp/eventbus.jsonl',
@@ -117,7 +131,10 @@ describe('Producer', () => {
         });
 
         it('should also log to console when writing to file', async () => {
-            await producer.publish({ topic: 'any', events: [{ type: 'E', data: null }] });
+            await producer.publish({
+                topic: 'any',
+                events: [{ type: 'E', data: null }],
+            });
 
             expect(captured.log).toHaveLength(1);
             expect(mockedFs.appendFileSync).toHaveBeenCalledTimes(1);

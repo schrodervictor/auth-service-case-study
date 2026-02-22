@@ -51,10 +51,15 @@ describe('loadSecrets', () => {
                 Parameters: [
                     { Name: '/app/jwt-secret', Value: VALID_SECRETS.jwtSecret },
                     { Name: '/app/db-user', Value: VALID_SECRETS.databaseUser },
-                    { Name: '/app/db-password', Value: VALID_SECRETS.databasePassword },
+                    {
+                        Name: '/app/db-password',
+                        Value: VALID_SECRETS.databasePassword,
+                    },
                 ],
             });
-            (SSMClient as jest.Mock).mockImplementation(() => ({ send: mockSend }));
+            (SSMClient as jest.Mock).mockImplementation(() => ({
+                send: mockSend,
+            }));
 
             process.env.SECRETS_PATH = '/tmp/secrets.json';
             const config = configWith({
@@ -76,14 +81,19 @@ describe('loadSecrets', () => {
         });
 
         it('should use file backend when SECRETS_PATH env var is set and no ssm configured', async () => {
-            mockedFs.readFileSync.mockReturnValue(JSON.stringify(VALID_SECRETS));
+            mockedFs.readFileSync.mockReturnValue(
+                JSON.stringify(VALID_SECRETS),
+            );
 
             process.env.SECRETS_PATH = '/tmp/secrets.json';
             const config = configWith({});
 
             await loadSecrets(config);
 
-            expect(mockedFs.readFileSync).toHaveBeenCalledWith('/tmp/secrets.json', 'utf-8');
+            expect(mockedFs.readFileSync).toHaveBeenCalledWith(
+                '/tmp/secrets.json',
+                'utf-8',
+            );
         });
 
         it('should throw when neither ssm nor SECRETS_PATH env var is configured', async () => {
@@ -106,7 +116,9 @@ describe('loadSecrets', () => {
         });
 
         it('should parse valid JSON and return validated AppSecrets', async () => {
-            mockedFs.readFileSync.mockReturnValue(JSON.stringify(VALID_SECRETS));
+            mockedFs.readFileSync.mockReturnValue(
+                JSON.stringify(VALID_SECRETS),
+            );
 
             const result = await loadSecrets(fileConfig());
 
@@ -115,15 +127,22 @@ describe('loadSecrets', () => {
 
         it('should read from the path specified in SECRETS_PATH env var', async () => {
             process.env.SECRETS_PATH = '/custom/path/secrets.json';
-            mockedFs.readFileSync.mockReturnValue(JSON.stringify(VALID_SECRETS));
+            mockedFs.readFileSync.mockReturnValue(
+                JSON.stringify(VALID_SECRETS),
+            );
 
             await loadSecrets(fileConfig());
 
-            expect(mockedFs.readFileSync).toHaveBeenCalledWith('/custom/path/secrets.json', 'utf-8');
+            expect(mockedFs.readFileSync).toHaveBeenCalledWith(
+                '/custom/path/secrets.json',
+                'utf-8',
+            );
         });
 
         it('should return a frozen object', async () => {
-            mockedFs.readFileSync.mockReturnValue(JSON.stringify(VALID_SECRETS));
+            mockedFs.readFileSync.mockReturnValue(
+                JSON.stringify(VALID_SECRETS),
+            );
 
             const result = await loadSecrets(fileConfig());
 
@@ -185,7 +204,8 @@ describe('loadSecrets', () => {
         beforeEach(async () => {
             const ssmModule = await import('@aws-sdk/client-ssm');
             SSMClient = ssmModule.SSMClient as jest.Mock;
-            GetParametersCommand = ssmModule.GetParametersCommand as unknown as jest.Mock;
+            GetParametersCommand =
+                ssmModule.GetParametersCommand as unknown as jest.Mock;
 
             mockSend = jest.fn();
             SSMClient.mockImplementation(() => ({ send: mockSend }));
@@ -195,9 +215,18 @@ describe('loadSecrets', () => {
         it('should create SSMClient with the correct region from config', async () => {
             mockSend.mockResolvedValue({
                 Parameters: [
-                    { Name: SSM_PARAMS.jwtSecret, Value: VALID_SECRETS.jwtSecret },
-                    { Name: SSM_PARAMS.databaseUser, Value: VALID_SECRETS.databaseUser },
-                    { Name: SSM_PARAMS.databasePassword, Value: VALID_SECRETS.databasePassword },
+                    {
+                        Name: SSM_PARAMS.jwtSecret,
+                        Value: VALID_SECRETS.jwtSecret,
+                    },
+                    {
+                        Name: SSM_PARAMS.databaseUser,
+                        Value: VALID_SECRETS.databaseUser,
+                    },
+                    {
+                        Name: SSM_PARAMS.databasePassword,
+                        Value: VALID_SECRETS.databasePassword,
+                    },
                 ],
             });
 
@@ -209,9 +238,18 @@ describe('loadSecrets', () => {
         it('should call GetParametersCommand with WithDecryption: true', async () => {
             mockSend.mockResolvedValue({
                 Parameters: [
-                    { Name: SSM_PARAMS.jwtSecret, Value: VALID_SECRETS.jwtSecret },
-                    { Name: SSM_PARAMS.databaseUser, Value: VALID_SECRETS.databaseUser },
-                    { Name: SSM_PARAMS.databasePassword, Value: VALID_SECRETS.databasePassword },
+                    {
+                        Name: SSM_PARAMS.jwtSecret,
+                        Value: VALID_SECRETS.jwtSecret,
+                    },
+                    {
+                        Name: SSM_PARAMS.databaseUser,
+                        Value: VALID_SECRETS.databaseUser,
+                    },
+                    {
+                        Name: SSM_PARAMS.databasePassword,
+                        Value: VALID_SECRETS.databasePassword,
+                    },
                 ],
             });
 
@@ -225,9 +263,18 @@ describe('loadSecrets', () => {
         it('should map SSM parameter names to AppSecrets keys correctly', async () => {
             mockSend.mockResolvedValue({
                 Parameters: [
-                    { Name: SSM_PARAMS.jwtSecret, Value: VALID_SECRETS.jwtSecret },
-                    { Name: SSM_PARAMS.databaseUser, Value: VALID_SECRETS.databaseUser },
-                    { Name: SSM_PARAMS.databasePassword, Value: VALID_SECRETS.databasePassword },
+                    {
+                        Name: SSM_PARAMS.jwtSecret,
+                        Value: VALID_SECRETS.jwtSecret,
+                    },
+                    {
+                        Name: SSM_PARAMS.databaseUser,
+                        Value: VALID_SECRETS.databaseUser,
+                    },
+                    {
+                        Name: SSM_PARAMS.databasePassword,
+                        Value: VALID_SECRETS.databasePassword,
+                    },
                 ],
             });
 
@@ -239,9 +286,18 @@ describe('loadSecrets', () => {
         it('should return a frozen object', async () => {
             mockSend.mockResolvedValue({
                 Parameters: [
-                    { Name: SSM_PARAMS.jwtSecret, Value: VALID_SECRETS.jwtSecret },
-                    { Name: SSM_PARAMS.databaseUser, Value: VALID_SECRETS.databaseUser },
-                    { Name: SSM_PARAMS.databasePassword, Value: VALID_SECRETS.databasePassword },
+                    {
+                        Name: SSM_PARAMS.jwtSecret,
+                        Value: VALID_SECRETS.jwtSecret,
+                    },
+                    {
+                        Name: SSM_PARAMS.databaseUser,
+                        Value: VALID_SECRETS.databaseUser,
+                    },
+                    {
+                        Name: SSM_PARAMS.databasePassword,
+                        Value: VALID_SECRETS.databasePassword,
+                    },
                 ],
             });
 
@@ -253,7 +309,10 @@ describe('loadSecrets', () => {
         it('should throw when SSM returns incomplete parameters', async () => {
             mockSend.mockResolvedValue({
                 Parameters: [
-                    { Name: SSM_PARAMS.jwtSecret, Value: VALID_SECRETS.jwtSecret },
+                    {
+                        Name: SSM_PARAMS.jwtSecret,
+                        Value: VALID_SECRETS.jwtSecret,
+                    },
                     // Missing databaseUser and databasePassword
                 ],
             });
@@ -292,7 +351,9 @@ describe('loadSecrets', () => {
         it('should propagate SSM client errors', async () => {
             mockSend.mockRejectedValue(new Error('SSM access denied'));
 
-            await expect(loadSecrets(ssmConfig())).rejects.toThrow(/SSM access denied/);
+            await expect(loadSecrets(ssmConfig())).rejects.toThrow(
+                /SSM access denied/,
+            );
         });
     });
 });

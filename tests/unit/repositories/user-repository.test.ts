@@ -2,7 +2,10 @@ import 'reflect-metadata';
 import type { DataSource } from 'typeorm';
 
 import { UserRepositoryImpl } from '../../../src/repositories/user-repository';
-import type { CreateUserData, UpdateUserData } from '../../../src/repositories/user-repository';
+import type {
+    CreateUserData,
+    UpdateUserData,
+} from '../../../src/repositories/user-repository';
 import { User } from '../../../src/entities/user';
 
 const createMockRepository = () => ({
@@ -12,7 +15,9 @@ const createMockRepository = () => ({
     update: jest.fn(),
 });
 
-const createMockDataSource = (mockRepository: ReturnType<typeof createMockRepository>) =>
+const createMockDataSource = (
+    mockRepository: ReturnType<typeof createMockRepository>,
+) =>
     ({
         getRepository: jest.fn().mockReturnValue(mockRepository),
     }) as unknown as DataSource;
@@ -40,7 +45,9 @@ describe('UserRepositoryImpl', () => {
 
             await repo.findByEmail('test@example.com');
 
-            expect(mockRepository.findOneBy).toHaveBeenCalledWith({ email: 'test@example.com' });
+            expect(mockRepository.findOneBy).toHaveBeenCalledWith({
+                email: 'test@example.com',
+            });
         });
 
         it('should return the User when found', async () => {
@@ -75,7 +82,9 @@ describe('UserRepositoryImpl', () => {
 
             await repo.findById('uuid-1');
 
-            expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 'uuid-1' });
+            expect(mockRepository.findOneBy).toHaveBeenCalledWith({
+                id: 'uuid-1',
+            });
         });
 
         it('should return the User when found', async () => {
@@ -168,13 +177,18 @@ describe('UserRepositoryImpl', () => {
         it('should return null when user not found by id', async () => {
             mockRepository.findOneBy.mockResolvedValue(null);
 
-            const result = await repo.update('nonexistent-uuid', { firstName: 'Updated' });
+            const result = await repo.update('nonexistent-uuid', {
+                firstName: 'Updated',
+            });
 
             expect(result).toBeNull();
         });
 
         it('should call repository.save with merged data when user exists', async () => {
-            const updateData: UpdateUserData = { firstName: 'Updated', lastName: 'Name' };
+            const updateData: UpdateUserData = {
+                firstName: 'Updated',
+                lastName: 'Name',
+            };
             const mergedUser = { ...existingUser, ...updateData };
             mockRepository.findOneBy.mockResolvedValue({ ...existingUser });
             mockRepository.save.mockResolvedValue(mergedUser);
@@ -192,7 +206,11 @@ describe('UserRepositoryImpl', () => {
 
         it('should return the updated User', async () => {
             const updateData: UpdateUserData = { firstName: 'Updated' };
-            const updatedUser = { ...existingUser, ...updateData, updatedAt: new Date() };
+            const updatedUser = {
+                ...existingUser,
+                ...updateData,
+                updatedAt: new Date(),
+            };
             mockRepository.findOneBy.mockResolvedValue({ ...existingUser });
             mockRepository.save.mockResolvedValue(updatedUser);
 
@@ -236,7 +254,10 @@ describe('UserRepositoryImpl', () => {
         it('should return true when the user exists and hash is updated', async () => {
             mockRepository.update.mockResolvedValue({ affected: 1 });
 
-            const result = await repo.updatePasswordHash('uuid-1', 'new-hashed-password');
+            const result = await repo.updatePasswordHash(
+                'uuid-1',
+                'new-hashed-password',
+            );
 
             expect(result).toBe(true);
         });
@@ -244,7 +265,10 @@ describe('UserRepositoryImpl', () => {
         it('should return false when the user does not exist', async () => {
             mockRepository.update.mockResolvedValue({ affected: 0 });
 
-            const result = await repo.updatePasswordHash('nonexistent-uuid', 'new-hashed-password');
+            const result = await repo.updatePasswordHash(
+                'nonexistent-uuid',
+                'new-hashed-password',
+            );
 
             expect(result).toBe(false);
         });

@@ -12,7 +12,9 @@ const createMockRepository = () => ({
     createQueryBuilder: jest.fn(),
 });
 
-const createMockDataSource = (mockRepository: ReturnType<typeof createMockRepository>) =>
+const createMockDataSource = (
+    mockRepository: ReturnType<typeof createMockRepository>,
+) =>
     ({
         getRepository: jest.fn().mockReturnValue(mockRepository),
     }) as unknown as DataSource;
@@ -30,7 +32,9 @@ describe('PasswordResetKeyRepositoryImpl', () => {
 
     describe('constructor', () => {
         it('should call dataSource.getRepository(PasswordResetKey)', () => {
-            expect(mockDataSource.getRepository).toHaveBeenCalledWith(PasswordResetKey);
+            expect(mockDataSource.getRepository).toHaveBeenCalledWith(
+                PasswordResetKey,
+            );
         });
     });
 
@@ -137,7 +141,9 @@ describe('PasswordResetKeyRepositoryImpl', () => {
 
             await repo.findByKeyHash('some-hash');
 
-            expect(mockRepository.findOneBy).toHaveBeenCalledWith({ keyHash: 'some-hash' });
+            expect(mockRepository.findOneBy).toHaveBeenCalledWith({
+                keyHash: 'some-hash',
+            });
         });
 
         it('should return the PasswordResetKey when found', async () => {
@@ -170,7 +176,9 @@ describe('PasswordResetKeyRepositoryImpl', () => {
 
             await repo.deleteByKeyHash('some-hash');
 
-            expect(mockRepository.delete).toHaveBeenCalledWith({ keyHash: 'some-hash' });
+            expect(mockRepository.delete).toHaveBeenCalledWith({
+                keyHash: 'some-hash',
+            });
         });
     });
 
@@ -180,7 +188,9 @@ describe('PasswordResetKeyRepositoryImpl', () => {
 
             await repo.deleteAllByUserId('user-uuid-1');
 
-            expect(mockRepository.delete).toHaveBeenCalledWith({ userId: 'user-uuid-1' });
+            expect(mockRepository.delete).toHaveBeenCalledWith({
+                userId: 'user-uuid-1',
+            });
         });
     });
 

@@ -41,7 +41,7 @@ describe('OpenAPI Spec', () => {
             '/users/password/reset',
         ];
 
-        it.each(expectedPaths)('should define path %s', (path) => {
+        it.each(expectedPaths)('should define path %s', path => {
             expect(openApiSpec.paths[path]).toBeDefined();
         });
 
@@ -88,27 +88,27 @@ describe('OpenAPI Spec', () => {
     describe('security annotations', () => {
         describe('protected endpoints should require bearerAuth', () => {
             it('should require bearerAuth for POST /users/logout', () => {
-                expect(openApiSpec.paths['/users/logout'].post.security).toEqual([
-                    { bearerAuth: [] },
-                ]);
+                expect(
+                    openApiSpec.paths['/users/logout'].post.security,
+                ).toEqual([{ bearerAuth: [] }]);
             });
 
             it('should require bearerAuth for GET /users/profile', () => {
-                expect(openApiSpec.paths['/users/profile'].get.security).toEqual([
-                    { bearerAuth: [] },
-                ]);
+                expect(
+                    openApiSpec.paths['/users/profile'].get.security,
+                ).toEqual([{ bearerAuth: [] }]);
             });
 
             it('should require bearerAuth for PUT /users/profile', () => {
-                expect(openApiSpec.paths['/users/profile'].put.security).toEqual([
-                    { bearerAuth: [] },
-                ]);
+                expect(
+                    openApiSpec.paths['/users/profile'].put.security,
+                ).toEqual([{ bearerAuth: [] }]);
             });
 
             it('should require bearerAuth for PUT /users/password', () => {
-                expect(openApiSpec.paths['/users/password'].put.security).toEqual([
-                    { bearerAuth: [] },
-                ]);
+                expect(
+                    openApiSpec.paths['/users/password'].put.security,
+                ).toEqual([{ bearerAuth: [] }]);
             });
         });
 
@@ -147,32 +147,48 @@ describe('OpenAPI Spec', () => {
         });
 
         it('should use HealthCheckResponse $ref for /health-check 200 response', () => {
-            const response200 = openApiSpec.paths['/health-check'].get.responses['200'] as Record<string, unknown>;
-            const content = response200.content as Record<string, Record<string, Record<string, unknown>>>;
+            const response200 = openApiSpec.paths['/health-check'].get
+                .responses['200'] as Record<string, unknown>;
+            const content = response200.content as Record<
+                string,
+                Record<string, Record<string, unknown>>
+            >;
             expect(content['application/json'].schema).toEqual({
                 $ref: '#/components/schemas/HealthCheckResponse',
             });
         });
 
         it('should use HealthCheckResponse $ref for /health-check 503 response', () => {
-            const response503 = openApiSpec.paths['/health-check'].get.responses['503'] as Record<string, unknown>;
-            const content = response503.content as Record<string, Record<string, Record<string, unknown>>>;
+            const response503 = openApiSpec.paths['/health-check'].get
+                .responses['503'] as Record<string, unknown>;
+            const content = response503.content as Record<
+                string,
+                Record<string, Record<string, unknown>>
+            >;
             expect(content['application/json'].schema).toEqual({
                 $ref: '#/components/schemas/HealthCheckResponse',
             });
         });
 
         it('should not have old message property in /health-check 200 response schema', () => {
-            const response200 = openApiSpec.paths['/health-check'].get.responses['200'] as Record<string, unknown>;
-            const content = response200.content as Record<string, Record<string, Record<string, unknown>>>;
-            const schema = content['application/json'].schema as Record<string, unknown>;
+            const response200 = openApiSpec.paths['/health-check'].get
+                .responses['200'] as Record<string, unknown>;
+            const content = response200.content as Record<
+                string,
+                Record<string, Record<string, unknown>>
+            >;
+            const schema = content['application/json'].schema as Record<
+                string,
+                unknown
+            >;
             // Should be a $ref, not an inline schema with message property
             expect(schema.$ref).toBeDefined();
             expect(schema.properties).toBeUndefined();
         });
 
         it('should define 201, 409, 415, 422 for POST /users/register', () => {
-            const responses = openApiSpec.paths['/users/register'].post.responses;
+            const responses =
+                openApiSpec.paths['/users/register'].post.responses;
             expect(responses['201']).toBeDefined();
             expect(responses['409']).toBeDefined();
             expect(responses['415']).toBeDefined();
@@ -189,7 +205,8 @@ describe('OpenAPI Spec', () => {
         });
 
         it('should define 200, 401, 415, 422, 429 for POST /users/refresh', () => {
-            const responses = openApiSpec.paths['/users/refresh'].post.responses;
+            const responses =
+                openApiSpec.paths['/users/refresh'].post.responses;
             expect(responses['200']).toBeDefined();
             expect(responses['401']).toBeDefined();
             expect(responses['415']).toBeDefined();
@@ -218,7 +235,8 @@ describe('OpenAPI Spec', () => {
         });
 
         it('should define 204, 401, 415, 422 for PUT /users/password', () => {
-            const responses = openApiSpec.paths['/users/password'].put.responses;
+            const responses =
+                openApiSpec.paths['/users/password'].put.responses;
             expect(responses['204']).toBeDefined();
             expect(responses['401']).toBeDefined();
             expect(responses['415']).toBeDefined();
@@ -240,27 +258,37 @@ describe('OpenAPI Spec', () => {
             'HealthCheckResponse',
         ];
 
-        it.each(expectedSchemas)('should define %s schema', (schemaName) => {
+        it.each(expectedSchemas)('should define %s schema', schemaName => {
             expect(openApiSpec.components.schemas[schemaName]).toBeDefined();
         });
 
         describe('HealthCheckResponse schema', () => {
             it('should have a status property with enum values healthy, degraded, unhealthy', () => {
-                const schema = openApiSpec.components.schemas.HealthCheckResponse as Record<string, unknown>;
+                const schema = openApiSpec.components.schemas
+                    .HealthCheckResponse as Record<string, unknown>;
                 expect(schema).toBeDefined();
-                const properties = schema.properties as Record<string, Record<string, unknown>>;
+                const properties = schema.properties as Record<
+                    string,
+                    Record<string, unknown>
+                >;
                 expect(properties.status).toBeDefined();
                 expect(properties.status.type).toBe('string');
-                expect(properties.status.enum).toEqual(['healthy', 'degraded', 'unhealthy']);
+                expect(properties.status.enum).toEqual([
+                    'healthy',
+                    'degraded',
+                    'unhealthy',
+                ]);
             });
 
             it('should require the status field', () => {
-                const schema = openApiSpec.components.schemas.HealthCheckResponse as Record<string, unknown>;
+                const schema = openApiSpec.components.schemas
+                    .HealthCheckResponse as Record<string, unknown>;
                 expect(schema.required).toEqual(['status']);
             });
 
             it('should not have a message property', () => {
-                const schema = openApiSpec.components.schemas.HealthCheckResponse as Record<string, unknown>;
+                const schema = openApiSpec.components.schemas
+                    .HealthCheckResponse as Record<string, unknown>;
                 const properties = schema.properties as Record<string, unknown>;
                 expect(properties.message).toBeUndefined();
             });
@@ -269,7 +297,8 @@ describe('OpenAPI Spec', () => {
 
     describe('security schemes', () => {
         it('should define bearerAuth security scheme', () => {
-            const bearerAuth = openApiSpec.components.securitySchemes?.bearerAuth;
+            const bearerAuth =
+                openApiSpec.components.securitySchemes?.bearerAuth;
             expect(bearerAuth).toBeDefined();
             expect(bearerAuth.type).toBe('http');
             expect(bearerAuth.scheme).toBe('bearer');

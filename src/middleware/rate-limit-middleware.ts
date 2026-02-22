@@ -31,8 +31,8 @@ export function createRateLimitMiddleware(
         const ip = req.ip ?? 'unknown';
         const key = `rateLimit:${endpointKey}:${ip}`;
 
-        checkRateLimit(redisClient, key, config)
-            .then(({ allowed, retryAfter }) => {
+        checkRateLimit(redisClient, key, config).then(
+            ({ allowed, retryAfter }) => {
                 if (!allowed) {
                     res.set('Retry-After', String(retryAfter));
                     res.status(429).json({
@@ -42,7 +42,8 @@ export function createRateLimitMiddleware(
                 }
 
                 next();
-            });
+            },
+        );
     };
 }
 

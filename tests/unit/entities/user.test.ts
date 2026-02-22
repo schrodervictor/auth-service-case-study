@@ -7,9 +7,7 @@ const storage = getMetadataArgsStorage();
 describe('User Entity', () => {
     describe('table registration', () => {
         it('should be registered as an entity with table name "users"', () => {
-            const tableMetadata = storage.tables.find(
-                (t) => t.target === User,
-            );
+            const tableMetadata = storage.tables.find(t => t.target === User);
 
             expect(tableMetadata).toBeDefined();
             expect(tableMetadata!.name).toBe('users');
@@ -19,7 +17,7 @@ describe('User Entity', () => {
     describe('columns', () => {
         const getColumn = (propertyName: string) =>
             storage.columns.find(
-                (c) => c.target === User && c.propertyName === propertyName,
+                c => c.target === User && c.propertyName === propertyName,
             );
 
         it('should have an "id" column with uuid generation strategy', () => {
@@ -27,7 +25,7 @@ describe('User Entity', () => {
             expect(idColumn).toBeDefined();
 
             const generation = storage.generations.find(
-                (g) => g.target === User && g.propertyName === 'id',
+                g => g.target === User && g.propertyName === 'id',
             );
             expect(generation).toBeDefined();
             expect(generation!.strategy).toBe('uuid');
@@ -42,7 +40,7 @@ describe('User Entity', () => {
                 emailColumn!.options && emailColumn!.options.unique === true;
 
             const hasUniqueDecorator = storage.uniques.some(
-                (u) =>
+                u =>
                     u.target === User &&
                     Array.isArray(u.columns) &&
                     u.columns.includes('email'),

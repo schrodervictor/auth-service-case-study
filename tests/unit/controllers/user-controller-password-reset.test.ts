@@ -71,7 +71,8 @@ describe('UserController — Password Reset', () => {
 
             expect(res.statusCode).toBe(200);
             expect(res.body).toEqual({
-                message: 'If an account with that email exists, a reset key has been generated.',
+                message:
+                    'If an account with that email exists, a reset key has been generated.',
             });
         });
 
@@ -84,7 +85,8 @@ describe('UserController — Password Reset', () => {
 
             expect(res.statusCode).toBe(200);
             expect(res.body).toEqual({
-                message: 'If an account with that email exists, a reset key has been generated.',
+                message:
+                    'If an account with that email exists, a reset key has been generated.',
             });
         });
 
@@ -95,11 +97,15 @@ describe('UserController — Password Reset', () => {
 
             await controller.requestResetKey(req as Request, res as Response);
 
-            expect(mockService.requestPasswordReset).toHaveBeenCalledWith('test@example.com');
+            expect(mockService.requestPasswordReset).toHaveBeenCalledWith(
+                'test@example.com',
+            );
         });
 
         it('should return 500 when service throws an unexpected error', async () => {
-            mockService.requestPasswordReset.mockRejectedValue(new Error('DB error'));
+            mockService.requestPasswordReset.mockRejectedValue(
+                new Error('DB error'),
+            );
             const req = createMockRequest({ email: 'test@example.com' });
             const res = createMockResponse();
 
@@ -140,11 +146,15 @@ describe('UserController — Password Reset', () => {
 
             await controller.validateResetKey(req as Request, res as Response);
 
-            expect(mockService.validateResetKey).toHaveBeenCalledWith('my-reset-key');
+            expect(mockService.validateResetKey).toHaveBeenCalledWith(
+                'my-reset-key',
+            );
         });
 
         it('should return 500 when service throws an unexpected error', async () => {
-            mockService.validateResetKey.mockRejectedValue(new Error('DB error'));
+            mockService.validateResetKey.mockRejectedValue(
+                new Error('DB error'),
+            );
             const req = createMockRequest({ resetKey: 'some-key' });
             const res = createMockResponse();
 
@@ -158,7 +168,10 @@ describe('UserController — Password Reset', () => {
     describe('POST /password/reset', () => {
         it('should return 200 with success message on successful password reset', async () => {
             mockService.resetPassword.mockResolvedValue(undefined);
-            const req = createMockRequest({ resetKey: 'valid-key', newPassword: 'NewStrong1' });
+            const req = createMockRequest({
+                resetKey: 'valid-key',
+                newPassword: 'NewStrong1',
+            });
             const res = createMockResponse();
 
             await controller.resetPassword(req as Request, res as Response);
@@ -171,32 +184,50 @@ describe('UserController — Password Reset', () => {
 
         it('should call userService.resetPassword with resetKey and newPassword from body', async () => {
             mockService.resetPassword.mockResolvedValue(undefined);
-            const req = createMockRequest({ resetKey: 'my-key', newPassword: 'NewStrong1' });
+            const req = createMockRequest({
+                resetKey: 'my-key',
+                newPassword: 'NewStrong1',
+            });
             const res = createMockResponse();
 
             await controller.resetPassword(req as Request, res as Response);
 
-            expect(mockService.resetPassword).toHaveBeenCalledWith('my-key', 'NewStrong1');
+            expect(mockService.resetPassword).toHaveBeenCalledWith(
+                'my-key',
+                'NewStrong1',
+            );
         });
 
         it('should return 400 when service throws InvalidResetKeyError', async () => {
-            mockService.resetPassword.mockRejectedValue(new InvalidResetKeyError());
-            const req = createMockRequest({ resetKey: 'bad-key', newPassword: 'NewStrong1' });
+            mockService.resetPassword.mockRejectedValue(
+                new InvalidResetKeyError(),
+            );
+            const req = createMockRequest({
+                resetKey: 'bad-key',
+                newPassword: 'NewStrong1',
+            });
             const res = createMockResponse();
 
             await controller.resetPassword(req as Request, res as Response);
 
             expect(res.statusCode).toBe(400);
-            expect(res.body).toEqual({ message: 'Invalid or expired reset key' });
+            expect(res.body).toEqual({
+                message: 'Invalid or expired reset key',
+            });
         });
 
         it('should return 422 when service throws ValidationError (weak password)', async () => {
             mockService.resetPassword.mockRejectedValue(
                 new ValidationError('Validation failed', {
-                    newPassword: ['Password must be at least 8 characters long'],
+                    newPassword: [
+                        'Password must be at least 8 characters long',
+                    ],
                 }),
             );
-            const req = createMockRequest({ resetKey: 'valid-key', newPassword: 'weak' });
+            const req = createMockRequest({
+                resetKey: 'valid-key',
+                newPassword: 'weak',
+            });
             const res = createMockResponse();
 
             await controller.resetPassword(req as Request, res as Response);
@@ -205,14 +236,19 @@ describe('UserController — Password Reset', () => {
             expect(res.body).toEqual({
                 message: 'Validation failed',
                 errors: {
-                    newPassword: ['Password must be at least 8 characters long'],
+                    newPassword: [
+                        'Password must be at least 8 characters long',
+                    ],
                 },
             });
         });
 
         it('should return 500 when service throws an unexpected error', async () => {
             mockService.resetPassword.mockRejectedValue(new Error('DB error'));
-            const req = createMockRequest({ resetKey: 'valid-key', newPassword: 'NewStrong1' });
+            const req = createMockRequest({
+                resetKey: 'valid-key',
+                newPassword: 'NewStrong1',
+            });
             const res = createMockResponse();
 
             await controller.resetPassword(req as Request, res as Response);
@@ -231,11 +267,14 @@ describe('UserController — Password Reset', () => {
         };
 
         const getMethodMetadata = (): MethodMetadata[] =>
-            Reflect.getMetadata('inversify-express-utils:controller-method', UserController) ?? [];
+            Reflect.getMetadata(
+                'inversify-express-utils:controller-method',
+                UserController,
+            ) ?? [];
 
         it('should have TYPES.ResetKeyRateLimiter applied to requestResetKey endpoint', () => {
             const metadata = getMethodMetadata();
-            const meta = metadata.find((m) => m.key === 'requestResetKey');
+            const meta = metadata.find(m => m.key === 'requestResetKey');
 
             expect(meta).toBeDefined();
             expect(meta!.middleware).toContain(TYPES.ResetKeyRateLimiter);
@@ -243,15 +282,17 @@ describe('UserController — Password Reset', () => {
 
         it('should have TYPES.ValidateResetKeyRateLimiter applied to validateResetKey endpoint', () => {
             const metadata = getMethodMetadata();
-            const meta = metadata.find((m) => m.key === 'validateResetKey');
+            const meta = metadata.find(m => m.key === 'validateResetKey');
 
             expect(meta).toBeDefined();
-            expect(meta!.middleware).toContain(TYPES.ValidateResetKeyRateLimiter);
+            expect(meta!.middleware).toContain(
+                TYPES.ValidateResetKeyRateLimiter,
+            );
         });
 
         it('should have TYPES.ResetPasswordRateLimiter applied to resetPassword endpoint', () => {
             const metadata = getMethodMetadata();
-            const meta = metadata.find((m) => m.key === 'resetPassword');
+            const meta = metadata.find(m => m.key === 'resetPassword');
 
             expect(meta).toBeDefined();
             expect(meta!.middleware).toContain(TYPES.ResetPasswordRateLimiter);
@@ -260,8 +301,12 @@ describe('UserController — Password Reset', () => {
         it('should have TYPES.JsonContentType on all three password-reset endpoints', () => {
             const metadata = getMethodMetadata();
 
-            for (const key of ['requestResetKey', 'validateResetKey', 'resetPassword']) {
-                const meta = metadata.find((m) => m.key === key);
+            for (const key of [
+                'requestResetKey',
+                'validateResetKey',
+                'resetPassword',
+            ]) {
+                const meta = metadata.find(m => m.key === key);
                 expect(meta).toBeDefined();
                 expect(meta!.middleware).toContain(TYPES.JsonContentType);
             }
@@ -270,8 +315,12 @@ describe('UserController — Password Reset', () => {
         it('should NOT have TYPES.AuthMiddleware on any password-reset endpoint', () => {
             const metadata = getMethodMetadata();
 
-            for (const key of ['requestResetKey', 'validateResetKey', 'resetPassword']) {
-                const meta = metadata.find((m) => m.key === key);
+            for (const key of [
+                'requestResetKey',
+                'validateResetKey',
+                'resetPassword',
+            ]) {
+                const meta = metadata.find(m => m.key === key);
                 expect(meta).toBeDefined();
                 expect(meta!.middleware).not.toContain(TYPES.AuthMiddleware);
             }
@@ -279,43 +328,49 @@ describe('UserController — Password Reset', () => {
 
         it('should have validate(ResetKeyRequestSchema) on requestResetKey endpoint', () => {
             const metadata = getMethodMetadata();
-            const meta = metadata.find((m) => m.key === 'requestResetKey');
+            const meta = metadata.find(m => m.key === 'requestResetKey');
             expect(meta).toBeDefined();
 
             const validateMiddleware = validate(ResetKeyRequestSchema);
             const hasValidateMiddleware = meta!.middleware.some(
-                (mw) => typeof mw === 'function' && mw.toString() === validateMiddleware.toString(),
+                mw =>
+                    typeof mw === 'function' &&
+                    mw.toString() === validateMiddleware.toString(),
             );
             expect(hasValidateMiddleware).toBe(true);
         });
 
         it('should have validate(ValidateResetKeyRequestSchema) on validateResetKey endpoint', () => {
             const metadata = getMethodMetadata();
-            const meta = metadata.find((m) => m.key === 'validateResetKey');
+            const meta = metadata.find(m => m.key === 'validateResetKey');
             expect(meta).toBeDefined();
 
             const validateMiddleware = validate(ValidateResetKeyRequestSchema);
             const hasValidateMiddleware = meta!.middleware.some(
-                (mw) => typeof mw === 'function' && mw.toString() === validateMiddleware.toString(),
+                mw =>
+                    typeof mw === 'function' &&
+                    mw.toString() === validateMiddleware.toString(),
             );
             expect(hasValidateMiddleware).toBe(true);
         });
 
         it('should have validate(ResetPasswordRequestSchema) on resetPassword endpoint', () => {
             const metadata = getMethodMetadata();
-            const meta = metadata.find((m) => m.key === 'resetPassword');
+            const meta = metadata.find(m => m.key === 'resetPassword');
             expect(meta).toBeDefined();
 
             const validateMiddleware = validate(ResetPasswordRequestSchema);
             const hasValidateMiddleware = meta!.middleware.some(
-                (mw) => typeof mw === 'function' && mw.toString() === validateMiddleware.toString(),
+                mw =>
+                    typeof mw === 'function' &&
+                    mw.toString() === validateMiddleware.toString(),
             );
             expect(hasValidateMiddleware).toBe(true);
         });
 
         it('should wire requestResetKey as POST /reset-key', () => {
             const metadata = getMethodMetadata();
-            const meta = metadata.find((m) => m.key === 'requestResetKey');
+            const meta = metadata.find(m => m.key === 'requestResetKey');
 
             expect(meta).toBeDefined();
             expect(meta!.method).toBe('post');
@@ -324,7 +379,7 @@ describe('UserController — Password Reset', () => {
 
         it('should wire validateResetKey as POST /validate-reset-key', () => {
             const metadata = getMethodMetadata();
-            const meta = metadata.find((m) => m.key === 'validateResetKey');
+            const meta = metadata.find(m => m.key === 'validateResetKey');
 
             expect(meta).toBeDefined();
             expect(meta!.method).toBe('post');
@@ -333,7 +388,7 @@ describe('UserController — Password Reset', () => {
 
         it('should wire resetPassword as POST /password/reset', () => {
             const metadata = getMethodMetadata();
-            const meta = metadata.find((m) => m.key === 'resetPassword');
+            const meta = metadata.find(m => m.key === 'resetPassword');
 
             expect(meta).toBeDefined();
             expect(meta!.method).toBe('post');

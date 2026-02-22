@@ -59,7 +59,9 @@ describe('createAuthMiddleware', () => {
             middleware(req as Request, res as Response, next);
 
             expect(mockVerify).toHaveBeenCalledWith('valid-token', JWT_SECRET);
-            expect((req as AuthenticatedRequest).user).toEqual({ id: 'user-123' });
+            expect((req as AuthenticatedRequest).user).toEqual({
+                id: 'user-123',
+            });
             expect(next).toHaveBeenCalled();
             expect(res.status).not.toHaveBeenCalled();
         });
@@ -119,7 +121,9 @@ describe('createAuthMiddleware', () => {
         it('should return 401 when jwt.verify throws JsonWebTokenError', () => {
             const error = new Error('invalid signature');
             error.name = 'JsonWebTokenError';
-            mockVerify.mockImplementation(() => { throw error; });
+            mockVerify.mockImplementation(() => {
+                throw error;
+            });
             const req = createMockRequest('Bearer bad-token');
             const res = createMockResponse();
             const next = createMockNext();
@@ -134,7 +138,9 @@ describe('createAuthMiddleware', () => {
         it('should return 401 when jwt.verify throws TokenExpiredError', () => {
             const error = new Error('jwt expired');
             error.name = 'TokenExpiredError';
-            mockVerify.mockImplementation(() => { throw error; });
+            mockVerify.mockImplementation(() => {
+                throw error;
+            });
             const req = createMockRequest('Bearer expired-token');
             const res = createMockResponse();
             const next = createMockNext();
@@ -147,7 +153,9 @@ describe('createAuthMiddleware', () => {
         });
 
         it('should return 401 when jwt.verify throws a generic error', () => {
-            mockVerify.mockImplementation(() => { throw new Error('something went wrong'); });
+            mockVerify.mockImplementation(() => {
+                throw new Error('something went wrong');
+            });
             const req = createMockRequest('Bearer malformed-token');
             const res = createMockResponse();
             const next = createMockNext();
@@ -183,7 +191,9 @@ describe('createAuthMiddleware', () => {
 
         it('should not call next() on any error path', () => {
             // jwt.verify error path
-            mockVerify.mockImplementation(() => { throw new Error('bad'); });
+            mockVerify.mockImplementation(() => {
+                throw new Error('bad');
+            });
             const req = createMockRequest('Bearer bad-token');
             const res = createMockResponse();
             const next = createMockNext();

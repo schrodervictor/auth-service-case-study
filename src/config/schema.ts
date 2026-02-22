@@ -83,10 +83,7 @@ const realEventbusSchema = z.object({
     kafka: z.record(z.string(), z.unknown()).default({}),
 });
 
-const eventbusSchema = z.union([
-    emulatedEventbusSchema,
-    realEventbusSchema,
-]);
+const eventbusSchema = z.union([emulatedEventbusSchema, realEventbusSchema]);
 
 export const configSchema = z.object({
     server: serverSchema.default({ port: 9000 }),

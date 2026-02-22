@@ -89,7 +89,9 @@ describe('HealthCheckController', () => {
         });
 
         it('should treat DB query throwing as "down"', async () => {
-            mockDataSource.query.mockRejectedValue(new Error('connection terminated'));
+            mockDataSource.query.mockRejectedValue(
+                new Error('connection terminated'),
+            );
             mockRedisClient.ping.mockResolvedValue(true);
             const res = createMockResponse();
 
@@ -114,14 +116,14 @@ describe('HealthCheckController', () => {
 
             mockDataSource.query.mockImplementation(async () => {
                 callOrder.push('db-start');
-                await new Promise((r) => setTimeout(r, 10));
+                await new Promise(r => setTimeout(r, 10));
                 callOrder.push('db-end');
                 return [{ '?column?': 1 }];
             });
 
             mockRedisClient.ping.mockImplementation(async () => {
                 callOrder.push('redis-start');
-                await new Promise((r) => setTimeout(r, 10));
+                await new Promise(r => setTimeout(r, 10));
                 callOrder.push('redis-end');
                 return true;
             });
@@ -130,10 +132,17 @@ describe('HealthCheckController', () => {
             await controller.healthCheck({} as Request, res as Response);
 
             // Both should start before either ends (parallel execution)
-            expect(callOrder.indexOf('db-start')).toBeLessThan(callOrder.indexOf('db-end'));
-            expect(callOrder.indexOf('redis-start')).toBeLessThan(callOrder.indexOf('redis-end'));
+            expect(callOrder.indexOf('db-start')).toBeLessThan(
+                callOrder.indexOf('db-end'),
+            );
+            expect(callOrder.indexOf('redis-start')).toBeLessThan(
+                callOrder.indexOf('redis-end'),
+            );
             // Both starts should happen before any end
-            const firstEnd = Math.min(callOrder.indexOf('db-end'), callOrder.indexOf('redis-end'));
+            const firstEnd = Math.min(
+                callOrder.indexOf('db-end'),
+                callOrder.indexOf('redis-end'),
+            );
             expect(callOrder.indexOf('db-start')).toBeLessThan(firstEnd);
             expect(callOrder.indexOf('redis-start')).toBeLessThan(firstEnd);
         });

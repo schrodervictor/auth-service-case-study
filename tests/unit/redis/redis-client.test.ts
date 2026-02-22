@@ -1,4 +1,7 @@
-import { silenceConsole, type CapturedConsole } from '../../helpers/test-console';
+import {
+    silenceConsole,
+    type CapturedConsole,
+} from '../../helpers/test-console';
 import { RedisClient } from '../../../src/redis/redis-client';
 
 const createMockIoredis = () => ({
@@ -71,8 +74,12 @@ describe('RedisClient', () => {
     describe('error handling (fail-open)', () => {
         let captured: CapturedConsole;
 
-        beforeEach(() => { captured = silenceConsole('error'); });
-        afterEach(() => { captured.restore(); });
+        beforeEach(() => {
+            captured = silenceConsole('error');
+        });
+        afterEach(() => {
+            captured.restore();
+        });
 
         it('incr should return 0 and log error on failure', async () => {
             const mock = createMockIoredis();
@@ -80,7 +87,9 @@ describe('RedisClient', () => {
             const client = new RedisClient(mock as never);
 
             expect(await client.incr('key')).toBe(0);
-            expect(captured.error).toContainEqual(expect.stringContaining('ECONNREFUSED'));
+            expect(captured.error).toContainEqual(
+                expect.stringContaining('ECONNREFUSED'),
+            );
         });
 
         it('expire should return 0 and log error on failure', async () => {
@@ -89,7 +98,9 @@ describe('RedisClient', () => {
             const client = new RedisClient(mock as never);
 
             expect(await client.expire('key', 60)).toBe(0);
-            expect(captured.error).toContainEqual(expect.stringContaining('timeout'));
+            expect(captured.error).toContainEqual(
+                expect.stringContaining('timeout'),
+            );
         });
 
         it('ttl should return -1 and log error on failure', async () => {
@@ -98,7 +109,9 @@ describe('RedisClient', () => {
             const client = new RedisClient(mock as never);
 
             expect(await client.ttl('key')).toBe(-1);
-            expect(captured.error).toContainEqual(expect.stringContaining('connection lost'));
+            expect(captured.error).toContainEqual(
+                expect.stringContaining('connection lost'),
+            );
         });
 
         it('ping should return false and log warning on failure', async () => {
@@ -107,7 +120,9 @@ describe('RedisClient', () => {
             const client = new RedisClient(mock as never);
 
             expect(await client.ping()).toBe(false);
-            expect(captured.error).toContainEqual(expect.stringContaining('ECONNREFUSED'));
+            expect(captured.error).toContainEqual(
+                expect.stringContaining('ECONNREFUSED'),
+            );
         });
     });
 
@@ -135,7 +150,9 @@ describe('RedisClient', () => {
             const client = new RedisClient(mock as never);
 
             await expect(client.quit()).resolves.toBeUndefined();
-            expect(captured.error).toContainEqual(expect.stringContaining('ECONNRESET'));
+            expect(captured.error).toContainEqual(
+                expect.stringContaining('ECONNRESET'),
+            );
 
             captured.restore();
         });

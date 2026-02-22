@@ -5,7 +5,11 @@ import { PasswordResetKey } from '../entities/password-reset-key';
 import { TYPES } from '../lib/types';
 
 export interface PasswordResetKeyRepository {
-    save(keyHash: string, userId: string, expiresAt: Date): Promise<PasswordResetKey>;
+    save(
+        keyHash: string,
+        userId: string,
+        expiresAt: Date,
+    ): Promise<PasswordResetKey>;
     findByKeyHash(keyHash: string): Promise<PasswordResetKey | null>;
     deleteByKeyHash(keyHash: string): Promise<void>;
     deleteAllByUserId(userId: string): Promise<void>;
@@ -20,7 +24,11 @@ export class PasswordResetKeyRepositoryImpl implements PasswordResetKeyRepositor
         this.repository = dataSource.getRepository(PasswordResetKey);
     }
 
-    async save(keyHash: string, userId: string, expiresAt: Date): Promise<PasswordResetKey> {
+    async save(
+        keyHash: string,
+        userId: string,
+        expiresAt: Date,
+    ): Promise<PasswordResetKey> {
         await this.deleteAllByUserId(userId);
         try {
             await this.deleteExpired();

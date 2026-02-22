@@ -270,7 +270,8 @@ describe('loadConfig', () => {
             const config = loadValidConfig();
 
             expect(() => {
-                (config.auth.accessToken as Record<string, unknown>).expiresIn = '1h';
+                (config.auth.accessToken as Record<string, unknown>).expiresIn =
+                    '1h';
             }).toThrow(TypeError);
         });
     });

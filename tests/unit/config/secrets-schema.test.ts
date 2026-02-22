@@ -20,7 +20,9 @@ describe('secretsSchema', () => {
 
             expect(result.jwtSecret).toBe(VALID_SECRETS.jwtSecret);
             expect(result.databaseUser).toBe(VALID_SECRETS.databaseUser);
-            expect(result.databasePassword).toBe(VALID_SECRETS.databasePassword);
+            expect(result.databasePassword).toBe(
+                VALID_SECRETS.databasePassword,
+            );
         });
     });
 
