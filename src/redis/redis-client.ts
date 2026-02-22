@@ -46,6 +46,16 @@ export class RedisClient {
         }
     }
 
+    async quit(): Promise<void> {
+        if (!this.client) return;
+
+        try {
+            await this.client.quit();
+        } catch (error: unknown) {
+            this.logWarning('quit', error);
+        }
+    }
+
     private logWarning(operation: string, error: unknown): void {
         const message = error instanceof Error ? error.message : String(error);
         console.error(
