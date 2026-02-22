@@ -94,7 +94,14 @@ tests/
 │   ├── tsconfig.json
 │   ├── jest.config.json
 │   └── specs/
-│       └── example.test.ts
+│       ├── helpers/
+│       │   └── api.ts               # Shared helpers (validUserData, BASE, auth)
+│       ├── example.test.ts          # Health-check smoke test
+│       ├── registration.test.ts     # POST /users/register
+│       ├── login.test.ts            # POST /users/login
+│       ├── profile.test.ts          # GET/PUT /users/profile
+│       ├── refresh.test.ts          # POST /users/refresh
+│       └── logout.test.ts           # POST /users/logout
 ├── setup.ts           # Shared setup (sets CONFIG_PATH to config/test.json)
 ├── teardown.ts        # Shared teardown
 └── helpers.ts         # Shared test utilities
