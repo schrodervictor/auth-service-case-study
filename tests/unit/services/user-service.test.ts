@@ -233,36 +233,6 @@ describe('UserServiceImpl', () => {
             expect(err.errors).toHaveProperty('lastName');
         });
 
-        it('should throw ValidationError for empty firstName', async () => {
-            const data = { ...validRegisterData, firstName: '' };
-
-            const err = await catchError(service.register(data));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('firstName');
-            expect(err.errors.firstName).toContain('First name is required');
-        });
-
-        it('should throw ValidationError for whitespace-only firstName', async () => {
-            const data = { ...validRegisterData, firstName: '   ' };
-
-            const err = await catchError(service.register(data));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('firstName');
-            expect(err.errors.firstName).toContain('First name is required');
-        });
-
-        it('should throw ValidationError for empty lastName', async () => {
-            const data = { ...validRegisterData, lastName: '' };
-
-            const err = await catchError(service.register(data));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('lastName');
-            expect(err.errors.lastName).toContain('Last name is required');
-        });
-
         it('should throw EmailAlreadyExistsError when email is already registered', async () => {
             mockRepo.findByEmail.mockResolvedValue(createSampleUser());
 
@@ -288,58 +258,6 @@ describe('UserServiceImpl', () => {
             );
 
             expect(mockRepo.create).not.toHaveBeenCalled();
-        });
-
-        it('should throw ValidationError when email is null', async () => {
-            const data = { ...validRegisterData, email: null } as any;
-
-            const err = await catchError(service.register(data));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('email');
-            expect(err.errors.email).toContain('Email is required');
-        });
-
-        it('should throw ValidationError when password is null', async () => {
-            const data = { ...validRegisterData, password: null } as any;
-
-            const err = await catchError(service.register(data));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('password');
-            expect(err.errors.password).toContain('Password is required');
-        });
-
-        it('should throw ValidationError when firstName is null', async () => {
-            const data = { ...validRegisterData, firstName: null } as any;
-
-            const err = await catchError(service.register(data));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('firstName');
-            expect(err.errors.firstName).toContain('First name is required');
-        });
-
-        it('should throw ValidationError when lastName is null', async () => {
-            const data = { ...validRegisterData, lastName: null } as any;
-
-            const err = await catchError(service.register(data));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('lastName');
-            expect(err.errors.lastName).toContain('Last name is required');
-        });
-
-        it('should throw ValidationError with all 4 field errors when all fields are null', async () => {
-            const data = { email: null, password: null, firstName: null, lastName: null } as any;
-
-            const err = await catchError(service.register(data));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('email');
-            expect(err.errors).toHaveProperty('password');
-            expect(err.errors).toHaveProperty('firstName');
-            expect(err.errors).toHaveProperty('lastName');
         });
 
         it('should collect multiple password errors in a single array', async () => {
@@ -455,37 +373,6 @@ describe('UserServiceImpl', () => {
             );
         });
 
-        it('should throw ValidationError when email is null', async () => {
-            const err = await catchError(service.authenticate(null as any, 'StrongPass1'));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('email');
-            expect(err.errors.email).toContain('Email is required');
-        });
-
-        it('should throw ValidationError when password is null', async () => {
-            const err = await catchError(service.authenticate('test@example.com', null as any));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('password');
-            expect(err.errors.password).toContain('Password is required');
-        });
-
-        it('should throw ValidationError when email is empty string', async () => {
-            const err = await catchError(service.authenticate('', 'StrongPass1'));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('email');
-            expect(err.errors.email).toContain('Email is required');
-        });
-
-        it('should throw ValidationError with both fields when email and password are null', async () => {
-            const err = await catchError(service.authenticate(null as any, null as any));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('email');
-            expect(err.errors).toHaveProperty('password');
-        });
     });
 
     describe('refreshAccessToken', () => {
@@ -586,21 +473,6 @@ describe('UserServiceImpl', () => {
             expect(result.refreshToken).toMatch(/^[0-9a-f]{64}$/);
         });
 
-        it('should throw ValidationError when token is null', async () => {
-            const err = await catchError(service.refreshAccessToken(null as any));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('refreshToken');
-            expect(err.errors.refreshToken).toContain('Refresh token is required');
-        });
-
-        it('should throw ValidationError when token is empty string', async () => {
-            const err = await catchError(service.refreshAccessToken(''));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('refreshToken');
-            expect(err.errors.refreshToken).toContain('Refresh token is required');
-        });
     });
 
     describe('getProfile', () => {
@@ -660,45 +532,6 @@ describe('UserServiceImpl', () => {
             ).rejects.toThrow(UserNotFoundError);
         });
 
-        it('should throw ValidationError for empty firstName when key is present', async () => {
-            const err = await catchError(
-                service.updateProfile('uuid-1', { firstName: '' }),
-            );
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('firstName');
-            expect(err.errors.firstName).toContain('First name cannot be empty');
-        });
-
-        it('should throw ValidationError for whitespace-only firstName', async () => {
-            const err = await catchError(
-                service.updateProfile('uuid-1', { firstName: '   ' }),
-            );
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors.firstName).toContain('First name cannot be empty');
-        });
-
-        it('should throw ValidationError for empty lastName when key is present', async () => {
-            const err = await catchError(
-                service.updateProfile('uuid-1', { lastName: '' }),
-            );
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('lastName');
-            expect(err.errors.lastName).toContain('Last name cannot be empty');
-        });
-
-        it('should throw ValidationError with both fields when both are empty', async () => {
-            const err = await catchError(
-                service.updateProfile('uuid-1', { firstName: '', lastName: '' }),
-            );
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('firstName');
-            expect(err.errors).toHaveProperty('lastName');
-        });
-
         it('should pass only provided fields to the repository', async () => {
             const updatedUser = createSampleUser({ firstName: 'Jane' });
             mockRepo.update.mockResolvedValue(updatedUser);
@@ -731,13 +564,6 @@ describe('UserServiceImpl', () => {
             expect(result).not.toHaveProperty('passwordHash');
         });
 
-        it('should not call repository.update when validation fails', async () => {
-            await catchError(
-                service.updateProfile('uuid-1', { firstName: '' }),
-            );
-
-            expect(mockRepo.update).not.toHaveBeenCalled();
-        });
     });
 
     describe('changePassword', () => {
@@ -745,66 +571,6 @@ describe('UserServiceImpl', () => {
             currentPassword: 'OldP@ss1',
             newPassword: 'NewP@ss2',
         };
-
-        it('should throw ValidationError when currentPassword is missing', async () => {
-            const data = { currentPassword: '', newPassword: 'NewP@ss2' };
-
-            const err = await catchError(service.changePassword('uuid-1', data));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('currentPassword');
-            expect(err.errors.currentPassword).toContain('Current password is required');
-        });
-
-        it('should throw ValidationError when currentPassword is null', async () => {
-            const data = { currentPassword: null, newPassword: 'NewP@ss2' } as any;
-
-            const err = await catchError(service.changePassword('uuid-1', data));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('currentPassword');
-            expect(err.errors.currentPassword).toContain('Current password is required');
-        });
-
-        it('should throw ValidationError when newPassword is missing', async () => {
-            const data = { currentPassword: 'OldP@ss1', newPassword: '' };
-
-            const err = await catchError(service.changePassword('uuid-1', data));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('newPassword');
-            expect(err.errors.newPassword).toContain('New password is required');
-        });
-
-        it('should throw ValidationError when newPassword is null', async () => {
-            const data = { currentPassword: 'OldP@ss1', newPassword: null } as any;
-
-            const err = await catchError(service.changePassword('uuid-1', data));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('newPassword');
-            expect(err.errors.newPassword).toContain('New password is required');
-        });
-
-        it('should throw ValidationError with both fields when both are missing', async () => {
-            const data = { currentPassword: '', newPassword: '' };
-
-            const err = await catchError(service.changePassword('uuid-1', data));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('currentPassword');
-            expect(err.errors).toHaveProperty('newPassword');
-        });
-
-        it('should throw ValidationError with both fields when both are null', async () => {
-            const data = { currentPassword: null, newPassword: null } as any;
-
-            const err = await catchError(service.changePassword('uuid-1', data));
-
-            expect(err).toBeInstanceOf(ValidationError);
-            expect(err.errors).toHaveProperty('currentPassword');
-            expect(err.errors).toHaveProperty('newPassword');
-        });
 
         it('should throw ValidationError when newPassword is too short', async () => {
             const data = { currentPassword: 'OldP@ss1', newPassword: 'Ab1' };
@@ -962,16 +728,6 @@ describe('UserServiceImpl', () => {
             ).rejects.toThrow(UserNotFoundError);
         });
 
-        it('should not call passwordManager or repository when validation fails', async () => {
-            const data = { currentPassword: '', newPassword: '' };
-
-            await catchError(service.changePassword('uuid-1', data));
-
-            expect(mockPasswordManager.compare).not.toHaveBeenCalled();
-            expect(mockPasswordManager.toHash).not.toHaveBeenCalled();
-            expect(mockRepo.findById).not.toHaveBeenCalled();
-            expect(mockRepo.updatePasswordHash).not.toHaveBeenCalled();
-        });
     });
 
     describe('logout', () => {

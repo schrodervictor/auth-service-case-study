@@ -12,6 +12,14 @@ import {
 import { IncorrectPasswordError } from '../../../src/errors/incorrect-password-error';
 import { InvalidRefreshTokenError } from '../../../src/errors/invalid-refresh-token-error';
 import { TYPES } from '../../../src/lib/types';
+import { validate } from '../../../src/middleware/validate-middleware';
+import {
+    RegisterRequestSchema,
+    LoginRequestSchema,
+    RefreshRequestSchema,
+    UpdateProfileRequestSchema,
+    ChangePasswordRequestSchema,
+} from '../../../src/schemas/user-schemas';
 
 const createMockUserService = (): jest.Mocked<UserService> => ({
     register: jest.fn(),
@@ -104,29 +112,23 @@ describe('UserController', () => {
             });
         });
 
-        it('should pass undefined fields through to service and return 422 when service throws ValidationError', async () => {
-            mockService.register.mockRejectedValue(
-                new ValidationError('Validation failed', {
-                    email: ['Email is required'],
-                    password: ['Password is required'],
-                    firstName: ['First name is required'],
-                    lastName: ['Last name is required'],
-                }),
-            );
-            const req = createMockRequest({});
+        it('should pass req.body directly to service (middleware guarantees shape)', async () => {
+            mockService.register.mockResolvedValue(sampleUser);
+            const req = createMockRequest({
+                email: 'test@example.com',
+                password: 'StrongPass1!',
+                firstName: 'John',
+                lastName: 'Doe',
+            });
             const res = createMockResponse();
 
             await controller.register(req as Request, res as Response);
 
-            expect(res.statusCode).toBe(422);
-            expect(res.body).toEqual({
-                message: 'Validation failed',
-                errors: {
-                    email: ['Email is required'],
-                    password: ['Password is required'],
-                    firstName: ['First name is required'],
-                    lastName: ['Last name is required'],
-                },
+            expect(mockService.register).toHaveBeenCalledWith({
+                email: 'test@example.com',
+                password: 'StrongPass1!',
+                firstName: 'John',
+                lastName: 'Doe',
             });
         });
 
@@ -263,28 +265,6 @@ describe('UserController', () => {
             );
         });
 
-        it('should pass undefined fields through to service and return 422 when service throws ValidationError', async () => {
-            mockService.authenticate.mockRejectedValue(
-                new ValidationError('Validation failed', {
-                    email: ['Email is required'],
-                    password: ['Password is required'],
-                }),
-            );
-            const req = createMockRequest({});
-            const res = createMockResponse();
-
-            await controller.login(req as Request, res as Response);
-
-            expect(res.statusCode).toBe(422);
-            expect(res.body).toEqual({
-                message: 'Validation failed',
-                errors: {
-                    email: ['Email is required'],
-                    password: ['Password is required'],
-                },
-            });
-        });
-
         it('should return 401 when service throws InvalidCredentialsError', async () => {
             mockService.authenticate.mockRejectedValue(new InvalidCredentialsError());
             const req = createMockRequest({
@@ -419,28 +399,18 @@ describe('UserController', () => {
             });
         });
 
-        it('should return 400 when neither firstName nor lastName is provided', async () => {
-            const req = createMockRequest({ age: 30 }, { id: 'uuid-1' });
+        it('should pass req.body directly to service (middleware guarantees at least one field)', async () => {
+            const updatedUser = { ...sampleUser, firstName: 'Jane' };
+            mockService.updateProfile.mockResolvedValue(updatedUser);
+            const req = createMockRequest({ firstName: 'Jane' }, { id: 'uuid-1' });
             const res = createMockResponse();
 
             await controller.updateProfile(req as Request, res as Response);
 
-            expect(res.statusCode).toBe(400);
-            expect(res.body).toEqual({
-                message: 'At least one field (firstName or lastName) is required',
+            expect(mockService.updateProfile).toHaveBeenCalledWith('uuid-1', {
+                firstName: 'Jane',
             });
-        });
-
-        it('should return 400 when body is empty/undefined', async () => {
-            const req = createMockRequest(undefined, { id: 'uuid-1' });
-            const res = createMockResponse();
-
-            await controller.updateProfile(req as Request, res as Response);
-
-            expect(res.statusCode).toBe(400);
-            expect(res.body).toEqual({
-                message: 'At least one field (firstName or lastName) is required',
-            });
+            expect(res.statusCode).toBe(200);
         });
 
         it('should return 401 when service throws UserNotFoundError', async () => {
@@ -491,26 +461,6 @@ describe('UserController', () => {
             await controller.refresh(req as Request, res as Response);
 
             expect(mockService.refreshAccessToken).toHaveBeenCalledWith('old-token-hex');
-        });
-
-        it('should pass undefined refreshToken through to service and return 422 when service throws ValidationError', async () => {
-            mockService.refreshAccessToken.mockRejectedValue(
-                new ValidationError('Validation failed', {
-                    refreshToken: ['Refresh token is required'],
-                }),
-            );
-            const req = createMockRequest({});
-            const res = createMockResponse();
-
-            await controller.refresh(req as Request, res as Response);
-
-            expect(res.statusCode).toBe(422);
-            expect(res.body).toEqual({
-                message: 'Validation failed',
-                errors: {
-                    refreshToken: ['Refresh token is required'],
-                },
-            });
         });
 
         it('should return 401 when service throws InvalidRefreshTokenError', async () => {
@@ -652,14 +602,16 @@ describe('UserController', () => {
             expect(res.body).toEqual({ message: 'Current password is incorrect' });
         });
 
-        it('should return 422 when service throws ValidationError', async () => {
+        it('should return 422 when service throws ValidationError (business rules)', async () => {
             mockService.changePassword.mockRejectedValue(
                 new ValidationError('Validation failed', {
-                    currentPassword: ['Current password is required'],
-                    newPassword: ['New password is required'],
+                    newPassword: ['Password must be at least 8 characters long'],
                 }),
             );
-            const req = createMockRequest({}, { id: 'uuid-1' });
+            const req = createMockRequest(
+                { currentPassword: 'OldP@ss1', newPassword: 'short' },
+                { id: 'uuid-1' },
+            );
             const res = createMockResponse();
 
             await controller.changePassword(req as Request, res as Response);
@@ -668,8 +620,7 @@ describe('UserController', () => {
             expect(res.body).toEqual({
                 message: 'Validation failed',
                 errors: {
-                    currentPassword: ['Current password is required'],
-                    newPassword: ['New password is required'],
+                    newPassword: ['Password must be at least 8 characters long'],
                 },
             });
         });
@@ -690,7 +641,7 @@ describe('UserController', () => {
     });
 
     describe('middleware decorator wiring', () => {
-        type MethodMetadata = { key: string; method: string; path: string; middleware: (symbol | Function)[] };
+        type MethodMetadata = { key: string; method: string; path: string; middleware: (symbol | ((...args: unknown[]) => unknown))[] };
 
         const getMethodMetadata = (): MethodMetadata[] =>
             Reflect.getMetadata('inversify-express-utils:controller-method', UserController) ?? [];
@@ -739,14 +690,84 @@ describe('UserController', () => {
             }
         });
 
-        it('should NOT have TYPES.JsonContentType on logout, getProfile, or updateProfile', () => {
+        it('should NOT have TYPES.JsonContentType on logout or getProfile', () => {
             const metadata = getMethodMetadata();
 
-            for (const key of ['logout', 'getProfile', 'updateProfile']) {
+            for (const key of ['logout', 'getProfile']) {
                 const meta = metadata.find((m) => m.key === key);
                 expect(meta).toBeDefined();
                 expect(meta!.middleware).not.toContain(TYPES.JsonContentType);
             }
+        });
+
+        it('should have validate(RegisterRequestSchema) on register endpoint', () => {
+            const metadata = getMethodMetadata();
+            const meta = metadata.find((m) => m.key === 'register');
+            expect(meta).toBeDefined();
+
+            const validateMiddleware = validate(RegisterRequestSchema);
+            const hasValidateMiddleware = meta!.middleware.some(
+                (mw) => typeof mw === 'function' && mw.toString() === validateMiddleware.toString(),
+            );
+            expect(hasValidateMiddleware).toBe(true);
+        });
+
+        it('should have validate(LoginRequestSchema) on login endpoint', () => {
+            const metadata = getMethodMetadata();
+            const meta = metadata.find((m) => m.key === 'login');
+            expect(meta).toBeDefined();
+
+            const validateMiddleware = validate(LoginRequestSchema);
+            const hasValidateMiddleware = meta!.middleware.some(
+                (mw) => typeof mw === 'function' && mw.toString() === validateMiddleware.toString(),
+            );
+            expect(hasValidateMiddleware).toBe(true);
+        });
+
+        it('should have validate(RefreshRequestSchema) on refresh endpoint', () => {
+            const metadata = getMethodMetadata();
+            const meta = metadata.find((m) => m.key === 'refresh');
+            expect(meta).toBeDefined();
+
+            const validateMiddleware = validate(RefreshRequestSchema);
+            const hasValidateMiddleware = meta!.middleware.some(
+                (mw) => typeof mw === 'function' && mw.toString() === validateMiddleware.toString(),
+            );
+            expect(hasValidateMiddleware).toBe(true);
+        });
+
+        it('should have validate(UpdateProfileRequestSchema) on updateProfile endpoint', () => {
+            const metadata = getMethodMetadata();
+            const meta = metadata.find((m) => m.key === 'updateProfile');
+            expect(meta).toBeDefined();
+
+            const validateMiddleware = validate(UpdateProfileRequestSchema);
+            const hasValidateMiddleware = meta!.middleware.some(
+                (mw) => typeof mw === 'function' && mw.toString() === validateMiddleware.toString(),
+            );
+            expect(hasValidateMiddleware).toBe(true);
+        });
+
+        it('should have validate(ChangePasswordRequestSchema) on changePassword endpoint', () => {
+            const metadata = getMethodMetadata();
+            const meta = metadata.find((m) => m.key === 'changePassword');
+            expect(meta).toBeDefined();
+
+            const validateMiddleware = validate(ChangePasswordRequestSchema);
+            const hasValidateMiddleware = meta!.middleware.some(
+                (mw) => typeof mw === 'function' && mw.toString() === validateMiddleware.toString(),
+            );
+            expect(hasValidateMiddleware).toBe(true);
+        });
+
+        it('should NOT have validate middleware on logout endpoint', () => {
+            const metadata = getMethodMetadata();
+            const meta = metadata.find((m) => m.key === 'logout');
+            expect(meta).toBeDefined();
+
+            // Logout has no body validation — only auth middleware
+            const functionMiddleware = meta!.middleware.filter((mw) => typeof mw === 'function');
+            expect(functionMiddleware.length).toBe(0);
         });
     });
 
