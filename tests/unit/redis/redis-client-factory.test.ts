@@ -1,6 +1,7 @@
 import type { AppConfig } from '../../../src/config/schema';
 import { TYPES } from '../../../src/lib/types';
 import { createRedisClient } from '../../../src/redis/redis-client-factory';
+import { RedisClient } from '../../../src/redis/redis-client';
 
 jest.mock('ioredis');
 
@@ -49,11 +50,10 @@ describe('createRedisClient', () => {
         Redis.mockImplementation(() => mockRedisInstance);
     });
 
-    it('should return a Redis instance on successful connection', async () => {
+    it('should return a RedisClient instance on successful connection', async () => {
         const client = await createRedisClient(MOCK_CONFIG);
 
-        expect(client).not.toBeNull();
-        expect(client).toBe(mockRedisInstance);
+        expect(client).toBeInstanceOf(RedisClient);
     });
 
     it('should pass host and port from config to Redis constructor', async () => {
@@ -105,12 +105,12 @@ describe('createRedisClient', () => {
         expect(constructorArgs.password).toBeUndefined();
     });
 
-    it('should return null when Redis connection fails', async () => {
+    it('should return a RedisClient when Redis connection fails (fail-open)', async () => {
         mockRedisInstance.ping.mockRejectedValue(new Error('Connection refused'));
 
         const client = await createRedisClient(MOCK_CONFIG);
 
-        expect(client).toBeNull();
+        expect(client).toBeInstanceOf(RedisClient);
     });
 
     it('should log a warning when Redis connection fails', async () => {
@@ -137,14 +137,14 @@ describe('createRedisClient', () => {
         warnSpy.mockRestore();
     });
 
-    it('should return null when Redis constructor throws', async () => {
+    it('should return a RedisClient when Redis constructor throws (fail-open)', async () => {
         Redis.mockImplementation(() => {
             throw new Error('Invalid host');
         });
 
         const client = await createRedisClient(MOCK_CONFIG);
 
-        expect(client).toBeNull();
+        expect(client).toBeInstanceOf(RedisClient);
     });
 
     it('should log a warning when Redis constructor throws', async () => {

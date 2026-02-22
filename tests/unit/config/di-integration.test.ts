@@ -10,7 +10,8 @@ import { PasswordManagerServiceImpl } from '../../../src/services/password-manag
 import { UserRepositoryImpl } from '../../../src/repositories/user-repository';
 import { RefreshTokenRepositoryImpl } from '../../../src/repositories/refresh-token-repository';
 import { createAuthMiddleware } from '../../../src/middleware/auth-middleware';
-import { createRateLimitMiddleware, type RedisLike } from '../../../src/middleware/rate-limit-middleware';
+import { createRateLimitMiddleware } from '../../../src/middleware/rate-limit-middleware';
+import { RedisClient } from '../../../src/redis/redis-client';
 
 jest.mock('../../../src/middleware/auth-middleware', () => ({
     createAuthMiddleware: jest.fn().mockReturnValue(jest.fn()),
@@ -50,11 +51,7 @@ const MOCK_DATA_SOURCE = {
     }),
 } as unknown as DataSource;
 
-const MOCK_REDIS_CLIENT: RedisLike = {
-    incr: jest.fn(),
-    expire: jest.fn(),
-    ttl: jest.fn(),
-};
+const MOCK_REDIS_CLIENT = new RedisClient(null);
 
 describe('DI container config integration', () => {
     describe('config binding', () => {
@@ -199,11 +196,13 @@ describe('DI container config integration', () => {
             expect(client).toBe(MOCK_REDIS_CLIENT);
         });
 
-        it('should accept null as redisClient (fail-open scenario)', () => {
-            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS, null);
+        it('should bind RedisClient as a constant (same reference on multiple gets)', () => {
+            const container = createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS, MOCK_REDIS_CLIENT);
 
-            expect(container.isBound(TYPES.RedisClient)).toBe(true);
-            expect(container.get(TYPES.RedisClient)).toBeNull();
+            const first = container.get(TYPES.RedisClient);
+            const second = container.get(TYPES.RedisClient);
+
+            expect(first).toBe(second);
         });
     });
 
@@ -250,16 +249,16 @@ describe('DI container config integration', () => {
             );
         });
 
-        it('should pass null redisClient to createRateLimitMiddleware when Redis is unavailable', () => {
-            createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS, null);
+        it('should pass redisClient to createRateLimitMiddleware', () => {
+            createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS, MOCK_REDIS_CLIENT);
 
             expect(createRateLimitMiddleware).toHaveBeenCalledWith(
-                null,
+                MOCK_REDIS_CLIENT,
                 'login',
                 expect.any(Object),
             );
             expect(createRateLimitMiddleware).toHaveBeenCalledWith(
-                null,
+                MOCK_REDIS_CLIENT,
                 'refresh',
                 expect.any(Object),
             );
@@ -273,9 +272,10 @@ describe('DI container config integration', () => {
             ).not.toThrow();
         });
 
-        it('should accept null as 4th parameter', () => {
+        it('should accept RedisClient as 4th parameter', () => {
+            const client = new RedisClient(null);
             expect(() =>
-                createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS, null),
+                createContainer(VALID_CONFIG, MOCK_DATA_SOURCE, MOCK_SECRETS, client),
             ).not.toThrow();
         });
     });

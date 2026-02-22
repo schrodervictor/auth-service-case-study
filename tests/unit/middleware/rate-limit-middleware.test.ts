@@ -5,14 +5,15 @@ import {
     type RateLimitMiddlewareFunction,
     type RateLimitConfig,
 } from '../../../src/middleware/rate-limit-middleware';
+import type { RedisClient } from '../../../src/redis/redis-client';
+
+const flushPromises = () => new Promise(process.nextTick);
 
 const createMockRedisClient = () => ({
     incr: jest.fn(),
     expire: jest.fn(),
     ttl: jest.fn(),
-});
-
-type MockRedisClient = ReturnType<typeof createMockRedisClient>;
+}) as unknown as jest.Mocked<RedisClient>;
 
 const createMockRequest = (ip = '192.168.1.1'): Partial<Request> => ({
     ip,
@@ -51,44 +52,15 @@ const DEFAULT_CONFIG: RateLimitConfig = {
 };
 
 describe('createRateLimitMiddleware', () => {
-    describe('null Redis client (no-op passthrough)', () => {
-        it('should call next() immediately when redisClient is null', () => {
-            const middleware = createRateLimitMiddleware(null, 'login', DEFAULT_CONFIG);
-            const req = createMockRequest();
-            const res = createMockResponse();
-            const next = createMockNext();
-
-            middleware(req as Request, res as Response, next);
-
-            expect(next).toHaveBeenCalled();
-            expect(res.status).not.toHaveBeenCalled();
-        });
-
-        it('should not send any response when redisClient is null', () => {
-            const middleware = createRateLimitMiddleware(null, 'login', DEFAULT_CONFIG);
-            const req = createMockRequest();
-            const res = createMockResponse();
-            const next = createMockNext();
-
-            middleware(req as Request, res as Response, next);
-
-            expect(res.json).not.toHaveBeenCalled();
-        });
-    });
-
     describe('under rate limit', () => {
-        let mockRedis: MockRedisClient;
+        let mockRedis: jest.Mocked<RedisClient>;
         let middleware: RateLimitMiddlewareFunction;
 
         beforeEach(() => {
             mockRedis = createMockRedisClient();
             mockRedis.incr.mockResolvedValue(1);
             mockRedis.expire.mockResolvedValue(1);
-            middleware = createRateLimitMiddleware(
-                mockRedis as never,
-                'login',
-                DEFAULT_CONFIG,
-            );
+            middleware = createRateLimitMiddleware(mockRedis, 'login', DEFAULT_CONFIG);
         });
 
         it('should call next() when request count is under the limit', async () => {
@@ -97,7 +69,8 @@ describe('createRateLimitMiddleware', () => {
             const res = createMockResponse();
             const next = createMockNext();
 
-            await middleware(req as Request, res as Response, next);
+            middleware(req as Request, res as Response, next);
+            await flushPromises();
 
             expect(next).toHaveBeenCalled();
             expect(res.status).not.toHaveBeenCalled();
@@ -109,7 +82,8 @@ describe('createRateLimitMiddleware', () => {
             const res = createMockResponse();
             const next = createMockNext();
 
-            await middleware(req as Request, res as Response, next);
+            middleware(req as Request, res as Response, next);
+            await flushPromises();
 
             expect(next).toHaveBeenCalled();
             expect(res.status).not.toHaveBeenCalled();
@@ -121,7 +95,8 @@ describe('createRateLimitMiddleware', () => {
             const res = createMockResponse();
             const next = createMockNext();
 
-            await middleware(req as Request, res as Response, next);
+            middleware(req as Request, res as Response, next);
+            await flushPromises();
 
             expect(res.status).not.toHaveBeenCalled();
             expect(res.json).not.toHaveBeenCalled();
@@ -130,16 +105,12 @@ describe('createRateLimitMiddleware', () => {
     });
 
     describe('over rate limit', () => {
-        let mockRedis: MockRedisClient;
+        let mockRedis: jest.Mocked<RedisClient>;
         let middleware: RateLimitMiddlewareFunction;
 
         beforeEach(() => {
             mockRedis = createMockRedisClient();
-            middleware = createRateLimitMiddleware(
-                mockRedis as never,
-                'login',
-                DEFAULT_CONFIG,
-            );
+            middleware = createRateLimitMiddleware(mockRedis, 'login', DEFAULT_CONFIG);
         });
 
         it('should respond with 429 when count exceeds maxAttempts', async () => {
@@ -149,7 +120,8 @@ describe('createRateLimitMiddleware', () => {
             const res = createMockResponse();
             const next = createMockNext();
 
-            await middleware(req as Request, res as Response, next);
+            middleware(req as Request, res as Response, next);
+            await flushPromises();
 
             expect(res.statusCode).toBe(429);
             expect(next).not.toHaveBeenCalled();
@@ -162,7 +134,8 @@ describe('createRateLimitMiddleware', () => {
             const res = createMockResponse();
             const next = createMockNext();
 
-            await middleware(req as Request, res as Response, next);
+            middleware(req as Request, res as Response, next);
+            await flushPromises();
 
             expect(res.body).toEqual({
                 message: 'Too many requests. Please try again later.',
@@ -176,19 +149,21 @@ describe('createRateLimitMiddleware', () => {
             const res = createMockResponse();
             const next = createMockNext();
 
-            await middleware(req as Request, res as Response, next);
+            middleware(req as Request, res as Response, next);
+            await flushPromises();
 
             expect(res.set).toHaveBeenCalledWith('Retry-After', '450');
         });
 
         it('should fall back to windowSeconds for Retry-After when TTL is unavailable', async () => {
             mockRedis.incr.mockResolvedValue(10);
-            mockRedis.ttl.mockResolvedValue(-1); // key exists but no TTL
+            mockRedis.ttl.mockResolvedValue(-1);
             const req = createMockRequest();
             const res = createMockResponse();
             const next = createMockNext();
 
-            await middleware(req as Request, res as Response, next);
+            middleware(req as Request, res as Response, next);
+            await flushPromises();
 
             expect(res.set).toHaveBeenCalledWith('Retry-After', '900');
         });
@@ -200,24 +175,21 @@ describe('createRateLimitMiddleware', () => {
             const res = createMockResponse();
             const next = createMockNext();
 
-            await middleware(req as Request, res as Response, next);
+            middleware(req as Request, res as Response, next);
+            await flushPromises();
 
             expect(res.set).toHaveBeenCalledWith('Retry-After', '900');
         });
     });
 
     describe('EXPIRE on first request', () => {
-        let mockRedis: MockRedisClient;
+        let mockRedis: jest.Mocked<RedisClient>;
         let middleware: RateLimitMiddlewareFunction;
 
         beforeEach(() => {
             mockRedis = createMockRedisClient();
             mockRedis.expire.mockResolvedValue(1);
-            middleware = createRateLimitMiddleware(
-                mockRedis as never,
-                'login',
-                DEFAULT_CONFIG,
-            );
+            middleware = createRateLimitMiddleware(mockRedis, 'login', DEFAULT_CONFIG);
         });
 
         it('should call EXPIRE when count is 1 (first request in window)', async () => {
@@ -226,7 +198,8 @@ describe('createRateLimitMiddleware', () => {
             const res = createMockResponse();
             const next = createMockNext();
 
-            await middleware(req as Request, res as Response, next);
+            middleware(req as Request, res as Response, next);
+            await flushPromises();
 
             expect(mockRedis.expire).toHaveBeenCalledWith(
                 expect.any(String),
@@ -240,14 +213,15 @@ describe('createRateLimitMiddleware', () => {
             const res = createMockResponse();
             const next = createMockNext();
 
-            await middleware(req as Request, res as Response, next);
+            middleware(req as Request, res as Response, next);
+            await flushPromises();
 
             expect(mockRedis.expire).not.toHaveBeenCalled();
         });
     });
 
     describe('Redis key format', () => {
-        let mockRedis: MockRedisClient;
+        let mockRedis: jest.Mocked<RedisClient>;
 
         beforeEach(() => {
             mockRedis = createMockRedisClient();
@@ -256,140 +230,60 @@ describe('createRateLimitMiddleware', () => {
         });
 
         it('should use key format rateLimit:{endpointKey}:{ip}', async () => {
-            const middleware = createRateLimitMiddleware(
-                mockRedis as never,
-                'login',
-                DEFAULT_CONFIG,
-            );
+            const middleware = createRateLimitMiddleware(mockRedis, 'login', DEFAULT_CONFIG);
             const req = createMockRequest('10.0.0.1');
             const res = createMockResponse();
             const next = createMockNext();
 
-            await middleware(req as Request, res as Response, next);
+            middleware(req as Request, res as Response, next);
+            await flushPromises();
 
             expect(mockRedis.incr).toHaveBeenCalledWith('rateLimit:login:10.0.0.1');
         });
 
         it('should use the correct endpointKey for refresh', async () => {
-            const middleware = createRateLimitMiddleware(
-                mockRedis as never,
-                'refresh',
-                DEFAULT_CONFIG,
-            );
+            const middleware = createRateLimitMiddleware(mockRedis, 'refresh', DEFAULT_CONFIG);
             const req = createMockRequest('10.0.0.2');
             const res = createMockResponse();
             const next = createMockNext();
 
-            await middleware(req as Request, res as Response, next);
+            middleware(req as Request, res as Response, next);
+            await flushPromises();
 
             expect(mockRedis.incr).toHaveBeenCalledWith('rateLimit:refresh:10.0.0.2');
         });
 
         it('should handle IPv6 addresses in the key', async () => {
-            const middleware = createRateLimitMiddleware(
-                mockRedis as never,
-                'login',
-                DEFAULT_CONFIG,
-            );
+            const middleware = createRateLimitMiddleware(mockRedis, 'login', DEFAULT_CONFIG);
             const req = createMockRequest('::1');
             const res = createMockResponse();
             const next = createMockNext();
 
-            await middleware(req as Request, res as Response, next);
+            middleware(req as Request, res as Response, next);
+            await flushPromises();
 
             expect(mockRedis.incr).toHaveBeenCalledWith('rateLimit:login:::1');
         });
 
         it('should use fallback key when req.ip is undefined', async () => {
-            const middleware = createRateLimitMiddleware(
-                mockRedis as never,
-                'login',
-                DEFAULT_CONFIG,
-            );
+            const middleware = createRateLimitMiddleware(mockRedis, 'login', DEFAULT_CONFIG);
             const req = createMockRequest(undefined as unknown as string);
             const res = createMockResponse();
             const next = createMockNext();
 
-            await middleware(req as Request, res as Response, next);
+            middleware(req as Request, res as Response, next);
+            await flushPromises();
 
             expect(mockRedis.incr).toHaveBeenCalledWith(
                 expect.stringMatching(/^rateLimit:login:.+$/),
             );
-            // Should not contain "undefined" literally
             const calledKey = mockRedis.incr.mock.calls[0][0] as string;
             expect(calledKey).not.toContain('undefined');
         });
     });
 
-    describe('Redis error handling (fail-open)', () => {
-        let mockRedis: MockRedisClient;
-        let middleware: RateLimitMiddlewareFunction;
-
-        beforeEach(() => {
-            mockRedis = createMockRedisClient();
-            middleware = createRateLimitMiddleware(
-                mockRedis as never,
-                'login',
-                DEFAULT_CONFIG,
-            );
-        });
-
-        it('should call next() when Redis INCR fails (fail-open)', async () => {
-            mockRedis.incr.mockRejectedValue(new Error('Redis connection lost'));
-            const req = createMockRequest();
-            const res = createMockResponse();
-            const next = createMockNext();
-
-            await middleware(req as Request, res as Response, next);
-
-            expect(next).toHaveBeenCalled();
-            expect(res.status).not.toHaveBeenCalled();
-        });
-
-        it('should log a warning when Redis INCR fails', async () => {
-            const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
-            mockRedis.incr.mockRejectedValue(new Error('Redis connection lost'));
-            const req = createMockRequest();
-            const res = createMockResponse();
-            const next = createMockNext();
-
-            await middleware(req as Request, res as Response, next);
-
-            expect(warnSpy).toHaveBeenCalled();
-
-            warnSpy.mockRestore();
-        });
-
-        it('should include the error message in the warning log', async () => {
-            const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
-            mockRedis.incr.mockRejectedValue(new Error('ECONNREFUSED'));
-            const req = createMockRequest();
-            const res = createMockResponse();
-            const next = createMockNext();
-
-            await middleware(req as Request, res as Response, next);
-
-            const warnMessage = warnSpy.mock.calls.map(c => c.join(' ')).join(' ');
-            expect(warnMessage).toContain('ECONNREFUSED');
-
-            warnSpy.mockRestore();
-        });
-
-        it('should call next() when Redis EXPIRE fails (fail-open)', async () => {
-            mockRedis.incr.mockResolvedValue(1);
-            mockRedis.expire.mockRejectedValue(new Error('Redis error'));
-            const req = createMockRequest();
-            const res = createMockResponse();
-            const next = createMockNext();
-
-            await middleware(req as Request, res as Response, next);
-
-            expect(next).toHaveBeenCalled();
-        });
-    });
-
     describe('different configs', () => {
-        let mockRedis: MockRedisClient;
+        let mockRedis: jest.Mocked<RedisClient>;
 
         beforeEach(() => {
             mockRedis = createMockRedisClient();
@@ -398,18 +292,15 @@ describe('createRateLimitMiddleware', () => {
 
         it('should respect custom maxAttempts', async () => {
             const config: RateLimitConfig = { maxAttempts: 3, windowSeconds: 600 };
-            const middleware = createRateLimitMiddleware(
-                mockRedis as never,
-                'login',
-                config,
-            );
+            const middleware = createRateLimitMiddleware(mockRedis, 'login', config);
 
             // Count 3 = at limit, should pass
             mockRedis.incr.mockResolvedValue(3);
             const req1 = createMockRequest();
             const res1 = createMockResponse();
             const next1 = createMockNext();
-            await middleware(req1 as Request, res1 as Response, next1);
+            middleware(req1 as Request, res1 as Response, next1);
+            await flushPromises();
             expect(next1).toHaveBeenCalled();
 
             // Count 4 = over limit, should block
@@ -418,24 +309,22 @@ describe('createRateLimitMiddleware', () => {
             const req2 = createMockRequest();
             const res2 = createMockResponse();
             const next2 = createMockNext();
-            await middleware(req2 as Request, res2 as Response, next2);
+            middleware(req2 as Request, res2 as Response, next2);
+            await flushPromises();
             expect(res2.statusCode).toBe(429);
             expect(next2).not.toHaveBeenCalled();
         });
 
         it('should use custom windowSeconds for EXPIRE', async () => {
             const config: RateLimitConfig = { maxAttempts: 10, windowSeconds: 60 };
-            const middleware = createRateLimitMiddleware(
-                mockRedis as never,
-                'refresh',
-                config,
-            );
+            const middleware = createRateLimitMiddleware(mockRedis, 'refresh', config);
             mockRedis.incr.mockResolvedValue(1);
             const req = createMockRequest();
             const res = createMockResponse();
             const next = createMockNext();
 
-            await middleware(req as Request, res as Response, next);
+            middleware(req as Request, res as Response, next);
+            await flushPromises();
 
             expect(mockRedis.expire).toHaveBeenCalledWith(
                 expect.any(String),

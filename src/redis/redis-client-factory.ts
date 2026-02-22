@@ -1,8 +1,9 @@
 import Redis from 'ioredis';
 
 import type { AppConfig } from '../config/schema';
+import { RedisClient } from './redis-client';
 
-export async function createRedisClient(config: AppConfig): Promise<Redis | null> {
+export async function createRedisClient(config: AppConfig): Promise<RedisClient> {
     let client: Redis | undefined;
     try {
         const options: { host: string; port: number; password?: string } = {
@@ -18,13 +19,13 @@ export async function createRedisClient(config: AppConfig): Promise<Redis | null
 
         await client.ping();
 
-        return client;
+        return new RedisClient(client);
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         console.warn(`Redis connection failed: ${message}`);
         if (client) {
             client.quit().catch(() => {});
         }
-        return null;
+        return new RedisClient(null);
     }
 }

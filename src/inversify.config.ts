@@ -19,9 +19,10 @@ import { UserRepository, UserRepositoryImpl, RefreshTokenRepository, RefreshToke
 import { createAuthMiddleware } from './middleware/auth-middleware';
 import type { AuthMiddlewareFunction } from './middleware/auth-middleware';
 import { createRateLimitMiddleware } from './middleware/rate-limit-middleware';
-import type { RateLimitMiddlewareFunction, RedisLike } from './middleware/rate-limit-middleware';
+import type { RateLimitMiddlewareFunction } from './middleware/rate-limit-middleware';
+import type { RedisClient } from './redis/redis-client';
 
-export function createContainer(config: AppConfig, dataSource: DataSource, secrets: AppSecrets, redisClient: RedisLike | null): Container {
+export function createContainer(config: AppConfig, dataSource: DataSource, secrets: AppSecrets, redisClient: RedisClient): Container {
     if (config == null) {
         throw new Error('Config is required to create the DI container');
     }
@@ -44,7 +45,7 @@ export function createContainer(config: AppConfig, dataSource: DataSource, secre
         .to(PasswordManagerServiceImpl);
 
     // bind Redis client
-    container.bind<RedisLike | null>(TYPES.RedisClient).toDynamicValue(() => redisClient);
+    container.bind<RedisClient>(TYPES.RedisClient).toConstantValue(redisClient);
 
     // bind middleware
     container
