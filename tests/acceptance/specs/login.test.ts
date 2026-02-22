@@ -12,7 +12,7 @@ async function registerUser() {
 }
 
 describe('POST /users/login', () => {
-    beforeAll(async () => {
+    beforeEach(async () => {
         await flushRateLimitKeys();
     });
 
