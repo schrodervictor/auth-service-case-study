@@ -27,6 +27,7 @@ const createMockUserRepository = (): jest.Mocked<UserRepository> => ({
     findById: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+    updatePasswordHash: jest.fn(),
 });
 
 const createMockPasswordManager = (): jest.Mocked<PasswordManagerService> => ({

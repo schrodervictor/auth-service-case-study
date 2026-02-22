@@ -21,6 +21,7 @@ export interface UserRepository {
     findById(id: string): Promise<User | null>;
     create(data: CreateUserData): Promise<User>;
     update(id: string, data: UpdateUserData): Promise<User | null>;
+    updatePasswordHash(id: string, passwordHash: string): Promise<boolean>;
 }
 
 @injectable()
@@ -55,5 +56,10 @@ export class UserRepositoryImpl implements UserRepository {
         const { createdAt: _createdAt, updatedAt: _updatedAt, ...safeData } = data as UpdateUserData & Record<string, unknown>;
         Object.assign(user, safeData);
         return this.repository.save(user);
+    }
+
+    async updatePasswordHash(id: string, passwordHash: string): Promise<boolean> {
+        const result = await this.repository.update(id, { passwordHash });
+        return (result.affected ?? 0) > 0;
     }
 }
