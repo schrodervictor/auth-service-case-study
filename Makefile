@@ -39,7 +39,7 @@ wait-for-app:
 ## Tests ##
 ###########
 
-.PHONY: test test-unit test-integration test-acceptance
+.PHONY: test test-unit test-integration test-acceptance coverage
 
 test: build test-unit test-integration test-acceptance
 
@@ -52,6 +52,11 @@ test-integration: build
 test-acceptance: up wait-for-app
 	docker compose run --rm acceptance
 	docker compose down
+
+coverage: build
+	$(RUN_WITH_DEPS) npm run test:cov -- \
+		--testPathPatterns='tests/(unit|integration)' \
+		--runInBand
 
 
 ##################
