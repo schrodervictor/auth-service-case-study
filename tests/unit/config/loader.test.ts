@@ -69,7 +69,7 @@ describe('loadConfig', () => {
                     login: { maxAttempts: 5, windowSeconds: 900 },
                     refresh: { maxAttempts: 10, windowSeconds: 900 },
                 },
-                eventbus: { mode: 'real' },
+                eventbus: { mode: 'real', kafka: {} },
             });
         });
     });

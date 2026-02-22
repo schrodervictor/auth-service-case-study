@@ -56,10 +56,20 @@ const ssmSchema = z.object({
     parameters: ssmParametersSchema,
 });
 
-const eventbusSchema = z.object({
-    mode: z.enum(['real', 'emulated']).default('real'),
+const emulatedEventbusSchema = z.object({
+    mode: z.literal('emulated'),
     outputPath: z.string().optional(),
 });
+
+const realEventbusSchema = z.object({
+    mode: z.literal('real'),
+    kafka: z.record(z.string(), z.unknown()).default({}),
+});
+
+const eventbusSchema = z.union([
+    emulatedEventbusSchema,
+    realEventbusSchema,
+]);
 
 export const configSchema = z.object({
     server: serverSchema.default({ port: 9000 }),
@@ -74,7 +84,7 @@ export const configSchema = z.object({
         refresh: { maxAttempts: 10, windowSeconds: 900 },
     }),
     ssm: ssmSchema.optional(),
-    eventbus: eventbusSchema.default({ mode: 'real' }),
+    eventbus: eventbusSchema.default({ mode: 'real', kafka: {} }),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
