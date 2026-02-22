@@ -36,6 +36,9 @@ describe('OpenAPI Spec', () => {
             '/users/logout',
             '/users/profile',
             '/users/password',
+            '/users/reset-key',
+            '/users/validate-reset-key',
+            '/users/password/reset',
         ];
 
         it.each(expectedPaths)('should define path %s', (path) => {

@@ -15,7 +15,7 @@ import {
 } from './services';
 import type { UserService } from './services/user-service';
 import { UserServiceImpl } from './services/user-service';
-import { UserRepository, UserRepositoryImpl, RefreshTokenRepository, RefreshTokenRepositoryImpl } from './repositories';
+import { UserRepository, UserRepositoryImpl, RefreshTokenRepository, RefreshTokenRepositoryImpl, PasswordResetKeyRepository, PasswordResetKeyRepositoryImpl } from './repositories';
 import { createAuthMiddleware } from './middleware/auth-middleware';
 import type { AuthMiddlewareFunction } from './middleware/auth-middleware';
 import { requireJsonContentType } from './middleware/content-type-middleware';
@@ -68,6 +68,20 @@ export function createContainer(config: AppConfig, dataSource: DataSource, secre
     // bind repositories
     container.bind<UserRepository>(TYPES.UserRepository).to(UserRepositoryImpl);
     container.bind<RefreshTokenRepository>(TYPES.RefreshTokenRepository).to(RefreshTokenRepositoryImpl);
+    container.bind<PasswordResetKeyRepository>(TYPES.PasswordResetKeyRepository).to(PasswordResetKeyRepositoryImpl);
+
+    // bind rate limiters (password reset)
+    container
+        .bind<RateLimitMiddlewareFunction>(TYPES.ResetKeyRateLimiter)
+        .toConstantValue(createRateLimitMiddleware(redisClient, 'resetKey', config.rateLimit.resetKey));
+
+    container
+        .bind<RateLimitMiddlewareFunction>(TYPES.ValidateResetKeyRateLimiter)
+        .toConstantValue(createRateLimitMiddleware(redisClient, 'validateResetKey', config.rateLimit.validateResetKey));
+
+    container
+        .bind<RateLimitMiddlewareFunction>(TYPES.ResetPasswordRateLimiter)
+        .toConstantValue(createRateLimitMiddleware(redisClient, 'resetPassword', config.rateLimit.resetPassword));
 
     return container;
 }

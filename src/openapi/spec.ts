@@ -34,6 +34,7 @@ export const openApiSpec: OpenApiSpec = {
         { name: 'Health', description: 'Service health checks' },
         { name: 'Auth', description: 'Authentication and token management' },
         { name: 'Profile', description: 'User profile operations' },
+        { name: 'Password Reset', description: 'Password reset operations' },
     ],
     paths: {
         '/health-check': {
@@ -400,6 +401,191 @@ export const openApiSpec: OpenApiSpec = {
                 },
             },
         },
+        '/users/reset-key': {
+            post: {
+                tags: ['Password Reset'],
+                summary: 'Request a password reset key',
+                description:
+                    'Generates a password reset key for the given email address. Always returns a generic message to prevent email enumeration. Rate-limited to 3 attempts per 15 minutes per IP.',
+                operationId: 'requestResetKey',
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ResetKeyRequest' },
+                        },
+                    },
+                },
+                responses: {
+                    '200': {
+                        description: 'Reset key request accepted',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/MessageResponse' },
+                                example: {
+                                    message: 'If an account with that email exists, a reset key has been generated.',
+                                },
+                            },
+                        },
+                    },
+                    '415': {
+                        description: 'Unsupported Media Type',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                            },
+                        },
+                    },
+                    '422': {
+                        description: 'Validation failed',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                            },
+                        },
+                    },
+                    '429': {
+                        description: 'Too many requests',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                            },
+                        },
+                        headers: {
+                            'Retry-After': {
+                                description: 'Seconds until the rate limit resets',
+                                schema: { type: 'integer' },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        '/users/validate-reset-key': {
+            post: {
+                tags: ['Password Reset'],
+                summary: 'Validate a password reset key',
+                description:
+                    'Checks whether a password reset key is valid and not expired. Rate-limited to 10 attempts per 15 minutes per IP.',
+                operationId: 'validateResetKey',
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ValidateResetKeyRequest' },
+                        },
+                    },
+                },
+                responses: {
+                    '200': {
+                        description: 'Validation result',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ValidateResetKeyResponse' },
+                            },
+                        },
+                    },
+                    '415': {
+                        description: 'Unsupported Media Type',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                            },
+                        },
+                    },
+                    '422': {
+                        description: 'Validation failed',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                            },
+                        },
+                    },
+                    '429': {
+                        description: 'Too many requests',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                            },
+                        },
+                        headers: {
+                            'Retry-After': {
+                                description: 'Seconds until the rate limit resets',
+                                schema: { type: 'integer' },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        '/users/password/reset': {
+            post: {
+                tags: ['Password Reset'],
+                summary: 'Reset password using a reset key',
+                description:
+                    'Resets the user password using a valid reset key. The reset key is consumed after use. Rate-limited to 5 attempts per 15 minutes per IP.',
+                operationId: 'resetPassword',
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ResetPasswordRequest' },
+                        },
+                    },
+                },
+                responses: {
+                    '200': {
+                        description: 'Password reset successfully',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/MessageResponse' },
+                                example: {
+                                    message: 'Password has been reset successfully.',
+                                },
+                            },
+                        },
+                    },
+                    '400': {
+                        description: 'Invalid or expired reset key',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                            },
+                        },
+                    },
+                    '415': {
+                        description: 'Unsupported Media Type',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                            },
+                        },
+                    },
+                    '422': {
+                        description: 'Validation failed (weak password)',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                            },
+                        },
+                    },
+                    '429': {
+                        description: 'Too many requests',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                            },
+                        },
+                        headers: {
+                            'Retry-After': {
+                                description: 'Seconds until the rate limit resets',
+                                schema: { type: 'integer' },
+                            },
+                        },
+                    },
+                },
+            },
+        },
     },
     components: {
         schemas: {
@@ -495,6 +681,42 @@ export const openApiSpec: OpenApiSpec = {
                     newPassword: { type: 'string', format: 'password', example: 'NewP@ss2' },
                 },
                 required: ['currentPassword', 'newPassword'],
+            },
+            MessageResponse: {
+                type: 'object',
+                properties: {
+                    message: { type: 'string', example: 'Operation completed successfully.' },
+                },
+                required: ['message'],
+            },
+            ResetKeyRequest: {
+                type: 'object',
+                properties: {
+                    email: { type: 'string', format: 'email', example: 'user@example.com' },
+                },
+                required: ['email'],
+            },
+            ValidateResetKeyRequest: {
+                type: 'object',
+                properties: {
+                    resetKey: { type: 'string', example: 'abc123-reset-key' },
+                },
+                required: ['resetKey'],
+            },
+            ValidateResetKeyResponse: {
+                type: 'object',
+                properties: {
+                    valid: { type: 'boolean', example: true },
+                },
+                required: ['valid'],
+            },
+            ResetPasswordRequest: {
+                type: 'object',
+                properties: {
+                    resetKey: { type: 'string', example: 'abc123-reset-key' },
+                    newPassword: { type: 'string', format: 'password', example: 'NewSecureP@ss1' },
+                },
+                required: ['resetKey', 'newPassword'],
             },
         },
         securitySchemes: {
