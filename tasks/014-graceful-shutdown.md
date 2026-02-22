@@ -1,6 +1,6 @@
 # Task: Graceful Shutdown
 
-## Status: pending
+## Status: done
 
 ## Context
 
@@ -241,61 +241,61 @@ Test cases:
   gracefully disconnects from Redis (or no-ops if no connection exists). This is
   a prerequisite for the shutdown handler.
 - **Acceptance Criteria**:
-  - [ ] `RedisClient.quit()` returns `Promise<void>`
-  - [ ] When `client` is `null`, `quit()` resolves immediately without error
-  - [ ] When `client` is connected, `quit()` calls `this.client.quit()`
-  - [ ] When `this.client.quit()` rejects, the error is caught and logged via
+  - [x] `RedisClient.quit()` returns `Promise<void>`
+  - [x] When `client` is `null`, `quit()` resolves immediately without error
+  - [x] When `client` is connected, `quit()` calls `this.client.quit()`
+  - [x] When `this.client.quit()` rejects, the error is caught and logged via
         `logWarning('quit', error)` — does NOT throw
-  - [ ] Unit tests added to `tests/unit/redis/redis-client.test.ts` covering all
+  - [x] Unit tests added to `tests/unit/redis/redis-client.test.ts` covering all
         three cases (null client, success, error)
-  - [ ] All existing RedisClient tests still pass
+  - [x] All existing RedisClient tests still pass
 - **Red phase**: Add 3 new test cases to the existing `redis-client.test.ts`
 - **Green phase**: Add `quit()` method to `src/redis/redis-client.ts`
-- **Status**: pending
+- **Status**: done
 
 ### Milestone 2: Create Shutdown Handler
 
 - **Description**: Implement `createShutdownHandler` as a testable factory
   function with fully injectable dependencies.
 - **Acceptance Criteria**:
-  - [ ] `src/shutdown.ts` exports `createShutdownHandler` and `ShutdownDeps`
-  - [ ] Handler calls `server.close()` first
-  - [ ] Handler calls `dataSource.destroy()` when `isInitialized` is `true`
-  - [ ] Handler skips `dataSource.destroy()` when `isInitialized` is `false`
-  - [ ] Handler calls `redisClient.quit()`
-  - [ ] Handler calls `exit(0)` on success
-  - [ ] Handler is idempotent — second invocation is a no-op
-  - [ ] Errors in `destroy()` or `quit()` are caught, logged, and do not prevent
+  - [x] `src/shutdown.ts` exports `createShutdownHandler` and `ShutdownDeps`
+  - [x] Handler calls `server.close()` first
+  - [x] Handler calls `dataSource.destroy()` when `isInitialized` is `true`
+  - [x] Handler skips `dataSource.destroy()` when `isInitialized` is `false`
+  - [x] Handler calls `redisClient.quit()`
+  - [x] Handler calls `exit(0)` on success
+  - [x] Handler is idempotent — second invocation is a no-op
+  - [x] Errors in `destroy()` or `quit()` are caught, logged, and do not prevent
         `exit(0)`
-  - [ ] Force timeout calls `exit(1)` if cleanup exceeds `drainTimeoutMs`
-  - [ ] All lifecycle events are logged via the injected `logger`
-  - [ ] Unit tests in `tests/unit/shutdown.test.ts` cover all 9 test cases
+  - [x] Force timeout calls `exit(1)` if cleanup exceeds `drainTimeoutMs`
+  - [x] All lifecycle events are logged via the injected `logger`
+  - [x] Unit tests in `tests/unit/shutdown.test.ts` cover all 9 test cases
         listed in the Testing Strategy
-  - [ ] `make test-unit` passes
+  - [x] `make test-unit` passes
 - **Red phase**: Write `tests/unit/shutdown.test.ts` with all test cases
   (failing — no implementation yet)
 - **Green phase**: Implement `src/shutdown.ts`
-- **Status**: pending
+- **Status**: done
 
 ### Milestone 3: Wire Shutdown into Bootstrap
 
 - **Description**: Integrate the shutdown handler into `src/index.ts` by
   capturing the HTTP server instance and registering signal listeners.
 - **Acceptance Criteria**:
-  - [ ] `server.listen()` return value is captured as `httpServer`
-  - [ ] `createShutdownHandler` is called with `httpServer`, `dataSource`,
+  - [x] `server.listen()` return value is captured as `httpServer`
+  - [x] `createShutdownHandler` is called with `httpServer`, `dataSource`,
         `redisClient`
-  - [ ] `process.on('SIGTERM', shutdown)` is registered
-  - [ ] `process.on('SIGINT', shutdown)` is registered
-  - [ ] Application starts normally (`make up` succeeds)
-  - [ ] `docker stop <container>` triggers graceful shutdown (visible in logs:
+  - [x] `process.on('SIGTERM', shutdown)` is registered
+  - [x] `process.on('SIGINT', shutdown)` is registered
+  - [x] Application starts normally (`make up` succeeds)
+  - [x] `docker stop <container>` triggers graceful shutdown (visible in logs:
         "Shutdown signal received", "Database connection closed", "Shutdown
         complete")
-  - [ ] `make test-unit` still passes (no regressions)
-  - [ ] `make typecheck` passes
+  - [x] `make test-unit` still passes (no regressions)
+  - [x] `make typecheck` passes
 - **Red phase**: N/A — this is pure wiring of already-tested components
 - **Green phase**: Modify `src/index.ts`
-- **Status**: pending
+- **Status**: done
 
 ## Implementation Order
 
