@@ -21,11 +21,6 @@ export class UserController extends BaseController {
         try {
             const { email, password, firstName, lastName } = req.body ?? {};
 
-            if (email == null || password == null || firstName == null || lastName == null) {
-                res.status(400).json({ message: 'Missing required fields' });
-                return;
-            }
-
             const user = await this.userService.register({
                 email,
                 password,
@@ -44,11 +39,6 @@ export class UserController extends BaseController {
         try {
             const { email, password } = req.body ?? {};
 
-            if (!email || !password) {
-                res.status(400).json({ message: 'Missing required fields' });
-                return;
-            }
-
             const result = await this.userService.authenticate(email, password);
 
             res.status(200).json(result);
@@ -61,11 +51,6 @@ export class UserController extends BaseController {
     async refresh(req: Request, res: Response): Promise<void> {
         try {
             const { refreshToken } = req.body ?? {};
-
-            if (!refreshToken) {
-                res.status(400).json({ message: 'Missing required fields' });
-                return;
-            }
 
             const result = await this.userService.refreshAccessToken(refreshToken);
             res.status(200).json(result);

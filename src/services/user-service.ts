@@ -71,23 +71,29 @@ export class UserServiceImpl implements UserService {
         const errors: Record<string, string[]> = {};
 
         // Validate email
-        if (!EMAIL_REGEX.test(data.email)) {
+        if (!data.email) {
+            errors.email = ['Email is required'];
+        } else if (!EMAIL_REGEX.test(data.email)) {
             errors.email = ['Invalid email format'];
         }
 
         // Validate password
         const passwordErrors: string[] = [];
-        if (data.password.length < 8) {
-            passwordErrors.push('Password must be at least 8 characters long');
-        }
-        if (!/[A-Z]/.test(data.password)) {
-            passwordErrors.push('Password must contain at least one uppercase letter');
-        }
-        if (!/[a-z]/.test(data.password)) {
-            passwordErrors.push('Password must contain at least one lowercase letter');
-        }
-        if (!/[0-9]/.test(data.password)) {
-            passwordErrors.push('Password must contain at least one number');
+        if (!data.password) {
+            passwordErrors.push('Password is required');
+        } else {
+            if (data.password.length < 8) {
+                passwordErrors.push('Password must be at least 8 characters long');
+            }
+            if (!/[A-Z]/.test(data.password)) {
+                passwordErrors.push('Password must contain at least one uppercase letter');
+            }
+            if (!/[a-z]/.test(data.password)) {
+                passwordErrors.push('Password must contain at least one lowercase letter');
+            }
+            if (!/[0-9]/.test(data.password)) {
+                passwordErrors.push('Password must contain at least one number');
+            }
         }
         if (passwordErrors.length > 0) {
             errors.password = passwordErrors;
@@ -125,6 +131,13 @@ export class UserServiceImpl implements UserService {
     }
 
     async authenticate(email: string, password: string): Promise<AuthResponseDto> {
+        const errors: Record<string, string[]> = {};
+        if (!email) errors.email = ['Email is required'];
+        if (!password) errors.password = ['Password is required'];
+        if (Object.keys(errors).length > 0) {
+            throw new ValidationError('Validation failed', errors);
+        }
+
         const user = await this.userRepository.findByEmail(email);
         if (!user) {
             throw new InvalidCredentialsError();
@@ -139,6 +152,10 @@ export class UserServiceImpl implements UserService {
     }
 
     async refreshAccessToken(token: string): Promise<AuthResponseDto> {
+        if (!token) {
+            throw new ValidationError('Validation failed', { refreshToken: ['Refresh token is required'] });
+        }
+
         const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
         const stored = await this.refreshTokenRepository.findByTokenHash(tokenHash);
 
