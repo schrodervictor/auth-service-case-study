@@ -35,6 +35,7 @@ const entities = [
             { property: 'createdAt', dbName: 'created_at', mode: 'createDate' },
             { property: 'updatedAt', dbName: 'updated_at', mode: 'updateDate' },
         ],
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
         relation: null as { relatedEntity: Function; joinColumn: string } | null,
     },
     {
