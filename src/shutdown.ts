@@ -41,7 +41,7 @@ export function createShutdownHandler(deps: ShutdownDeps): () => Promise<void> {
 
             await redisClient.quit();
             logger.log('Redis connection closed');
-        } catch (error) {
+        } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : String(error);
             logger.error(`Error during shutdown: ${msg}`);
         }

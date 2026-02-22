@@ -2,20 +2,18 @@ import 'reflect-metadata';
 
 import { json } from 'body-parser';
 import { InversifyExpressServer } from 'inversify-express-utils';
-
-import { createKafkaClient, Producer, Consumer } from './eventbus';
-
 import yaml from 'js-yaml';
 import swaggerUi from 'swagger-ui-express';
 
 import { loadConfig } from './config';
 import { loadSecrets } from './config/secrets-loader';
-import { createContainer } from './inversify.config';
 import { createDataSource } from './database';
+import { createKafkaClient, Producer, Consumer } from './eventbus';
+import { createContainer } from './inversify.config';
+import { TYPES } from './lib/types';
 import { openApiSpec } from './openapi';
 import { createRedisClient } from './redis/redis-client-factory';
 import { createShutdownHandler } from './shutdown';
-import { TYPES } from './lib/types';
 
 (async () => {
     try {
@@ -87,7 +85,7 @@ import { TYPES } from './lib/types';
 
         process.on('SIGTERM', shutdown);
         process.on('SIGINT', shutdown);
-    } catch (err) {
+    } catch (err: unknown) {
         console.error('Failed to start application:', err);
         process.exit(1);
     }

@@ -54,7 +54,7 @@ export class UserController extends BaseController {
             });
 
             res.status(201).json(user);
-        } catch (error) {
+        } catch (error: unknown) {
             this.handleError(res, error);
         }
     }
@@ -72,7 +72,7 @@ export class UserController extends BaseController {
             const result = await this.userService.authenticate(email, password);
 
             res.status(200).json(result);
-        } catch (error) {
+        } catch (error: unknown) {
             this.handleError(res, error);
         }
     }
@@ -90,7 +90,7 @@ export class UserController extends BaseController {
             const result =
                 await this.userService.refreshAccessToken(refreshToken);
             res.status(200).json(result);
-        } catch (error) {
+        } catch (error: unknown) {
             this.handleError(res, error);
         }
     }
@@ -101,7 +101,7 @@ export class UserController extends BaseController {
             const userId = (req as AuthenticatedRequest).user.id;
             await this.userService.logout(userId);
             res.status(204).send();
-        } catch (error) {
+        } catch (error: unknown) {
             this.handleError(res, error);
         }
     }
@@ -113,7 +113,7 @@ export class UserController extends BaseController {
             const user = await this.userService.getProfile(userId);
 
             res.status(200).json(user);
-        } catch (error) {
+        } catch (error: unknown) {
             if (error instanceof UserNotFoundError) {
                 res.status(401).json({ message: 'Unauthorized' });
                 return;
@@ -134,7 +134,7 @@ export class UserController extends BaseController {
             const user = await this.userService.updateProfile(userId, req.body);
 
             res.status(200).json(user);
-        } catch (error) {
+        } catch (error: unknown) {
             if (error instanceof UserNotFoundError) {
                 res.status(401).json({ message: 'Unauthorized' });
                 return;
@@ -160,7 +160,7 @@ export class UserController extends BaseController {
             });
 
             res.status(204).send();
-        } catch (error) {
+        } catch (error: unknown) {
             if (error instanceof UserNotFoundError) {
                 res.status(401).json({ message: 'Unauthorized' });
                 return;
@@ -183,7 +183,7 @@ export class UserController extends BaseController {
                 message:
                     'If an account with that email exists, a reset key has been generated.',
             });
-        } catch (error) {
+        } catch (error: unknown) {
             this.handleError(res, error);
         }
     }
@@ -199,7 +199,7 @@ export class UserController extends BaseController {
             const { resetKey } = req.body;
             const valid = await this.userService.validateResetKey(resetKey);
             res.status(200).json({ valid });
-        } catch (error) {
+        } catch (error: unknown) {
             this.handleError(res, error);
         }
     }
@@ -217,7 +217,7 @@ export class UserController extends BaseController {
             res.status(200).json({
                 message: 'Password has been reset successfully.',
             });
-        } catch (error) {
+        } catch (error: unknown) {
             if (error instanceof InvalidResetKeyError) {
                 res.status(400).json({ message: error.message });
                 return;

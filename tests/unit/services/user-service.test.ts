@@ -96,7 +96,7 @@ const catchError = async <T>(promise: Promise<T>): Promise<ValidationError> => {
     let caught: unknown;
     try {
         await promise;
-    } catch (err) {
+    } catch (err: unknown) {
         caught = err;
     }
     return caught as ValidationError;

@@ -68,8 +68,6 @@ typecheck: build
 
 format: build
 	$(RUN_ISOLATED) sh -c ' \
-		npx prettier \
-			--config prettierrc.json \
-			--write "src/**/*.ts" "tests/**/*.ts" \
+		npx prettier --write "src/**/*.ts" "tests/**/*.ts" \
 		&& npx eslint --fix src/ tests/ \
 	'

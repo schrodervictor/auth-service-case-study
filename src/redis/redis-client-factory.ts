@@ -29,7 +29,7 @@ export async function createRedisClient(
         await client.ping();
 
         return new RedisClient(client);
-    } catch (error) {
+    } catch (error: unknown) {
         const message = error instanceof Error ? error.message : String(error);
         console.error(
             `[RATE-LIMIT DEGRADED] Redis connection failed at startup — ` +
