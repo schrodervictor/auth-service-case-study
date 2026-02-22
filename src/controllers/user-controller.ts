@@ -16,7 +16,7 @@ export class UserController extends BaseController {
         super();
     }
 
-    @httpPost('/register')
+    @httpPost('/register', TYPES.JsonContentType)
     async register(req: Request, res: Response): Promise<void> {
         try {
             const { email, password, firstName, lastName } = req.body ?? {};
@@ -34,7 +34,7 @@ export class UserController extends BaseController {
         }
     }
 
-    @httpPost('/login', TYPES.LoginRateLimiter)
+    @httpPost('/login', TYPES.JsonContentType, TYPES.LoginRateLimiter)
     async login(req: Request, res: Response): Promise<void> {
         try {
             const { email, password } = req.body ?? {};
@@ -47,7 +47,7 @@ export class UserController extends BaseController {
         }
     }
 
-    @httpPost('/refresh', TYPES.RefreshRateLimiter)
+    @httpPost('/refresh', TYPES.JsonContentType, TYPES.RefreshRateLimiter)
     async refresh(req: Request, res: Response): Promise<void> {
         try {
             const { refreshToken } = req.body ?? {};

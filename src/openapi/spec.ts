@@ -328,14 +328,6 @@ export const openApiSpec: OpenApiSpec = {
                             },
                         },
                     },
-                    '415': {
-                        description: 'Unsupported Media Type',
-                        content: {
-                            'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
-                            },
-                        },
-                    },
                     '422': {
                         description: 'Validation failed',
                         content: {

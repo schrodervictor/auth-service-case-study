@@ -1,3 +1,4 @@
+import type { RequestHandler } from 'express';
 import { Container } from 'inversify';
 import type { DataSource } from 'typeorm';
 
@@ -18,6 +19,7 @@ import { UserServiceImpl } from './services/user-service';
 import { UserRepository, UserRepositoryImpl, RefreshTokenRepository, RefreshTokenRepositoryImpl } from './repositories';
 import { createAuthMiddleware } from './middleware/auth-middleware';
 import type { AuthMiddlewareFunction } from './middleware/auth-middleware';
+import { requireJsonContentType } from './middleware/content-type-middleware';
 import { createRateLimitMiddleware } from './middleware/rate-limit-middleware';
 import type { RateLimitMiddlewareFunction } from './middleware/rate-limit-middleware';
 import type { RedisClient } from './redis/redis-client';
@@ -51,6 +53,10 @@ export function createContainer(config: AppConfig, dataSource: DataSource, secre
     container
         .bind<AuthMiddlewareFunction>(TYPES.AuthMiddleware)
         .toConstantValue(createAuthMiddleware(secrets.jwtSecret));
+
+    container
+        .bind<RequestHandler>(TYPES.JsonContentType)
+        .toConstantValue(requireJsonContentType);
 
     container
         .bind<RateLimitMiddlewareFunction>(TYPES.LoginRateLimiter)

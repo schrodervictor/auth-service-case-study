@@ -14,7 +14,6 @@ import { createContainer } from './inversify.config';
 import { createDataSource } from './database';
 import { openApiSpec } from './openapi';
 import { createRedisClient } from './redis/redis-client-factory';
-import { requireJsonContentType } from './middleware/content-type-middleware';
 import { createShutdownHandler } from './shutdown';
 // import { exampleEventHandler } from './events/handlers';
 
@@ -54,7 +53,6 @@ import { createShutdownHandler } from './shutdown';
         });
         app.setConfig(app => {
             app.use(json());
-            app.use(requireJsonContentType);
             app.get('/partner-app/api/docs/spec.json', (_req, res) => {
                 res.json(openApiSpec);
             });

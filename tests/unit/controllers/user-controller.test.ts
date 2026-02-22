@@ -591,8 +591,8 @@ describe('UserController', () => {
         });
     });
 
-    describe('rate limit middleware decorator wiring', () => {
-        type MethodMetadata = { key: string; method: string; path: string; middleware: symbol[] };
+    describe('middleware decorator wiring', () => {
+        type MethodMetadata = { key: string; method: string; path: string; middleware: (symbol | Function)[] };
 
         const getMethodMetadata = (): MethodMetadata[] =>
             Reflect.getMetadata('inversify-express-utils:controller-method', UserController) ?? [];
@@ -620,6 +620,26 @@ describe('UserController', () => {
             expect(registerMeta).toBeDefined();
             expect(registerMeta!.middleware).not.toContain(TYPES.LoginRateLimiter);
             expect(registerMeta!.middleware).not.toContain(TYPES.RefreshRateLimiter);
+        });
+
+        it('should have TYPES.JsonContentType on register, login, and refresh', () => {
+            const metadata = getMethodMetadata();
+
+            for (const key of ['register', 'login', 'refresh']) {
+                const meta = metadata.find((m) => m.key === key);
+                expect(meta).toBeDefined();
+                expect(meta!.middleware).toContain(TYPES.JsonContentType);
+            }
+        });
+
+        it('should NOT have TYPES.JsonContentType on logout, getProfile, or updateProfile', () => {
+            const metadata = getMethodMetadata();
+
+            for (const key of ['logout', 'getProfile', 'updateProfile']) {
+                const meta = metadata.find((m) => m.key === key);
+                expect(meta).toBeDefined();
+                expect(meta!.middleware).not.toContain(TYPES.JsonContentType);
+            }
         });
     });
 
