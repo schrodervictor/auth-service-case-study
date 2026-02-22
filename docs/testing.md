@@ -85,7 +85,8 @@ tests/
 │   ├── middleware/
 │   │   ├── auth-middleware.test.ts     # Auth middleware (JWT verification)
 │   │   ├── content-type-middleware.test.ts  # Content-Type validation (415 responses)
-│   │   └── rate-limit-middleware.test.ts  # Rate limit (mocked Redis)
+│   │   ├── rate-limit-middleware.test.ts  # Rate limit (mocked Redis)
+│   │   └── validate-middleware.test.ts  # Zod validation middleware (422 responses)
 │   ├── redis/
 │   │   ├── redis-client.test.ts       # RedisClient facade (incr/expire/ttl/quit/ping)
 │   │   └── redis-client-factory.test.ts  # Redis factory (connect + fail-open)
@@ -97,6 +98,8 @@ tests/
 │   │   └── user-service.test.ts       # Register, auth, profile, refresh, logout, changePassword
 │   ├── openapi/
 │   │   └── spec.test.ts               # OpenAPI spec structure and coverage
+│   ├── schemas/
+│   │   └── user-schemas.test.ts       # Zod request body schemas (5 schemas)
 │   └── shutdown.test.ts               # Graceful shutdown handler
 ├── integration/                   # Requires PostgreSQL + Redis
 │   ├── database/
