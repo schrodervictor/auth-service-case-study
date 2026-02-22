@@ -9,6 +9,7 @@ import {
     UserNotFoundError,
     ValidationError,
 } from '../../../src/errors';
+import { IncorrectPasswordError } from '../../../src/errors/incorrect-password-error';
 import { InvalidRefreshTokenError } from '../../../src/errors/invalid-refresh-token-error';
 import { TYPES } from '../../../src/lib/types';
 
@@ -19,6 +20,7 @@ const createMockUserService = (): jest.Mocked<UserService> => ({
     logout: jest.fn(),
     getProfile: jest.fn(),
     updateProfile: jest.fn(),
+    changePassword: jest.fn(),
 });
 
 const createMockRequest = (
@@ -591,6 +593,102 @@ describe('UserController', () => {
         });
     });
 
+    describe('PUT /password', () => {
+        it('should return 204 with no body on successful password change', async () => {
+            mockService.changePassword.mockResolvedValue(undefined);
+            const req = createMockRequest(
+                { currentPassword: 'OldP@ss1', newPassword: 'NewP@ss2' },
+                { id: 'uuid-1' },
+            );
+            const res = createMockResponse();
+
+            await controller.changePassword(req as Request, res as Response);
+
+            expect(res.statusCode).toBe(204);
+            expect(res.body).toBeUndefined();
+        });
+
+        it('should call userService.changePassword with userId and body fields', async () => {
+            mockService.changePassword.mockResolvedValue(undefined);
+            const req = createMockRequest(
+                { currentPassword: 'OldP@ss1', newPassword: 'NewP@ss2' },
+                { id: 'uuid-1' },
+            );
+            const res = createMockResponse();
+
+            await controller.changePassword(req as Request, res as Response);
+
+            expect(mockService.changePassword).toHaveBeenCalledWith('uuid-1', {
+                currentPassword: 'OldP@ss1',
+                newPassword: 'NewP@ss2',
+            });
+        });
+
+        it('should return 401 when service throws UserNotFoundError', async () => {
+            mockService.changePassword.mockRejectedValue(new UserNotFoundError('uuid-1'));
+            const req = createMockRequest(
+                { currentPassword: 'OldP@ss1', newPassword: 'NewP@ss2' },
+                { id: 'uuid-1' },
+            );
+            const res = createMockResponse();
+
+            await controller.changePassword(req as Request, res as Response);
+
+            expect(res.statusCode).toBe(401);
+            expect(res.body).toEqual({ message: 'Unauthorized' });
+        });
+
+        it('should return 401 when service throws IncorrectPasswordError', async () => {
+            mockService.changePassword.mockRejectedValue(new IncorrectPasswordError());
+            const req = createMockRequest(
+                { currentPassword: 'WrongP@ss1', newPassword: 'NewP@ss2' },
+                { id: 'uuid-1' },
+            );
+            const res = createMockResponse();
+
+            await controller.changePassword(req as Request, res as Response);
+
+            expect(res.statusCode).toBe(401);
+            expect(res.body).toEqual({ message: 'Current password is incorrect' });
+        });
+
+        it('should return 422 when service throws ValidationError', async () => {
+            mockService.changePassword.mockRejectedValue(
+                new ValidationError('Validation failed', {
+                    currentPassword: ['Current password is required'],
+                    newPassword: ['New password is required'],
+                }),
+            );
+            const req = createMockRequest({}, { id: 'uuid-1' });
+            const res = createMockResponse();
+
+            await controller.changePassword(req as Request, res as Response);
+
+            expect(res.statusCode).toBe(422);
+            expect(res.body).toEqual({
+                message: 'Validation failed',
+                errors: {
+                    currentPassword: ['Current password is required'],
+                    newPassword: ['New password is required'],
+                },
+            });
+        });
+
+        it('should return 500 on unexpected error', async () => {
+            mockService.changePassword.mockRejectedValue(new Error('DB error'));
+            const req = createMockRequest(
+                { currentPassword: 'OldP@ss1', newPassword: 'NewP@ss2' },
+                { id: 'uuid-1' },
+            );
+            const res = createMockResponse();
+
+            await controller.changePassword(req as Request, res as Response);
+
+            expect(res.statusCode).toBe(500);
+            expect(res.body).toEqual({ message: 'Internal server error' });
+        });
+    });
+
     describe('middleware decorator wiring', () => {
         type MethodMetadata = { key: string; method: string; path: string; middleware: (symbol | Function)[] };
 
@@ -622,10 +720,19 @@ describe('UserController', () => {
             expect(registerMeta!.middleware).not.toContain(TYPES.RefreshRateLimiter);
         });
 
-        it('should have TYPES.JsonContentType on register, login, and refresh', () => {
+        it('should have TYPES.AuthMiddleware and TYPES.JsonContentType on changePassword', () => {
+            const metadata = getMethodMetadata();
+            const meta = metadata.find((m) => m.key === 'changePassword');
+
+            expect(meta).toBeDefined();
+            expect(meta!.middleware).toContain(TYPES.AuthMiddleware);
+            expect(meta!.middleware).toContain(TYPES.JsonContentType);
+        });
+
+        it('should have TYPES.JsonContentType on register, login, refresh, and changePassword', () => {
             const metadata = getMethodMetadata();
 
-            for (const key of ['register', 'login', 'refresh']) {
+            for (const key of ['register', 'login', 'refresh', 'changePassword']) {
                 const meta = metadata.find((m) => m.key === key);
                 expect(meta).toBeDefined();
                 expect(meta!.middleware).toContain(TYPES.JsonContentType);

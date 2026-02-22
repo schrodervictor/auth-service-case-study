@@ -355,6 +355,57 @@ export const openApiSpec: OpenApiSpec = {
                 },
             },
         },
+        '/users/password': {
+            put: {
+                tags: ['Auth'],
+                summary: 'Change password',
+                description:
+                    'Changes the password of the authenticated user. Requires the current password for verification. Revokes all existing refresh tokens.',
+                operationId: 'changePassword',
+                security: [{ bearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ChangePasswordRequest' },
+                        },
+                    },
+                },
+                responses: {
+                    '204': {
+                        description: 'Password changed successfully',
+                    },
+                    '401': {
+                        description: 'Unauthorized or incorrect current password',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                            },
+                        },
+                    },
+                    '415': {
+                        description: 'Unsupported Media Type',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                            },
+                        },
+                    },
+                    '422': {
+                        description: 'Validation failed',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                                example: {
+                                    message: 'Validation failed',
+                                    errors: { newPassword: ['Password must be at least 8 characters long'] },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
     },
     components: {
         schemas: {
@@ -431,6 +482,14 @@ export const openApiSpec: OpenApiSpec = {
                     firstName: { type: 'string', example: 'Jane' },
                     lastName: { type: 'string', example: 'Smith' },
                 },
+            },
+            ChangePasswordRequest: {
+                type: 'object',
+                properties: {
+                    currentPassword: { type: 'string', format: 'password', example: 'OldP@ss1' },
+                    newPassword: { type: 'string', format: 'password', example: 'NewP@ss2' },
+                },
+                required: ['currentPassword', 'newPassword'],
             },
         },
         securitySchemes: {

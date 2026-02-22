@@ -229,4 +229,39 @@ describe('UserRepository integration', () => {
             expect(updated!.updatedAt.getTime()).toBeGreaterThan(tenSecondsAgo.getTime());
         });
     });
+
+    describe('updatePasswordHash', () => {
+        it('should update the password hash and return true', async () => {
+            const created = await repo.create(sampleUser);
+
+            const result = await repo.updatePasswordHash(created.id, 'new_hashed_password');
+
+            expect(result).toBe(true);
+
+            const found = await repo.findById(created.id);
+            expect(found).not.toBeNull();
+            expect(found!.passwordHash).toBe('new_hashed_password');
+        });
+
+        it('should return false for a non-existent id', async () => {
+            const result = await repo.updatePasswordHash(
+                '00000000-0000-0000-0000-000000000000',
+                'new_hashed_password',
+            );
+
+            expect(result).toBe(false);
+        });
+
+        it('should preserve all other fields unchanged', async () => {
+            const created = await repo.create(sampleUser);
+
+            await repo.updatePasswordHash(created.id, 'new_hashed_password');
+
+            const found = await repo.findById(created.id);
+            expect(found).not.toBeNull();
+            expect(found!.email).toBe(sampleUser.email);
+            expect(found!.firstName).toBe(sampleUser.firstName);
+            expect(found!.lastName).toBe(sampleUser.lastName);
+        });
+    });
 });

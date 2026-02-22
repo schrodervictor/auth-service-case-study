@@ -35,6 +35,7 @@ describe('OpenAPI Spec', () => {
             '/users/refresh',
             '/users/logout',
             '/users/profile',
+            '/users/password',
         ];
 
         it.each(expectedPaths)('should define path %s', (path) => {
@@ -75,6 +76,10 @@ describe('OpenAPI Spec', () => {
         it('should define PUT for /users/profile', () => {
             expect(openApiSpec.paths['/users/profile'].put).toBeDefined();
         });
+
+        it('should define PUT for /users/password', () => {
+            expect(openApiSpec.paths['/users/password'].put).toBeDefined();
+        });
     });
 
     describe('security annotations', () => {
@@ -93,6 +98,12 @@ describe('OpenAPI Spec', () => {
 
             it('should require bearerAuth for PUT /users/profile', () => {
                 expect(openApiSpec.paths['/users/profile'].put.security).toEqual([
+                    { bearerAuth: [] },
+                ]);
+            });
+
+            it('should require bearerAuth for PUT /users/password', () => {
+                expect(openApiSpec.paths['/users/password'].put.security).toEqual([
                     { bearerAuth: [] },
                 ]);
             });
@@ -176,6 +187,14 @@ describe('OpenAPI Spec', () => {
             expect(responses['401']).toBeDefined();
             expect(responses['422']).toBeDefined();
         });
+
+        it('should define 204, 401, 415, 422 for PUT /users/password', () => {
+            const responses = openApiSpec.paths['/users/password'].put.responses;
+            expect(responses['204']).toBeDefined();
+            expect(responses['401']).toBeDefined();
+            expect(responses['415']).toBeDefined();
+            expect(responses['422']).toBeDefined();
+        });
     });
 
     describe('component schemas', () => {
@@ -188,6 +207,7 @@ describe('OpenAPI Spec', () => {
             'LoginRequest',
             'RefreshRequest',
             'UpdateProfileRequest',
+            'ChangePasswordRequest',
         ];
 
         it.each(expectedSchemas)('should define %s schema', (schemaName) => {

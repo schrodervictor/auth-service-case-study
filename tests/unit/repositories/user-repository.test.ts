@@ -9,6 +9,7 @@ const createMockRepository = () => ({
     findOneBy: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
+    update: jest.fn(),
 });
 
 const createMockDataSource = (mockRepository: ReturnType<typeof createMockRepository>) =>
@@ -218,6 +219,34 @@ describe('UserRepositoryImpl', () => {
                     email: 'test@example.com', // unchanged
                 }),
             );
+        });
+    });
+
+    describe('updatePasswordHash', () => {
+        it('should call repository.update with the id and new password hash', async () => {
+            mockRepository.update.mockResolvedValue({ affected: 1 });
+
+            await repo.updatePasswordHash('uuid-1', 'new-hashed-password');
+
+            expect(mockRepository.update).toHaveBeenCalledWith('uuid-1', {
+                passwordHash: 'new-hashed-password',
+            });
+        });
+
+        it('should return true when the user exists and hash is updated', async () => {
+            mockRepository.update.mockResolvedValue({ affected: 1 });
+
+            const result = await repo.updatePasswordHash('uuid-1', 'new-hashed-password');
+
+            expect(result).toBe(true);
+        });
+
+        it('should return false when the user does not exist', async () => {
+            mockRepository.update.mockResolvedValue({ affected: 0 });
+
+            const result = await repo.updatePasswordHash('nonexistent-uuid', 'new-hashed-password');
+
+            expect(result).toBe(false);
         });
     });
 });
