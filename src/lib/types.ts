@@ -24,4 +24,10 @@ export const TYPES = {
     // Repositories
     UserRepository: Symbol.for('UserRepository'),
     RefreshTokenRepository: Symbol.for('RefreshTokenRepository'),
+    PasswordResetKeyRepository: Symbol.for('PasswordResetKeyRepository'),
+
+    // Rate Limiters (password reset)
+    ResetKeyRateLimiter: Symbol.for('ResetKeyRateLimiter'),
+    ValidateResetKeyRateLimiter: Symbol.for('ValidateResetKeyRateLimiter'),
+    ResetPasswordRateLimiter: Symbol.for('ResetPasswordRateLimiter'),
 };

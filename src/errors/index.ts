@@ -6,3 +6,4 @@ export { UserNotFoundError } from './user-not-found-error';
 export { InvalidRefreshTokenError } from './invalid-refresh-token-error';
 export { RateLimitError } from './rate-limit-error';
 export { ValidationError } from './validation-error';
+export { InvalidResetKeyError } from './invalid-reset-key-error';
