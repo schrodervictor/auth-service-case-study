@@ -1,7 +1,17 @@
-RUN_ISOLATED := docker compose run --rm --no-deps -v ./src:/app/src -v ./tests:/app/tests -v ./config:/app/config app
-RUN_WITH_DEPS := docker compose run --rm -v ./src:/app/src -v ./tests:/app/tests -v ./config:/app/config app
+VOLUME_ARGS = \
+	--volume ./src:/app/src \
+	--volume ./tests:/app/tests \
+	--volume ./config:/app/config app
 
-.PHONY: build up down wait-for-app lint typecheck test test-unit test-integration test-acceptance
+RUN_ISOLATED := docker compose run --rm --no-deps $(VOLUME_ARGS)
+RUN_WITH_DEPS := docker compose run --rm $(VOLUME_ARGS)
+
+
+########################
+## Docker Compose Env ##
+########################
+
+.PHONY: build up down wait-for-app
 
 build:
 	docker compose build --quiet app
@@ -14,19 +24,22 @@ down:
 
 wait-for-app:
 	@echo "Waiting for app on http://localhost:9000 ..."
+	URL=http://localhost:9000/partner-app/api/health-check; \
 	@i=0; while [ $$i -lt 30 ]; do \
-		if curl -sf http://localhost:9000/partner-app/api/health-check > /dev/null 2>&1; then \
+		if curl -sf "$$URL" > /dev/null 2>&1; then \
 			echo "App is ready."; exit 0; \
 		fi; \
 		sleep 1; i=$$((i + 1)); \
 	done; \
-	echo "Timed out waiting for app." >&2; exit 1
+	echo "Timed out waiting for app." >&2; \
+	exit 1
 
-lint: build
-	$(RUN_ISOLATED) npm run lint
 
-typecheck: build
-	$(RUN_ISOLATED) npm run typecheck
+###########
+## Tests ##
+###########
+
+.PHONY: test test-unit test-integration test-acceptance
 
 test: build test-unit test-integration test-acceptance
 
@@ -39,3 +52,24 @@ test-integration: build
 test-acceptance: up wait-for-app
 	docker compose run --rm acceptance
 	docker compose down
+
+
+##################
+## Code Quality ##
+##################
+
+.PHONY: format lint typecheck
+
+lint: build
+	$(RUN_ISOLATED) npm run lint
+
+typecheck: build
+	$(RUN_ISOLATED) npm run typecheck
+
+format: build
+	$(RUN_ISOLATED) sh -c ' \
+		npx prettier \
+			--config prettierrc.json \
+			--write "src/**/*.ts" "tests/**/*.ts" \
+		&& npx eslint --fix src/ tests/ \
+	'
