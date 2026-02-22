@@ -15,6 +15,7 @@ import {
     UserNotFoundError,
     ValidationError,
 } from '../../../src/errors';
+import { IncorrectPasswordError } from '../../../src/errors/incorrect-password-error';
 import { InvalidRefreshTokenError } from '../../../src/errors/invalid-refresh-token-error';
 import { RefreshToken } from '../../../src/entities/refresh-token';
 
@@ -736,6 +737,240 @@ describe('UserServiceImpl', () => {
             );
 
             expect(mockRepo.update).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('changePassword', () => {
+        const validChangePasswordData = {
+            currentPassword: 'OldP@ss1',
+            newPassword: 'NewP@ss2',
+        };
+
+        it('should throw ValidationError when currentPassword is missing', async () => {
+            const data = { currentPassword: '', newPassword: 'NewP@ss2' };
+
+            const err = await catchError(service.changePassword('uuid-1', data));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('currentPassword');
+            expect(err.errors.currentPassword).toContain('Current password is required');
+        });
+
+        it('should throw ValidationError when currentPassword is null', async () => {
+            const data = { currentPassword: null, newPassword: 'NewP@ss2' } as any;
+
+            const err = await catchError(service.changePassword('uuid-1', data));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('currentPassword');
+            expect(err.errors.currentPassword).toContain('Current password is required');
+        });
+
+        it('should throw ValidationError when newPassword is missing', async () => {
+            const data = { currentPassword: 'OldP@ss1', newPassword: '' };
+
+            const err = await catchError(service.changePassword('uuid-1', data));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('newPassword');
+            expect(err.errors.newPassword).toContain('New password is required');
+        });
+
+        it('should throw ValidationError when newPassword is null', async () => {
+            const data = { currentPassword: 'OldP@ss1', newPassword: null } as any;
+
+            const err = await catchError(service.changePassword('uuid-1', data));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('newPassword');
+            expect(err.errors.newPassword).toContain('New password is required');
+        });
+
+        it('should throw ValidationError with both fields when both are missing', async () => {
+            const data = { currentPassword: '', newPassword: '' };
+
+            const err = await catchError(service.changePassword('uuid-1', data));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('currentPassword');
+            expect(err.errors).toHaveProperty('newPassword');
+        });
+
+        it('should throw ValidationError with both fields when both are null', async () => {
+            const data = { currentPassword: null, newPassword: null } as any;
+
+            const err = await catchError(service.changePassword('uuid-1', data));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('currentPassword');
+            expect(err.errors).toHaveProperty('newPassword');
+        });
+
+        it('should throw ValidationError when newPassword is too short', async () => {
+            const data = { currentPassword: 'OldP@ss1', newPassword: 'Ab1' };
+
+            const err = await catchError(service.changePassword('uuid-1', data));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('newPassword');
+            expect(err.errors.newPassword).toContain(
+                'Password must be at least 8 characters long',
+            );
+        });
+
+        it('should throw ValidationError when newPassword has no uppercase letter', async () => {
+            const data = { currentPassword: 'OldP@ss1', newPassword: 'lowercase1' };
+
+            const err = await catchError(service.changePassword('uuid-1', data));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('newPassword');
+            expect(err.errors.newPassword).toContain(
+                'Password must contain at least one uppercase letter',
+            );
+        });
+
+        it('should throw ValidationError when newPassword has no lowercase letter', async () => {
+            const data = { currentPassword: 'OldP@ss1', newPassword: 'UPPERCASE1' };
+
+            const err = await catchError(service.changePassword('uuid-1', data));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('newPassword');
+            expect(err.errors.newPassword).toContain(
+                'Password must contain at least one lowercase letter',
+            );
+        });
+
+        it('should throw ValidationError when newPassword has no digit', async () => {
+            const data = { currentPassword: 'OldP@ss1', newPassword: 'NoDigitsHere' };
+
+            const err = await catchError(service.changePassword('uuid-1', data));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('newPassword');
+            expect(err.errors.newPassword).toContain(
+                'Password must contain at least one number',
+            );
+        });
+
+        it('should collect multiple password strength errors in a single array', async () => {
+            const data = { currentPassword: 'OldP@ss1', newPassword: '!!!' };
+
+            const err = await catchError(service.changePassword('uuid-1', data));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors.newPassword.length).toBeGreaterThanOrEqual(3);
+            expect(err.errors.newPassword).toContain(
+                'Password must be at least 8 characters long',
+            );
+            expect(err.errors.newPassword).toContain(
+                'Password must contain at least one uppercase letter',
+            );
+            expect(err.errors.newPassword).toContain(
+                'Password must contain at least one lowercase letter',
+            );
+            expect(err.errors.newPassword).toContain(
+                'Password must contain at least one number',
+            );
+        });
+
+        it('should throw UserNotFoundError when user does not exist', async () => {
+            mockRepo.findById.mockResolvedValue(null);
+
+            await expect(
+                service.changePassword('nonexistent-id', validChangePasswordData),
+            ).rejects.toThrow(UserNotFoundError);
+        });
+
+        it('should throw IncorrectPasswordError when current password does not match', async () => {
+            mockRepo.findById.mockResolvedValue(createSampleUser());
+            mockPasswordManager.compare.mockResolvedValue(false);
+
+            await expect(
+                service.changePassword('uuid-1', validChangePasswordData),
+            ).rejects.toThrow(IncorrectPasswordError);
+        });
+
+        it('should call passwordManager.compare with stored hash and currentPassword', async () => {
+            const user = createSampleUser({ passwordHash: 'stored-hash' });
+            mockRepo.findById.mockResolvedValue(user);
+            mockPasswordManager.compare.mockResolvedValue(true);
+            mockPasswordManager.toHash.mockResolvedValue('new-hashed-pw');
+            mockRepo.updatePasswordHash.mockResolvedValue(true);
+
+            await service.changePassword('uuid-1', validChangePasswordData);
+
+            expect(mockPasswordManager.compare).toHaveBeenCalledWith(
+                'stored-hash',
+                'OldP@ss1',
+            );
+        });
+
+        it('should call passwordManager.toHash with the new password', async () => {
+            mockRepo.findById.mockResolvedValue(createSampleUser());
+            mockPasswordManager.compare.mockResolvedValue(true);
+            mockPasswordManager.toHash.mockResolvedValue('new-hashed-pw');
+            mockRepo.updatePasswordHash.mockResolvedValue(true);
+
+            await service.changePassword('uuid-1', validChangePasswordData);
+
+            expect(mockPasswordManager.toHash).toHaveBeenCalledWith('NewP@ss2');
+        });
+
+        it('should call userRepository.updatePasswordHash with userId and new hash', async () => {
+            mockRepo.findById.mockResolvedValue(createSampleUser());
+            mockPasswordManager.compare.mockResolvedValue(true);
+            mockPasswordManager.toHash.mockResolvedValue('new-hashed-pw');
+            mockRepo.updatePasswordHash.mockResolvedValue(true);
+
+            await service.changePassword('uuid-1', validChangePasswordData);
+
+            expect(mockRepo.updatePasswordHash).toHaveBeenCalledWith('uuid-1', 'new-hashed-pw');
+        });
+
+        it('should call refreshTokenRepository.deleteAllByUserId to revoke all tokens', async () => {
+            mockRepo.findById.mockResolvedValue(createSampleUser());
+            mockPasswordManager.compare.mockResolvedValue(true);
+            mockPasswordManager.toHash.mockResolvedValue('new-hashed-pw');
+            mockRepo.updatePasswordHash.mockResolvedValue(true);
+
+            await service.changePassword('uuid-1', validChangePasswordData);
+
+            expect(mockRefreshTokenRepo.deleteAllByUserId).toHaveBeenCalledWith('uuid-1');
+        });
+
+        it('should return void on success', async () => {
+            mockRepo.findById.mockResolvedValue(createSampleUser());
+            mockPasswordManager.compare.mockResolvedValue(true);
+            mockPasswordManager.toHash.mockResolvedValue('new-hashed-pw');
+            mockRepo.updatePasswordHash.mockResolvedValue(true);
+
+            const result = await service.changePassword('uuid-1', validChangePasswordData);
+
+            expect(result).toBeUndefined();
+        });
+
+        it('should throw UserNotFoundError when updatePasswordHash returns false', async () => {
+            mockRepo.findById.mockResolvedValue(createSampleUser());
+            mockPasswordManager.compare.mockResolvedValue(true);
+            mockPasswordManager.toHash.mockResolvedValue('new-hashed-pw');
+            mockRepo.updatePasswordHash.mockResolvedValue(false);
+
+            await expect(
+                service.changePassword('uuid-1', validChangePasswordData),
+            ).rejects.toThrow(UserNotFoundError);
+        });
+
+        it('should not call passwordManager or repository when validation fails', async () => {
+            const data = { currentPassword: '', newPassword: '' };
+
+            await catchError(service.changePassword('uuid-1', data));
+
+            expect(mockPasswordManager.compare).not.toHaveBeenCalled();
+            expect(mockPasswordManager.toHash).not.toHaveBeenCalled();
+            expect(mockRepo.findById).not.toHaveBeenCalled();
+            expect(mockRepo.updatePasswordHash).not.toHaveBeenCalled();
         });
     });
 
