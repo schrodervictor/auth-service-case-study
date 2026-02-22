@@ -2,7 +2,6 @@ import type { RequestHandler } from 'express';
 import { Container } from 'inversify';
 import type { DataSource } from 'typeorm';
 
-import './lib/base-controller';
 import './controllers/health-check-controller';
 import './controllers/user-controller';
 

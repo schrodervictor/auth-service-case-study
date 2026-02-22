@@ -5,6 +5,7 @@ const createMockIoredis = () => ({
     expire: jest.fn(),
     ttl: jest.fn(),
     quit: jest.fn(),
+    ping: jest.fn(),
 });
 
 describe('RedisClient', () => {
@@ -21,6 +22,10 @@ describe('RedisClient', () => {
 
         it('ttl should return -1', async () => {
             expect(await client.ttl('key')).toBe(-1);
+        });
+
+        it('ping should return false', async () => {
+            expect(await client.ping()).toBe(false);
         });
     });
 
@@ -50,6 +55,15 @@ describe('RedisClient', () => {
 
             expect(await client.ttl('mykey')).toBe(450);
             expect(mock.ttl).toHaveBeenCalledWith('mykey');
+        });
+
+        it('ping should return true when client responds with PONG', async () => {
+            const mock = createMockIoredis();
+            mock.ping.mockResolvedValue('PONG');
+            const client = new RedisClient(mock as never);
+
+            expect(await client.ping()).toBe(true);
+            expect(mock.ping).toHaveBeenCalled();
         });
     });
 
@@ -86,6 +100,18 @@ describe('RedisClient', () => {
 
             expect(await client.ttl('key')).toBe(-1);
             expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('connection lost'));
+
+            warnSpy.mockRestore();
+        });
+
+        it('ping should return false and log warning on failure', async () => {
+            const warnSpy = jest.spyOn(console, 'error').mockImplementation();
+            const mock = createMockIoredis();
+            mock.ping.mockRejectedValue(new Error('ECONNREFUSED'));
+            const client = new RedisClient(mock as never);
+
+            expect(await client.ping()).toBe(false);
+            expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('ECONNREFUSED'));
 
             warnSpy.mockRestore();
         });

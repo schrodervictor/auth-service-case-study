@@ -71,6 +71,7 @@ tests/
 │   │   ├── secrets-loader.test.ts     # Secrets loader (file + SSM backends)
 │   │   └── di-integration.test.ts     # DI container bindings
 │   ├── controllers/
+│   │   ├── health-check-controller.test.ts  # HealthCheckController (mocked DataSource + RedisClient)
 │   │   └── user-controller.test.ts    # UserController routes (mocked service)
 │   ├── database/
 │   │   └── data-source.test.ts        # DataSource factory and credentials
@@ -86,7 +87,7 @@ tests/
 │   │   ├── content-type-middleware.test.ts  # Content-Type validation (415 responses)
 │   │   └── rate-limit-middleware.test.ts  # Rate limit (mocked Redis)
 │   ├── redis/
-│   │   ├── redis-client.test.ts       # RedisClient facade (incr/expire/ttl/quit)
+│   │   ├── redis-client.test.ts       # RedisClient facade (incr/expire/ttl/quit/ping)
 │   │   └── redis-client-factory.test.ts  # Redis factory (connect + fail-open)
 │   ├── repositories/
 │   │   ├── user-repository.test.ts    # UserRepository (mocked TypeORM)
@@ -114,7 +115,7 @@ tests/
 │       ├── helpers/
 │       │   ├── api.ts                 # Shared helpers (validUserData, auth)
 │       │   └── redis.ts               # Redis flush helper (rate limit reset)
-│       ├── health-check.test.ts       # GET /health-check smoke test
+│       ├── health-check.test.ts       # GET /health-check — status body, no legacy message field
 │       ├── registration.test.ts       # POST /users/register
 │       ├── login.test.ts              # POST /users/login
 │       ├── profile.test.ts            # GET/PUT /users/profile

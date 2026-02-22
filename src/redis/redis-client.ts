@@ -46,6 +46,18 @@ export class RedisClient {
         }
     }
 
+    async ping(): Promise<boolean> {
+        if (!this.client) return false;
+
+        try {
+            await this.client.ping();
+            return true;
+        } catch (error: unknown) {
+            this.logWarning('ping', error);
+            return false;
+        }
+    }
+
     async quit(): Promise<void> {
         if (!this.client) return;
 
