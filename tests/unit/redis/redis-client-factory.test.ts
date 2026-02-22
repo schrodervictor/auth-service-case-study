@@ -1,7 +1,4 @@
-import {
-    silenceConsole,
-    type CapturedConsole,
-} from '../../helpers/test-console';
+import { silenceConsole } from '../../helpers/test-console';
 import type { AppConfig } from '../../../src/config/schema';
 import { TYPES } from '../../../src/lib/types';
 import { createRedisClient } from '../../../src/redis/redis-client-factory';

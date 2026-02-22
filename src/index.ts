@@ -45,7 +45,7 @@ import { TYPES } from './lib/types';
         // Create eventbus producer and consumer
         const kafkaClient = await createKafkaClient();
         const producer = new Producer(kafkaClient);
-        const consumer = new Consumer(kafkaClient, 'test-service-group');
+        const _consumer = new Consumer(kafkaClient, 'test-service-group');
 
         // Subscribe to topics when handlers are available
         // await consumer.subscribe([
