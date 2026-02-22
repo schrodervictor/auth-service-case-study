@@ -12,7 +12,9 @@ async function loadFromFile(path: string): Promise<AppSecrets> {
     return Object.freeze(secrets);
 }
 
-async function loadFromSSM(config: NonNullable<AppConfig['ssm']>): Promise<AppSecrets> {
+async function loadFromSSM(
+    config: NonNullable<AppConfig['ssm']>,
+): Promise<AppSecrets> {
     const client = new SSMClient({ region: config.region });
 
     const uniqueNames = [...new Set(Object.values(config.parameters))];

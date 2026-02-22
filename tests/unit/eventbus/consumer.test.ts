@@ -1,4 +1,7 @@
-import { silenceConsole, type CapturedConsole } from '../../helpers/test-console';
+import {
+    silenceConsole,
+    type CapturedConsole,
+} from '../../helpers/test-console';
 import { Consumer } from '../../../src/eventbus/consumer';
 import type { KafkaClient } from '../../../src/eventbus/types';
 
@@ -12,7 +15,9 @@ describe('Consumer', () => {
         captured = silenceConsole('log');
     });
 
-    afterEach(() => { captured.restore(); });
+    afterEach(() => {
+        captured.restore();
+    });
 
     it('should log subscribed topic names', async () => {
         const handler = jest.fn();

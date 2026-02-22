@@ -8,12 +8,14 @@ export function uniqueEmail(): string {
     return `test-${crypto.randomUUID()}@example.com`;
 }
 
-export function validUserData(overrides?: Partial<{
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-}>) {
+export function validUserData(
+    overrides?: Partial<{
+        email: string;
+        password: string;
+        firstName: string;
+        lastName: string;
+    }>,
+) {
     return {
         email: uniqueEmail(),
         password: 'StrongPass1',
@@ -27,12 +29,14 @@ export function validUserData(overrides?: Partial<{
  * Register a user and login, returning tokens and user info.
  * Flushes rate limit keys before the login call to avoid 429 interference.
  */
-export async function registerAndLogin(overrides?: Partial<{
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-}>): Promise<{
+export async function registerAndLogin(
+    overrides?: Partial<{
+        email: string;
+        password: string;
+        firstName: string;
+        lastName: string;
+    }>,
+): Promise<{
     accessToken: string;
     refreshToken: string;
     email: string;

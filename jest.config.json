@@ -6,7 +6,6 @@
     "^.+\\.ts$": ["ts-jest", { "tsconfig": "tsconfig.json" }]
   },
   "setupFilesAfterEnv": ["<rootDir>/tests/setup.ts"],
-  "globalTeardown": "<rootDir>/tests/teardown.ts",
   "coverageDirectory": "coverage",
   "coverageThreshold": {
     "global": {

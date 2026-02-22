@@ -10,7 +10,9 @@ import { RedisClient } from './redis-client';
  * the service starts without rate limiting (fail-open). The failure is
  * logged as a warning for DevOps visibility.
  */
-export async function createRedisClient(config: AppConfig): Promise<RedisClient> {
+export async function createRedisClient(
+    config: AppConfig,
+): Promise<RedisClient> {
     let client: Redis | undefined;
     try {
         const options: { host: string; port: number; password?: string } = {
@@ -27,11 +29,11 @@ export async function createRedisClient(config: AppConfig): Promise<RedisClient>
         await client.ping();
 
         return new RedisClient(client);
-    } catch (error) {
+    } catch (error: unknown) {
         const message = error instanceof Error ? error.message : String(error);
         console.error(
             `[RATE-LIMIT DEGRADED] Redis connection failed at startup — ` +
-            `rate limiting is DISABLED. Cause: ${message}`,
+                `rate limiting is DISABLED. Cause: ${message}`,
         );
         if (client) {
             client.quit().catch(() => {});

@@ -1,9 +1,7 @@
 import { z } from 'zod';
 
 export const RegisterRequestSchema = z.object({
-    email: z
-        .string({ error: 'Email is required' })
-        .min(1, 'Email is required'),
+    email: z.string({ error: 'Email is required' }).min(1, 'Email is required'),
     password: z
         .string({ error: 'Password is required' })
         .min(1, 'Password is required'),
@@ -20,9 +18,7 @@ export const RegisterRequestSchema = z.object({
 export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
 
 export const LoginRequestSchema = z.object({
-    email: z
-        .string({ error: 'Email is required' })
-        .min(1, 'Email is required'),
+    email: z.string({ error: 'Email is required' }).min(1, 'Email is required'),
     password: z
         .string({ error: 'Password is required' })
         .min(1, 'Password is required'),
@@ -40,11 +36,19 @@ export type RefreshRequest = z.infer<typeof RefreshRequestSchema>;
 
 export const UpdateProfileRequestSchema = z
     .object({
-        firstName: z.string().trim().min(1, 'First name cannot be empty').optional(),
-        lastName: z.string().trim().min(1, 'Last name cannot be empty').optional(),
+        firstName: z
+            .string()
+            .trim()
+            .min(1, 'First name cannot be empty')
+            .optional(),
+        lastName: z
+            .string()
+            .trim()
+            .min(1, 'Last name cannot be empty')
+            .optional(),
     })
     .refine(
-        (data) => data.firstName !== undefined || data.lastName !== undefined,
+        data => data.firstName !== undefined || data.lastName !== undefined,
         {
             message: 'At least one field (firstName or lastName) is required',
             path: ['_'],
@@ -65,9 +69,7 @@ export const ChangePasswordRequestSchema = z.object({
 export type ChangePasswordRequest = z.infer<typeof ChangePasswordRequestSchema>;
 
 export const ResetKeyRequestSchema = z.object({
-    email: z
-        .string({ error: 'Email is required' })
-        .min(1, 'Email is required'),
+    email: z.string({ error: 'Email is required' }).min(1, 'Email is required'),
 });
 
 export type ResetKeyRequest = z.infer<typeof ResetKeyRequestSchema>;
@@ -78,7 +80,9 @@ export const ValidateResetKeyRequestSchema = z.object({
         .min(1, 'Reset key is required'),
 });
 
-export type ValidateResetKeyRequest = z.infer<typeof ValidateResetKeyRequestSchema>;
+export type ValidateResetKeyRequest = z.infer<
+    typeof ValidateResetKeyRequestSchema
+>;
 
 export const ResetPasswordRequestSchema = z.object({
     resetKey: z

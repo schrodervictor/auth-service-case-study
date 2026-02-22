@@ -35,7 +35,7 @@ const MIGRATION_UP = `
     );
 `;
 
-const MIGRATION_DOWN = `DROP TABLE IF EXISTS "users";`;
+const MIGRATION_DOWN = `DROP TABLE IF EXISTS "users" CASCADE;`;
 
 const sampleUser: CreateUserData = {
     email: 'integration@example.com',
@@ -49,7 +49,11 @@ describe('UserRepository integration', () => {
     let repo: UserRepositoryImpl;
 
     beforeAll(async () => {
-        dataSource = new DataSource({ ...pgOptions, entities: [User], synchronize: false });
+        dataSource = new DataSource({
+            ...pgOptions,
+            entities: [User],
+            synchronize: false,
+        });
         await dataSource.initialize();
         await dataSource.query(MIGRATION_DOWN);
         await dataSource.query(MIGRATION_UP);
@@ -100,8 +104,12 @@ describe('UserRepository integration', () => {
             } as any);
 
             const tenSecondsAgo = new Date(beforeCreate.getTime() - 10_000);
-            expect(user.createdAt.getTime()).toBeGreaterThan(tenSecondsAgo.getTime());
-            expect(user.updatedAt.getTime()).toBeGreaterThan(tenSecondsAgo.getTime());
+            expect(user.createdAt.getTime()).toBeGreaterThan(
+                tenSecondsAgo.getTime(),
+            );
+            expect(user.updatedAt.getTime()).toBeGreaterThan(
+                tenSecondsAgo.getTime(),
+            );
             expect(user.createdAt.getFullYear()).not.toBe(2000);
             expect(user.updatedAt.getFullYear()).not.toBe(2000);
         });
@@ -137,7 +145,9 @@ describe('UserRepository integration', () => {
         });
 
         it('should return null for a non-existent id', async () => {
-            const found = await repo.findById('00000000-0000-0000-0000-000000000000');
+            const found = await repo.findById(
+                '00000000-0000-0000-0000-000000000000',
+            );
 
             expect(found).toBeNull();
         });
@@ -148,7 +158,7 @@ describe('UserRepository integration', () => {
             const created = await repo.create(sampleUser);
 
             // Small delay to ensure updatedAt differs
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise(resolve => setTimeout(resolve, 50));
 
             const updated = await repo.update(created.id, {
                 firstName: 'Updated',
@@ -165,9 +175,12 @@ describe('UserRepository integration', () => {
         });
 
         it('should return null for a non-existent id', async () => {
-            const result = await repo.update('00000000-0000-0000-0000-000000000000', {
-                firstName: 'Ghost',
-            });
+            const result = await repo.update(
+                '00000000-0000-0000-0000-000000000000',
+                {
+                    firstName: 'Ghost',
+                },
+            );
 
             expect(result).toBeNull();
         });
@@ -175,7 +188,9 @@ describe('UserRepository integration', () => {
         it('should preserve other fields on partial update', async () => {
             const created = await repo.create(sampleUser);
 
-            const updated = await repo.update(created.id, { firstName: 'OnlyFirst' });
+            const updated = await repo.update(created.id, {
+                firstName: 'OnlyFirst',
+            });
 
             expect(updated).not.toBeNull();
             expect(updated!.firstName).toBe('OnlyFirst');
@@ -187,20 +202,26 @@ describe('UserRepository integration', () => {
         it('should preserve createdAt unchanged after update', async () => {
             const created = await repo.create(sampleUser);
 
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise(resolve => setTimeout(resolve, 50));
 
-            const updated = await repo.update(created.id, { firstName: 'Changed' });
+            const updated = await repo.update(created.id, {
+                firstName: 'Changed',
+            });
 
             expect(updated).not.toBeNull();
-            expect(updated!.createdAt.getTime()).toBe(created.createdAt.getTime());
+            expect(updated!.createdAt.getTime()).toBe(
+                created.createdAt.getTime(),
+            );
         });
 
         it('should set updatedAt strictly greater than original after update', async () => {
             const created = await repo.create(sampleUser);
 
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise(resolve => setTimeout(resolve, 50));
 
-            const updated = await repo.update(created.id, { firstName: 'Changed' });
+            const updated = await repo.update(created.id, {
+                firstName: 'Changed',
+            });
 
             expect(updated).not.toBeNull();
             expect(updated!.updatedAt.getTime()).toBeGreaterThan(
@@ -212,7 +233,7 @@ describe('UserRepository integration', () => {
             const created = await repo.create(sampleUser);
             const injectedDate = new Date('2000-01-01');
 
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await new Promise(resolve => setTimeout(resolve, 50));
 
             const updated = await repo.update(created.id, {
                 firstName: 'X',
@@ -222,11 +243,15 @@ describe('UserRepository integration', () => {
 
             expect(updated).not.toBeNull();
             // createdAt must remain unchanged from original
-            expect(updated!.createdAt.getTime()).toBe(created.createdAt.getTime());
+            expect(updated!.createdAt.getTime()).toBe(
+                created.createdAt.getTime(),
+            );
             // updatedAt must be recent, not the injected year-2000 date
             expect(updated!.updatedAt.getFullYear()).not.toBe(2000);
             const tenSecondsAgo = new Date(Date.now() - 10_000);
-            expect(updated!.updatedAt.getTime()).toBeGreaterThan(tenSecondsAgo.getTime());
+            expect(updated!.updatedAt.getTime()).toBeGreaterThan(
+                tenSecondsAgo.getTime(),
+            );
         });
     });
 
@@ -234,7 +259,10 @@ describe('UserRepository integration', () => {
         it('should update the password hash and return true', async () => {
             const created = await repo.create(sampleUser);
 
-            const result = await repo.updatePasswordHash(created.id, 'new_hashed_password');
+            const result = await repo.updatePasswordHash(
+                created.id,
+                'new_hashed_password',
+            );
 
             expect(result).toBe(true);
 

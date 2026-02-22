@@ -26,7 +26,8 @@ describe('Password Reset', () => {
 
             expect(res.status).toBe(200);
             expect(res.body).toEqual({
-                message: 'If an account with that email exists, a reset key has been generated.',
+                message:
+                    'If an account with that email exists, a reset key has been generated.',
             });
         });
 
@@ -37,7 +38,8 @@ describe('Password Reset', () => {
 
             expect(res.status).toBe(200);
             expect(res.body).toEqual({
-                message: 'If an account with that email exists, a reset key has been generated.',
+                message:
+                    'If an account with that email exists, a reset key has been generated.',
             });
         });
 
@@ -48,7 +50,9 @@ describe('Password Reset', () => {
                 .send('not json');
 
             expect(res.status).toBe(415);
-            expect(res.body).toEqual({ message: 'Content-Type must be application/json' });
+            expect(res.body).toEqual({
+                message: 'Content-Type must be application/json',
+            });
         });
 
         it('should return 422 when email is missing', async () => {
@@ -81,18 +85,22 @@ describe('Password Reset', () => {
             expect(resetKey).not.toBeNull();
 
             await flushRateLimitKeys();
-            const res = await request.post(`${BASE}/users/validate-reset-key`).send({
-                resetKey,
-            });
+            const res = await request
+                .post(`${BASE}/users/validate-reset-key`)
+                .send({
+                    resetKey,
+                });
 
             expect(res.status).toBe(200);
             expect(res.body).toEqual({ valid: true });
         });
 
         it('should return 200 with { valid: false } for an invalid/random key', async () => {
-            const res = await request.post(`${BASE}/users/validate-reset-key`).send({
-                resetKey: 'totally-invalid-random-key-value',
-            });
+            const res = await request
+                .post(`${BASE}/users/validate-reset-key`)
+                .send({
+                    resetKey: 'totally-invalid-random-key-value',
+                });
 
             expect(res.status).toBe(200);
             expect(res.body).toEqual({ valid: false });
@@ -105,7 +113,9 @@ describe('Password Reset', () => {
                 .send('not json');
 
             expect(res.status).toBe(415);
-            expect(res.body).toEqual({ message: 'Content-Type must be application/json' });
+            expect(res.body).toEqual({
+                message: 'Content-Type must be application/json',
+            });
         });
 
         it('should return 422 when resetKey is missing', async () => {
@@ -140,10 +150,12 @@ describe('Password Reset', () => {
             expect(resetKey).not.toBeNull();
 
             await flushRateLimitKeys();
-            const res = await request.post(`${BASE}/users/password/reset`).send({
-                resetKey,
-                newPassword,
-            });
+            const res = await request
+                .post(`${BASE}/users/password/reset`)
+                .send({
+                    resetKey,
+                    newPassword,
+                });
 
             expect(res.status).toBe(200);
             expect(res.body).toEqual({
@@ -205,13 +217,17 @@ describe('Password Reset', () => {
         });
 
         it('should return 400 for invalid reset key', async () => {
-            const res = await request.post(`${BASE}/users/password/reset`).send({
-                resetKey: 'totally-invalid-key',
-                newPassword,
-            });
+            const res = await request
+                .post(`${BASE}/users/password/reset`)
+                .send({
+                    resetKey: 'totally-invalid-key',
+                    newPassword,
+                });
 
             expect(res.status).toBe(400);
-            expect(res.body).toEqual({ message: 'Invalid or expired reset key' });
+            expect(res.body).toEqual({
+                message: 'Invalid or expired reset key',
+            });
         });
 
         it('should return 422 for weak password', async () => {
@@ -225,10 +241,12 @@ describe('Password Reset', () => {
             const resetKey = getResetKeyForEmail(user.email);
 
             await flushRateLimitKeys();
-            const res = await request.post(`${BASE}/users/password/reset`).send({
-                resetKey,
-                newPassword: 'weak',
-            });
+            const res = await request
+                .post(`${BASE}/users/password/reset`)
+                .send({
+                    resetKey,
+                    newPassword: 'weak',
+                });
 
             expect(res.status).toBe(422);
             expect(res.body).toHaveProperty('message', 'Validation failed');
@@ -243,7 +261,9 @@ describe('Password Reset', () => {
                 .send('not json');
 
             expect(res.status).toBe(415);
-            expect(res.body).toEqual({ message: 'Content-Type must be application/json' });
+            expect(res.body).toEqual({
+                message: 'Content-Type must be application/json',
+            });
         });
 
         it('should return 422 when required fields are missing', async () => {
@@ -275,20 +295,26 @@ describe('Password Reset', () => {
 
             // First reset succeeds
             await flushRateLimitKeys();
-            const firstRes = await request.post(`${BASE}/users/password/reset`).send({
-                resetKey,
-                newPassword: 'FirstReset1',
-            });
+            const firstRes = await request
+                .post(`${BASE}/users/password/reset`)
+                .send({
+                    resetKey,
+                    newPassword: 'FirstReset1',
+                });
             expect(firstRes.status).toBe(200);
 
             // Second reset with the same key fails
             await flushRateLimitKeys();
-            const secondRes = await request.post(`${BASE}/users/password/reset`).send({
-                resetKey,
-                newPassword: 'SecondReset1',
-            });
+            const secondRes = await request
+                .post(`${BASE}/users/password/reset`)
+                .send({
+                    resetKey,
+                    newPassword: 'SecondReset1',
+                });
             expect(secondRes.status).toBe(400);
-            expect(secondRes.body).toEqual({ message: 'Invalid or expired reset key' });
+            expect(secondRes.body).toEqual({
+                message: 'Invalid or expired reset key',
+            });
         });
     });
 
@@ -315,9 +341,11 @@ describe('Password Reset', () => {
 
             // Try to use the old refresh token — should fail
             await flushRateLimitKeys();
-            const refreshRes = await request.post(`${BASE}/users/refresh`).send({
-                refreshToken: user.refreshToken,
-            });
+            const refreshRes = await request
+                .post(`${BASE}/users/refresh`)
+                .send({
+                    refreshToken: user.refreshToken,
+                });
 
             expect(refreshRes.status).toBe(401);
         });
@@ -352,15 +380,19 @@ describe('Password Reset', () => {
             const maxAttempts = 10;
 
             for (let i = 0; i < maxAttempts; i++) {
-                const r = await request.post(`${BASE}/users/validate-reset-key`).send({
-                    resetKey: `fake-key-${i}`,
-                });
+                const r = await request
+                    .post(`${BASE}/users/validate-reset-key`)
+                    .send({
+                        resetKey: `fake-key-${i}`,
+                    });
                 expect(r.status).not.toBe(429);
             }
 
-            const res = await request.post(`${BASE}/users/validate-reset-key`).send({
-                resetKey: 'fake-key-extra',
-            });
+            const res = await request
+                .post(`${BASE}/users/validate-reset-key`)
+                .send({
+                    resetKey: 'fake-key-extra',
+                });
 
             expect(res.status).toBe(429);
             expect(res.body).toHaveProperty('message');
@@ -370,17 +402,21 @@ describe('Password Reset', () => {
             const maxAttempts = 5;
 
             for (let i = 0; i < maxAttempts; i++) {
-                const r = await request.post(`${BASE}/users/password/reset`).send({
-                    resetKey: `fake-key-${i}`,
-                    newPassword: 'SomePass123',
-                });
+                const r = await request
+                    .post(`${BASE}/users/password/reset`)
+                    .send({
+                        resetKey: `fake-key-${i}`,
+                        newPassword: 'SomePass123',
+                    });
                 expect(r.status).not.toBe(429);
             }
 
-            const res = await request.post(`${BASE}/users/password/reset`).send({
-                resetKey: 'fake-key-extra',
-                newPassword: 'SomePass123',
-            });
+            const res = await request
+                .post(`${BASE}/users/password/reset`)
+                .send({
+                    resetKey: 'fake-key-extra',
+                    newPassword: 'SomePass123',
+                });
 
             expect(res.status).toBe(429);
             expect(res.body).toHaveProperty('message');

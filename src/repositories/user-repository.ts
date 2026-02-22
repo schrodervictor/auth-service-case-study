@@ -41,9 +41,9 @@ export class UserRepositoryImpl implements UserRepository {
     }
 
     async create(data: CreateUserData): Promise<User> {
-        // Strip caller-supplied timestamps — these are managed by the database
-        const { createdAt: _createdAt, updatedAt: _updatedAt, ...safeData } = data as CreateUserData & Record<string, unknown>;
-        const entity = this.repository.create(safeData as CreateUserData);
+        const entity = this.repository.create(
+            this.stripTimestamps(data) as CreateUserData,
+        );
         return this.repository.save(entity);
     }
 
@@ -52,13 +52,24 @@ export class UserRepositoryImpl implements UserRepository {
         if (user === null) {
             return null;
         }
-        // Strip caller-supplied timestamps — these are managed by the database
-        const { createdAt: _createdAt, updatedAt: _updatedAt, ...safeData } = data as UpdateUserData & Record<string, unknown>;
-        Object.assign(user, safeData);
+        Object.assign(user, this.stripTimestamps(data));
         return this.repository.save(user);
     }
 
-    async updatePasswordHash(id: string, passwordHash: string): Promise<boolean> {
+    /** Strip caller-supplied timestamps — these are managed by the database. */
+    private stripTimestamps<T>(data: T): Omit<T, 'createdAt' | 'updatedAt'> {
+        const {
+            createdAt: _createdAt,
+            updatedAt: _updatedAt,
+            ...safe
+        } = data as T & Record<string, unknown>;
+        return safe as Omit<T, 'createdAt' | 'updatedAt'>;
+    }
+
+    async updatePasswordHash(
+        id: string,
+        passwordHash: string,
+    ): Promise<boolean> {
         const result = await this.repository.update(id, { passwordHash });
         return (result.affected ?? 0) > 0;
     }

@@ -1,29 +1,12 @@
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response } from 'express';
 import { z } from 'zod';
 
 import { validate } from '../../../src/middleware/validate-middleware';
+import { createMockResponse, createMockNext } from '../../helpers/mock-express';
 
 const createMockRequest = (body: unknown): Partial<Request> => ({
     body,
 });
-
-const createMockResponse = (): Partial<Response> & {
-    statusCode?: number;
-    body?: unknown;
-} => {
-    const res: Partial<Response> & { statusCode?: number; body?: unknown } = {};
-    res.status = jest.fn().mockImplementation((code: number) => {
-        res.statusCode = code;
-        return res;
-    });
-    res.json = jest.fn().mockImplementation((data: unknown) => {
-        res.body = data;
-        return res;
-    });
-    return res;
-};
-
-const createMockNext = (): jest.Mock<NextFunction> => jest.fn();
 
 const testSchema = z.object({
     name: z.string({ error: 'Name is required' }).min(1, 'Name is required'),
@@ -57,7 +40,12 @@ describe('validate middleware', () => {
 
         it('should strip extra fields not in the schema', () => {
             const middleware = validate(testSchema);
-            const req = createMockRequest({ name: 'Alice', age: 30, extra: 'field', admin: true });
+            const req = createMockRequest({
+                name: 'Alice',
+                age: 30,
+                extra: 'field',
+                admin: true,
+            });
             const res = createMockResponse();
             const next = createMockNext();
 
@@ -93,7 +81,9 @@ describe('validate middleware', () => {
 
             expect(res.body).toHaveProperty('message', 'Validation failed');
             expect(res.body).toHaveProperty('errors');
-            expect(typeof (res.body as Record<string, unknown>).errors).toBe('object');
+            expect(typeof (res.body as Record<string, unknown>).errors).toBe(
+                'object',
+            );
         });
 
         it('should group errors by field name', () => {
@@ -104,9 +94,16 @@ describe('validate middleware', () => {
 
             middleware(req as Request, res as Response, next);
 
-            const body = res.body as { message: string; errors: Record<string, string[]> };
-            expect(body.errors.name).toEqual(expect.arrayContaining([expect.any(String)]));
-            expect(body.errors.age).toEqual(expect.arrayContaining([expect.any(String)]));
+            const body = res.body as {
+                message: string;
+                errors: Record<string, string[]>;
+            };
+            expect(body.errors.name).toEqual(
+                expect.arrayContaining([expect.any(String)]),
+            );
+            expect(body.errors.age).toEqual(
+                expect.arrayContaining([expect.any(String)]),
+            );
         });
 
         it('should return multiple error messages for a single field', () => {
@@ -124,7 +121,10 @@ describe('validate middleware', () => {
 
             middleware(req as Request, res as Response, next);
 
-            const body = res.body as { message: string; errors: Record<string, string[]> };
+            const body = res.body as {
+                message: string;
+                errors: Record<string, string[]>;
+            };
             expect(body.errors.email.length).toBeGreaterThanOrEqual(1);
         });
 
@@ -136,7 +136,10 @@ describe('validate middleware', () => {
 
             middleware(req as Request, res as Response, next);
 
-            const body = res.body as { message: string; errors: Record<string, string[]> };
+            const body = res.body as {
+                message: string;
+                errors: Record<string, string[]>;
+            };
             expect(body.errors).toHaveProperty('name');
             expect(body.errors).toHaveProperty('age');
         });
@@ -149,7 +152,7 @@ describe('validate middleware', () => {
                     a: z.string().optional(),
                     b: z.string().optional(),
                 })
-                .refine((data) => data.a !== undefined || data.b !== undefined, {
+                .refine(data => data.a !== undefined || data.b !== undefined, {
                     message: 'At least one field is required',
                     path: [],
                 });
@@ -161,9 +164,14 @@ describe('validate middleware', () => {
 
             middleware(req as Request, res as Response, next);
 
-            const body = res.body as { message: string; errors: Record<string, string[]> };
+            const body = res.body as {
+                message: string;
+                errors: Record<string, string[]>;
+            };
             expect(body.errors).toHaveProperty('_');
-            expect(body.errors['_']).toContain('At least one field is required');
+            expect(body.errors['_']).toContain(
+                'At least one field is required',
+            );
         });
 
         it('should use the provided path when refine specifies one', () => {
@@ -172,7 +180,7 @@ describe('validate middleware', () => {
                     a: z.string().optional(),
                     b: z.string().optional(),
                 })
-                .refine((data) => data.a !== undefined || data.b !== undefined, {
+                .refine(data => data.a !== undefined || data.b !== undefined, {
                     message: 'At least one field is required',
                     path: ['_'],
                 });
@@ -184,9 +192,14 @@ describe('validate middleware', () => {
 
             middleware(req as Request, res as Response, next);
 
-            const body = res.body as { message: string; errors: Record<string, string[]> };
+            const body = res.body as {
+                message: string;
+                errors: Record<string, string[]>;
+            };
             expect(body.errors).toHaveProperty('_');
-            expect(body.errors['_']).toContain('At least one field is required');
+            expect(body.errors['_']).toContain(
+                'At least one field is required',
+            );
         });
     });
 

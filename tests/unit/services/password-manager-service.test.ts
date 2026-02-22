@@ -127,7 +127,9 @@ describe('PasswordManagerServiceImpl', () => {
             const password = 'mySecurePassword!';
             const hash = await service.toHash(password);
 
-            expect(await service.compare(hash, 'differentPassword')).toBe(false);
+            expect(await service.compare(hash, 'differentPassword')).toBe(
+                false,
+            );
         });
 
         it('should work with special characters (unicode, spaces, symbols)', async () => {

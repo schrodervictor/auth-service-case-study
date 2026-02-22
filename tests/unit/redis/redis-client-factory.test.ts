@@ -1,4 +1,5 @@
-import { silenceConsole, type CapturedConsole } from '../../helpers/test-console';
+import { silenceConsole } from '../../helpers/test-console';
+import { makeTestConfig } from '../../helpers/test-config';
 import type { AppConfig } from '../../../src/config/schema';
 import { TYPES } from '../../../src/lib/types';
 import { createRedisClient } from '../../../src/redis/redis-client-factory';
@@ -6,24 +7,7 @@ import { RedisClient } from '../../../src/redis/redis-client';
 
 jest.mock('ioredis');
 
-const MOCK_CONFIG: AppConfig = {
-    server: { port: 9000 },
-    database: { host: 'localhost', port: 5432, name: 'testdb' },
-    auth: {
-        accessToken: { expiresIn: '15m' },
-        refreshToken: { expiresIn: '7d' },
-        resetKey: { expiresIn: '15m' },
-    },
-    redis: { host: 'redis', port: 6379 },
-    rateLimit: {
-        login: { maxAttempts: 5, windowSeconds: 900 },
-        refresh: { maxAttempts: 10, windowSeconds: 900 },
-        resetKey: { maxAttempts: 3, windowSeconds: 900 },
-        validateResetKey: { maxAttempts: 10, windowSeconds: 900 },
-        resetPassword: { maxAttempts: 5, windowSeconds: 900 },
-    },
-    eventbus: { mode: 'emulated' as const },
-};
+const MOCK_CONFIG = makeTestConfig();
 
 describe('TYPES.RedisClient', () => {
     it('should have a RedisClient symbol defined in TYPES', () => {
@@ -113,7 +97,9 @@ describe('createRedisClient', () => {
 
     it('should return a RedisClient when Redis connection fails (fail-open)', async () => {
         const captured = silenceConsole('error');
-        mockRedisInstance.ping.mockRejectedValue(new Error('Connection refused'));
+        mockRedisInstance.ping.mockRejectedValue(
+            new Error('Connection refused'),
+        );
 
         const client = await createRedisClient(MOCK_CONFIG);
 
@@ -123,7 +109,9 @@ describe('createRedisClient', () => {
 
     it('should log an error when Redis connection fails', async () => {
         const captured = silenceConsole('error');
-        mockRedisInstance.ping.mockRejectedValue(new Error('Connection refused'));
+        mockRedisInstance.ping.mockRejectedValue(
+            new Error('Connection refused'),
+        );
 
         await createRedisClient(MOCK_CONFIG);
 

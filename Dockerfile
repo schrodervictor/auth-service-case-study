@@ -19,7 +19,7 @@ COPY package*.json .
 RUN --mount=type=ssh,id=default npm install --omit optional
 
 # Copy the remaining dev config files
-COPY eslint.config.mjs jest.config.json prettierrc.json tsconfig.json .
+COPY eslint.config.mjs jest.config.json .prettierrc.json tsconfig.json .
 
 EXPOSE 9000
 CMD ["npm", "run", "dev"]

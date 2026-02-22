@@ -1,4 +1,7 @@
-import { silenceConsole, type CapturedConsole } from '../../helpers/test-console';
+import {
+    silenceConsole,
+    type CapturedConsole,
+} from '../../helpers/test-console';
 import { createKafkaClient } from '../../../src/eventbus/client';
 
 jest.mock('../../../src/config', () => ({
@@ -10,8 +13,12 @@ jest.mock('../../../src/config', () => ({
 describe('createKafkaClient', () => {
     let captured: CapturedConsole;
 
-    beforeEach(() => { captured = silenceConsole('log'); });
-    afterEach(() => { captured.restore(); });
+    beforeEach(() => {
+        captured = silenceConsole('log');
+    });
+    afterEach(() => {
+        captured.restore();
+    });
 
     it('should return a KafkaClient with mode "emulated"', async () => {
         const client = await createKafkaClient();

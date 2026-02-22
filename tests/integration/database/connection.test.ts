@@ -38,7 +38,11 @@ describe('Database connectivity', () => {
     let dataSource: DataSource;
 
     beforeAll(async () => {
-        dataSource = new DataSource({ ...pgOptions, entities: [], synchronize: false });
+        dataSource = new DataSource({
+            ...pgOptions,
+            entities: [],
+            synchronize: false,
+        });
         await dataSource.initialize();
     });
 
@@ -62,7 +66,11 @@ describe('Migrations', () => {
     let dataSource: DataSource;
 
     beforeAll(async () => {
-        dataSource = new DataSource({ ...pgOptions, entities: [User], synchronize: false });
+        dataSource = new DataSource({
+            ...pgOptions,
+            entities: [User],
+            synchronize: false,
+        });
         await dataSource.initialize();
         // Clean up any leftover state from previous runs
         await dataSource.query(MIGRATION_DOWN);
@@ -101,7 +109,11 @@ describe('User entity roundtrip', () => {
     let dataSource: DataSource;
 
     beforeAll(async () => {
-        dataSource = new DataSource({ ...pgOptions, entities: [User], synchronize: false });
+        dataSource = new DataSource({
+            ...pgOptions,
+            entities: [User],
+            synchronize: false,
+        });
         await dataSource.initialize();
         // Ensure clean state, then apply migration
         await dataSource.query(MIGRATION_DOWN);

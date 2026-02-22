@@ -5,7 +5,11 @@ import { configSchema, type AppConfig } from './schema';
 function deepFreeze<T extends object>(obj: T): Readonly<T> {
     Object.freeze(obj);
     for (const value of Object.values(obj)) {
-        if (value !== null && typeof value === 'object' && !Object.isFrozen(value)) {
+        if (
+            value !== null &&
+            typeof value === 'object' &&
+            !Object.isFrozen(value)
+        ) {
             deepFreeze(value);
         }
     }
@@ -16,9 +20,7 @@ export function loadConfig(): AppConfig {
     const configPath = process.env.CONFIG_PATH;
 
     if (!configPath) {
-        throw new Error(
-            'CONFIG_PATH environment variable is not set or empty',
-        );
+        throw new Error('CONFIG_PATH environment variable is not set or empty');
     }
 
     const raw = fs.readFileSync(configPath, 'utf-8');

@@ -25,6 +25,10 @@ export function createDataSource(
         password: credentials.password,
         synchronize: false,
         entities: [User, RefreshToken, PasswordResetKey],
-        migrations: [CreateUser1740000000000, CreateRefreshTokensTable1740100000000, CreatePasswordResetKeysTable1740200000000],
+        migrations: [
+            CreateUser1740000000000,
+            CreateRefreshTokensTable1740100000000,
+            CreatePasswordResetKeysTable1740200000000,
+        ],
     });
 }

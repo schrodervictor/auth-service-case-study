@@ -58,7 +58,12 @@ const MIGRATION_DOWN = `
 
 async function createTestUser(
     dataSource: DataSource,
-    overrides: Partial<{ email: string; passwordHash: string; firstName: string; lastName: string }> = {},
+    overrides: Partial<{
+        email: string;
+        passwordHash: string;
+        firstName: string;
+        lastName: string;
+    }> = {},
 ): Promise<User> {
     const userRepo = new UserRepositoryImpl(dataSource);
     return userRepo.create({
@@ -102,7 +107,11 @@ describe('PasswordResetKeyRepository integration', () => {
             const user = await createTestUser(dataSource);
             const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
-            const key = await repo.save('sha256_hash_value', user.id, expiresAt);
+            const key = await repo.save(
+                'sha256_hash_value',
+                user.id,
+                expiresAt,
+            );
 
             expect(key.id).toBeDefined();
             expect(key.id).toMatch(
@@ -139,8 +148,12 @@ describe('PasswordResetKeyRepository integration', () => {
         });
 
         it('should clean up expired keys from other users on save (lazy deletion)', async () => {
-            const user1 = await createTestUser(dataSource, { email: 'user1@example.com' });
-            const user2 = await createTestUser(dataSource, { email: 'user2@example.com' });
+            const user1 = await createTestUser(dataSource, {
+                email: 'user1@example.com',
+            });
+            const user2 = await createTestUser(dataSource, {
+                email: 'user2@example.com',
+            });
 
             // Insert an expired key for user1 directly via raw query
             const expiredDate = new Date(Date.now() - 60 * 1000);
@@ -162,7 +175,11 @@ describe('PasswordResetKeyRepository integration', () => {
         it('should find a previously saved key by its hash', async () => {
             const user = await createTestUser(dataSource);
             const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
-            const saved = await repo.save('unique_hash_123', user.id, expiresAt);
+            const saved = await repo.save(
+                'unique_hash_123',
+                user.id,
+                expiresAt,
+            );
 
             const found = await repo.findByKeyHash('unique_hash_123');
 
@@ -222,8 +239,12 @@ describe('PasswordResetKeyRepository integration', () => {
         });
 
         it('should not affect keys of other users', async () => {
-            const user1 = await createTestUser(dataSource, { email: 'user1@example.com' });
-            const user2 = await createTestUser(dataSource, { email: 'user2@example.com' });
+            const user1 = await createTestUser(dataSource, {
+                email: 'user1@example.com',
+            });
+            const user2 = await createTestUser(dataSource, {
+                email: 'user2@example.com',
+            });
             const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
             await repo.save('user1_hash', user1.id, expiresAt);
             await repo.save('user2_hash', user2.id, expiresAt);
@@ -272,7 +293,9 @@ describe('PasswordResetKeyRepository integration', () => {
             const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
             await repo.save('cascade_hash', user.id, expiresAt);
 
-            await dataSource.query('DELETE FROM "users" WHERE "id" = $1', [user.id]);
+            await dataSource.query('DELETE FROM "users" WHERE "id" = $1', [
+                user.id,
+            ]);
 
             const found = await repo.findByKeyHash('cascade_hash');
             expect(found).toBeNull();

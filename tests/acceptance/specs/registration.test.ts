@@ -62,7 +62,9 @@ describe('POST /users/register', () => {
             .send('not json');
 
         expect(res.status).toBe(415);
-        expect(res.body).toEqual({ message: 'Content-Type must be application/json' });
+        expect(res.body).toEqual({
+            message: 'Content-Type must be application/json',
+        });
     });
 
     it('should return 409 when email already exists', async () => {

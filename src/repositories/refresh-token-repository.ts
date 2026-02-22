@@ -5,7 +5,11 @@ import { RefreshToken } from '../entities/refresh-token';
 import { TYPES } from '../lib/types';
 
 export interface RefreshTokenRepository {
-    save(tokenHash: string, userId: string, expiresAt: Date): Promise<RefreshToken>;
+    save(
+        tokenHash: string,
+        userId: string,
+        expiresAt: Date,
+    ): Promise<RefreshToken>;
     findByTokenHash(tokenHash: string): Promise<RefreshToken | null>;
     deleteByTokenHash(tokenHash: string): Promise<void>;
     deleteAllByUserId(userId: string): Promise<void>;
@@ -19,7 +23,11 @@ export class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
         this.repository = dataSource.getRepository(RefreshToken);
     }
 
-    async save(tokenHash: string, userId: string, expiresAt: Date): Promise<RefreshToken> {
+    async save(
+        tokenHash: string,
+        userId: string,
+        expiresAt: Date,
+    ): Promise<RefreshToken> {
         const entity = this.repository.create({ tokenHash, userId, expiresAt });
         return this.repository.save(entity);
     }

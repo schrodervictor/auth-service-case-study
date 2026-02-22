@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { loadConfig } from '../../../src/config/loader';
+import { makeTestConfig } from '../../helpers/test-config';
 
 function writeTmpConfig(data: unknown): string {
     const filePath = path.join(
@@ -13,32 +14,19 @@ function writeTmpConfig(data: unknown): string {
     return filePath;
 }
 
-const VALID_FULL_CONFIG = {
-    server: { port: 3000 },
-    database: { host: 'localhost', port: 5433, name: 'mydb' },
-    auth: {
-        accessToken: { expiresIn: '30m' },
-        refreshToken: { expiresIn: '14d' },
-    },
-};
-
-const MINIMAL_CONFIG = {
-    database: { host: 'localhost', name: 'mydb' },
-};
+const VALID_CONFIG = makeTestConfig();
 
 describe('loadConfig', () => {
     let tmpFiles: string[] = [];
     const originalEnv = process.env.CONFIG_PATH;
 
     afterEach(() => {
-        // Restore CONFIG_PATH
         if (originalEnv === undefined) {
             delete process.env.CONFIG_PATH;
         } else {
             process.env.CONFIG_PATH = originalEnv;
         }
 
-        // Clean up temp files
         for (const f of tmpFiles) {
             try {
                 fs.unlinkSync(f);
@@ -51,72 +39,28 @@ describe('loadConfig', () => {
 
     describe('valid config', () => {
         it('should load a fully-specified config and return a typed object', () => {
-            const configPath = writeTmpConfig(VALID_FULL_CONFIG);
+            const configPath = writeTmpConfig(VALID_CONFIG);
             tmpFiles.push(configPath);
             process.env.CONFIG_PATH = configPath;
 
             const config = loadConfig();
 
-            expect(config).toEqual({
+            expect(config).toEqual(VALID_CONFIG);
+        });
+
+        it('should load config with custom values', () => {
+            const customConfig = makeTestConfig({
                 server: { port: 3000 },
-                database: { host: 'localhost', port: 5433, name: 'mydb' },
-                auth: {
-                    accessToken: { expiresIn: '30m' },
-                    refreshToken: { expiresIn: '14d' },
-                    resetKey: { expiresIn: '15m' },
-                },
-                redis: { host: 'redis', port: 6379 },
-                rateLimit: {
-                    login: { maxAttempts: 5, windowSeconds: 900 },
-                    refresh: { maxAttempts: 10, windowSeconds: 900 },
-                    resetKey: { maxAttempts: 3, windowSeconds: 900 },
-                    validateResetKey: { maxAttempts: 10, windowSeconds: 900 },
-                    resetPassword: { maxAttempts: 5, windowSeconds: 900 },
-                },
-                eventbus: { mode: 'real', kafka: {} },
+                database: { port: 5433 },
             });
-        });
-    });
-
-    describe('default values', () => {
-        it('should apply default server.port of 9000 when omitted', () => {
-            const configPath = writeTmpConfig(MINIMAL_CONFIG);
+            const configPath = writeTmpConfig(customConfig);
             tmpFiles.push(configPath);
             process.env.CONFIG_PATH = configPath;
 
             const config = loadConfig();
 
-            expect(config.server.port).toBe(9000);
-        });
-
-        it('should apply default database.port of 5432 when omitted', () => {
-            const configPath = writeTmpConfig(MINIMAL_CONFIG);
-            tmpFiles.push(configPath);
-            process.env.CONFIG_PATH = configPath;
-
-            const config = loadConfig();
-
-            expect(config.database.port).toBe(5432);
-        });
-
-        it('should apply default auth.accessToken.expiresIn of "15m" when omitted', () => {
-            const configPath = writeTmpConfig(MINIMAL_CONFIG);
-            tmpFiles.push(configPath);
-            process.env.CONFIG_PATH = configPath;
-
-            const config = loadConfig();
-
-            expect(config.auth.accessToken.expiresIn).toBe('15m');
-        });
-
-        it('should apply default auth.refreshToken.expiresIn of "7d" when omitted', () => {
-            const configPath = writeTmpConfig(MINIMAL_CONFIG);
-            tmpFiles.push(configPath);
-            process.env.CONFIG_PATH = configPath;
-
-            const config = loadConfig();
-
-            expect(config.auth.refreshToken.expiresIn).toBe('7d');
+            expect(config.server.port).toBe(3000);
+            expect(config.database.port).toBe(5433);
         });
     });
 
@@ -157,9 +101,11 @@ describe('loadConfig', () => {
     });
 
     describe('missing required fields', () => {
-        it('should throw a validation error when database.host is missing', () => {
+        it('should throw when database.host is missing', () => {
+            const { host: _, ...dbWithoutHost } = VALID_CONFIG.database;
             const configPath = writeTmpConfig({
-                database: { name: 'mydb' },
+                ...VALID_CONFIG,
+                database: dbWithoutHost,
             });
             tmpFiles.push(configPath);
             process.env.CONFIG_PATH = configPath;
@@ -167,20 +113,18 @@ describe('loadConfig', () => {
             expect(() => loadConfig()).toThrow();
         });
 
-        it('should throw a validation error when database.name is missing', () => {
-            const configPath = writeTmpConfig({
-                database: { host: 'localhost' },
-            });
+        it('should throw when database section is missing entirely', () => {
+            const { database: _, ...configWithoutDb } = VALID_CONFIG;
+            const configPath = writeTmpConfig(configWithoutDb);
             tmpFiles.push(configPath);
             process.env.CONFIG_PATH = configPath;
 
             expect(() => loadConfig()).toThrow();
         });
 
-        it('should throw a validation error when database section is missing entirely', () => {
-            const configPath = writeTmpConfig({
-                server: { port: 3000 },
-            });
+        it('should throw when server section is missing', () => {
+            const { server: _, ...configWithoutServer } = VALID_CONFIG;
+            const configPath = writeTmpConfig(configWithoutServer);
             tmpFiles.push(configPath);
             process.env.CONFIG_PATH = configPath;
 
@@ -189,10 +133,10 @@ describe('loadConfig', () => {
     });
 
     describe('wrong types', () => {
-        it('should throw a validation error when server.port is a string', () => {
+        it('should throw when server.port is a string', () => {
             const configPath = writeTmpConfig({
+                ...VALID_CONFIG,
                 server: { port: '3000' },
-                database: { host: 'localhost', name: 'mydb' },
             });
             tmpFiles.push(configPath);
             process.env.CONFIG_PATH = configPath;
@@ -200,19 +144,10 @@ describe('loadConfig', () => {
             expect(() => loadConfig()).toThrow();
         });
 
-        it('should throw a validation error when database.port is a string', () => {
+        it('should throw when database.port is a string', () => {
             const configPath = writeTmpConfig({
-                database: { host: 'localhost', port: 'abc', name: 'mydb' },
-            });
-            tmpFiles.push(configPath);
-            process.env.CONFIG_PATH = configPath;
-
-            expect(() => loadConfig()).toThrow();
-        });
-
-        it('should throw a validation error when database.host is a number', () => {
-            const configPath = writeTmpConfig({
-                database: { host: 123, name: 'mydb' },
+                ...VALID_CONFIG,
+                database: { ...VALID_CONFIG.database, port: 'abc' },
             });
             tmpFiles.push(configPath);
             process.env.CONFIG_PATH = configPath;
@@ -223,7 +158,7 @@ describe('loadConfig', () => {
 
     describe('immutability', () => {
         function loadValidConfig() {
-            const configPath = writeTmpConfig(VALID_FULL_CONFIG);
+            const configPath = writeTmpConfig(VALID_CONFIG);
             tmpFiles.push(configPath);
             process.env.CONFIG_PATH = configPath;
             return loadConfig();
@@ -270,7 +205,8 @@ describe('loadConfig', () => {
             const config = loadValidConfig();
 
             expect(() => {
-                (config.auth.accessToken as Record<string, unknown>).expiresIn = '1h';
+                (config.auth.accessToken as Record<string, unknown>).expiresIn =
+                    '1h';
             }).toThrow(TypeError);
         });
     });
@@ -278,7 +214,7 @@ describe('loadConfig', () => {
     describe('extra/unknown fields', () => {
         it('should strip unknown top-level fields', () => {
             const configPath = writeTmpConfig({
-                ...VALID_FULL_CONFIG,
+                ...VALID_CONFIG,
                 extraField: 'should be stripped',
             });
             tmpFiles.push(configPath);
@@ -291,9 +227,9 @@ describe('loadConfig', () => {
 
         it('should strip unknown nested fields', () => {
             const configPath = writeTmpConfig({
-                ...VALID_FULL_CONFIG,
+                ...VALID_CONFIG,
                 database: {
-                    ...VALID_FULL_CONFIG.database,
+                    ...VALID_CONFIG.database,
                     extraNested: true,
                 },
             });

@@ -37,9 +37,11 @@ export function silenceConsole(...methods: ConsoleMethod[]): CapturedConsole {
     const spies: jest.SpyInstance[] = [];
 
     for (const method of methods) {
-        const spy = jest.spyOn(console, method).mockImplementation((...args: unknown[]) => {
-            captured[method].push(args.map(String).join(' '));
-        });
+        const spy = jest
+            .spyOn(console, method)
+            .mockImplementation((...args: unknown[]) => {
+                captured[method].push(args.map(String).join(' '));
+            });
         spies.push(spy);
     }
 

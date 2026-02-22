@@ -15,7 +15,9 @@ interface JwtPayload {
     userId: string;
 }
 
-export function createAuthMiddleware(jwtSecret: string): AuthMiddlewareFunction {
+export function createAuthMiddleware(
+    jwtSecret: string,
+): AuthMiddlewareFunction {
     if (!jwtSecret) {
         throw new Error('jwtSecret is required');
     }

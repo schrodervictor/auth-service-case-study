@@ -2,7 +2,10 @@ import 'reflect-metadata';
 import type { Request, Response } from 'express';
 
 import { UserController } from '../../../src/controllers/user-controller';
-import type { UserService, UserResponseDto } from '../../../src/services/user-service';
+import type {
+    UserService,
+    UserResponseDto,
+} from '../../../src/services/user-service';
 import {
     EmailAlreadyExistsError,
     InvalidCredentialsError,
@@ -20,45 +23,11 @@ import {
     UpdateProfileRequestSchema,
     ChangePasswordRequestSchema,
 } from '../../../src/schemas/user-schemas';
-
-const createMockUserService = (): jest.Mocked<UserService> => ({
-    register: jest.fn(),
-    authenticate: jest.fn(),
-    refreshAccessToken: jest.fn(),
-    logout: jest.fn(),
-    getProfile: jest.fn(),
-    updateProfile: jest.fn(),
-    changePassword: jest.fn(),
-    requestPasswordReset: jest.fn(),
-    validateResetKey: jest.fn(),
-    resetPassword: jest.fn(),
-});
-
-const createMockRequest = (
-    body?: Record<string, unknown>,
-    user?: { id: string },
-): Partial<Request> => ({
-    body,
-    ...(user ? { user } : {}),
-});
-
-const createMockResponse = (): Partial<Response> & {
-    statusCode?: number;
-    body?: unknown;
-} => {
-    const res: Partial<Response> & { statusCode?: number; body?: unknown } = {};
-    res.status = jest.fn().mockImplementation((code: number) => {
-        res.statusCode = code;
-        return res;
-    });
-    res.json = jest.fn().mockImplementation((data: unknown) => {
-        res.body = data;
-        return res;
-    });
-    res.send = jest.fn().mockImplementation(() => res);
-    res.end = jest.fn().mockImplementation(() => res);
-    return res;
-};
+import {
+    createMockResponse,
+    createMockRequest,
+    createMockUserService,
+} from '../../helpers/mock-express';
 
 const sampleUser: UserResponseDto = {
     id: 'uuid-1',
@@ -115,26 +84,6 @@ describe('UserController', () => {
             });
         });
 
-        it('should pass req.body directly to service (middleware guarantees shape)', async () => {
-            mockService.register.mockResolvedValue(sampleUser);
-            const req = createMockRequest({
-                email: 'test@example.com',
-                password: 'StrongPass1!',
-                firstName: 'John',
-                lastName: 'Doe',
-            });
-            const res = createMockResponse();
-
-            await controller.register(req as Request, res as Response);
-
-            expect(mockService.register).toHaveBeenCalledWith({
-                email: 'test@example.com',
-                password: 'StrongPass1!',
-                firstName: 'John',
-                lastName: 'Doe',
-            });
-        });
-
         it('should return 409 when service throws EmailAlreadyExistsError', async () => {
             mockService.register.mockRejectedValue(
                 new EmailAlreadyExistsError('test@example.com'),
@@ -158,7 +107,10 @@ describe('UserController', () => {
         it('should return 422 when service throws ValidationError', async () => {
             mockService.register.mockRejectedValue(
                 new ValidationError('Validation failed', {
-                    password: ['Must be at least 8 characters', 'Must contain uppercase'],
+                    password: [
+                        'Must be at least 8 characters',
+                        'Must contain uppercase',
+                    ],
                     email: ['Invalid email format'],
                 }),
             );
@@ -176,7 +128,10 @@ describe('UserController', () => {
             expect(res.body).toEqual({
                 message: 'Validation failed',
                 errors: {
-                    password: ['Must be at least 8 characters', 'Must contain uppercase'],
+                    password: [
+                        'Must be at least 8 characters',
+                        'Must contain uppercase',
+                    ],
                     email: ['Invalid email format'],
                 },
             });
@@ -216,7 +171,9 @@ describe('UserController', () => {
         });
 
         it('should return 500 when service throws an unexpected error', async () => {
-            mockService.register.mockRejectedValue(new Error('DB connection lost'));
+            mockService.register.mockRejectedValue(
+                new Error('DB connection lost'),
+            );
             const req = createMockRequest({
                 email: 'test@example.com',
                 password: 'StrongPass1!',
@@ -269,7 +226,9 @@ describe('UserController', () => {
         });
 
         it('should return 401 when service throws InvalidCredentialsError', async () => {
-            mockService.authenticate.mockRejectedValue(new InvalidCredentialsError());
+            mockService.authenticate.mockRejectedValue(
+                new InvalidCredentialsError(),
+            );
             const req = createMockRequest({
                 email: 'test@example.com',
                 password: 'WrongPass!',
@@ -283,7 +242,9 @@ describe('UserController', () => {
         });
 
         it('should return 500 when service throws an unexpected error', async () => {
-            mockService.authenticate.mockRejectedValue(new Error('Something broke'));
+            mockService.authenticate.mockRejectedValue(
+                new Error('Something broke'),
+            );
             const req = createMockRequest({
                 email: 'test@example.com',
                 password: 'StrongPass1!',
@@ -320,7 +281,9 @@ describe('UserController', () => {
         });
 
         it('should return 401 when service throws UserNotFoundError', async () => {
-            mockService.getProfile.mockRejectedValue(new UserNotFoundError('uuid-1'));
+            mockService.getProfile.mockRejectedValue(
+                new UserNotFoundError('uuid-1'),
+            );
             const req = createMockRequest(undefined, { id: 'uuid-1' });
             const res = createMockResponse();
 
@@ -377,7 +340,10 @@ describe('UserController', () => {
         it('should return 200 when only firstName is provided (partial update)', async () => {
             const updatedUser = { ...sampleUser, firstName: 'Jane' };
             mockService.updateProfile.mockResolvedValue(updatedUser);
-            const req = createMockRequest({ firstName: 'Jane' }, { id: 'uuid-1' });
+            const req = createMockRequest(
+                { firstName: 'Jane' },
+                { id: 'uuid-1' },
+            );
             const res = createMockResponse();
 
             await controller.updateProfile(req as Request, res as Response);
@@ -391,7 +357,10 @@ describe('UserController', () => {
         it('should return 200 when only lastName is provided (partial update)', async () => {
             const updatedUser = { ...sampleUser, lastName: 'Smith' };
             mockService.updateProfile.mockResolvedValue(updatedUser);
-            const req = createMockRequest({ lastName: 'Smith' }, { id: 'uuid-1' });
+            const req = createMockRequest(
+                { lastName: 'Smith' },
+                { id: 'uuid-1' },
+            );
             const res = createMockResponse();
 
             await controller.updateProfile(req as Request, res as Response);
@@ -402,23 +371,14 @@ describe('UserController', () => {
             });
         });
 
-        it('should pass req.body directly to service (middleware guarantees at least one field)', async () => {
-            const updatedUser = { ...sampleUser, firstName: 'Jane' };
-            mockService.updateProfile.mockResolvedValue(updatedUser);
-            const req = createMockRequest({ firstName: 'Jane' }, { id: 'uuid-1' });
-            const res = createMockResponse();
-
-            await controller.updateProfile(req as Request, res as Response);
-
-            expect(mockService.updateProfile).toHaveBeenCalledWith('uuid-1', {
-                firstName: 'Jane',
-            });
-            expect(res.statusCode).toBe(200);
-        });
-
         it('should return 401 when service throws UserNotFoundError', async () => {
-            mockService.updateProfile.mockRejectedValue(new UserNotFoundError('uuid-1'));
-            const req = createMockRequest({ firstName: 'Jane' }, { id: 'uuid-1' });
+            mockService.updateProfile.mockRejectedValue(
+                new UserNotFoundError('uuid-1'),
+            );
+            const req = createMockRequest(
+                { firstName: 'Jane' },
+                { id: 'uuid-1' },
+            );
             const res = createMockResponse();
 
             await controller.updateProfile(req as Request, res as Response);
@@ -429,7 +389,10 @@ describe('UserController', () => {
 
         it('should return 500 when service throws an unexpected error', async () => {
             mockService.updateProfile.mockRejectedValue(new Error('DB error'));
-            const req = createMockRequest({ firstName: 'Jane' }, { id: 'uuid-1' });
+            const req = createMockRequest(
+                { firstName: 'Jane' },
+                { id: 'uuid-1' },
+            );
             const res = createMockResponse();
 
             await controller.updateProfile(req as Request, res as Response);
@@ -463,22 +426,30 @@ describe('UserController', () => {
 
             await controller.refresh(req as Request, res as Response);
 
-            expect(mockService.refreshAccessToken).toHaveBeenCalledWith('old-token-hex');
+            expect(mockService.refreshAccessToken).toHaveBeenCalledWith(
+                'old-token-hex',
+            );
         });
 
         it('should return 401 when service throws InvalidRefreshTokenError', async () => {
-            mockService.refreshAccessToken.mockRejectedValue(new InvalidRefreshTokenError());
+            mockService.refreshAccessToken.mockRejectedValue(
+                new InvalidRefreshTokenError(),
+            );
             const req = createMockRequest({ refreshToken: 'bad-token' });
             const res = createMockResponse();
 
             await controller.refresh(req as Request, res as Response);
 
             expect(res.statusCode).toBe(401);
-            expect(res.body).toEqual({ message: 'Invalid or expired refresh token' });
+            expect(res.body).toEqual({
+                message: 'Invalid or expired refresh token',
+            });
         });
 
         it('should return 500 on unexpected error', async () => {
-            mockService.refreshAccessToken.mockRejectedValue(new Error('DB error'));
+            mockService.refreshAccessToken.mockRejectedValue(
+                new Error('DB error'),
+            );
             const req = createMockRequest({ refreshToken: 'some-token' });
             const res = createMockResponse();
 
@@ -578,7 +549,9 @@ describe('UserController', () => {
         });
 
         it('should return 401 when service throws UserNotFoundError', async () => {
-            mockService.changePassword.mockRejectedValue(new UserNotFoundError('uuid-1'));
+            mockService.changePassword.mockRejectedValue(
+                new UserNotFoundError('uuid-1'),
+            );
             const req = createMockRequest(
                 { currentPassword: 'OldP@ss1', newPassword: 'NewP@ss2' },
                 { id: 'uuid-1' },
@@ -592,7 +565,9 @@ describe('UserController', () => {
         });
 
         it('should return 401 when service throws IncorrectPasswordError', async () => {
-            mockService.changePassword.mockRejectedValue(new IncorrectPasswordError());
+            mockService.changePassword.mockRejectedValue(
+                new IncorrectPasswordError(),
+            );
             const req = createMockRequest(
                 { currentPassword: 'WrongP@ss1', newPassword: 'NewP@ss2' },
                 { id: 'uuid-1' },
@@ -602,13 +577,17 @@ describe('UserController', () => {
             await controller.changePassword(req as Request, res as Response);
 
             expect(res.statusCode).toBe(401);
-            expect(res.body).toEqual({ message: 'Current password is incorrect' });
+            expect(res.body).toEqual({
+                message: 'Current password is incorrect',
+            });
         });
 
         it('should return 422 when service throws ValidationError (business rules)', async () => {
             mockService.changePassword.mockRejectedValue(
                 new ValidationError('Validation failed', {
-                    newPassword: ['Password must be at least 8 characters long'],
+                    newPassword: [
+                        'Password must be at least 8 characters long',
+                    ],
                 }),
             );
             const req = createMockRequest(
@@ -623,7 +602,9 @@ describe('UserController', () => {
             expect(res.body).toEqual({
                 message: 'Validation failed',
                 errors: {
-                    newPassword: ['Password must be at least 8 characters long'],
+                    newPassword: [
+                        'Password must be at least 8 characters long',
+                    ],
                 },
             });
         });
@@ -644,14 +625,22 @@ describe('UserController', () => {
     });
 
     describe('middleware decorator wiring', () => {
-        type MethodMetadata = { key: string; method: string; path: string; middleware: (symbol | ((...args: unknown[]) => unknown))[] };
+        type MethodMetadata = {
+            key: string;
+            method: string;
+            path: string;
+            middleware: (symbol | ((...args: unknown[]) => unknown))[];
+        };
 
         const getMethodMetadata = (): MethodMetadata[] =>
-            Reflect.getMetadata('inversify-express-utils:controller-method', UserController) ?? [];
+            Reflect.getMetadata(
+                'inversify-express-utils:controller-method',
+                UserController,
+            ) ?? [];
 
         it('should have TYPES.LoginRateLimiter applied to login endpoint', () => {
             const metadata = getMethodMetadata();
-            const loginMeta = metadata.find((m) => m.key === 'login');
+            const loginMeta = metadata.find(m => m.key === 'login');
 
             expect(loginMeta).toBeDefined();
             expect(loginMeta!.middleware).toContain(TYPES.LoginRateLimiter);
@@ -659,7 +648,7 @@ describe('UserController', () => {
 
         it('should have TYPES.RefreshRateLimiter applied to refresh endpoint', () => {
             const metadata = getMethodMetadata();
-            const refreshMeta = metadata.find((m) => m.key === 'refresh');
+            const refreshMeta = metadata.find(m => m.key === 'refresh');
 
             expect(refreshMeta).toBeDefined();
             expect(refreshMeta!.middleware).toContain(TYPES.RefreshRateLimiter);
@@ -667,16 +656,20 @@ describe('UserController', () => {
 
         it('should NOT have rate limiter on register endpoint', () => {
             const metadata = getMethodMetadata();
-            const registerMeta = metadata.find((m) => m.key === 'register');
+            const registerMeta = metadata.find(m => m.key === 'register');
 
             expect(registerMeta).toBeDefined();
-            expect(registerMeta!.middleware).not.toContain(TYPES.LoginRateLimiter);
-            expect(registerMeta!.middleware).not.toContain(TYPES.RefreshRateLimiter);
+            expect(registerMeta!.middleware).not.toContain(
+                TYPES.LoginRateLimiter,
+            );
+            expect(registerMeta!.middleware).not.toContain(
+                TYPES.RefreshRateLimiter,
+            );
         });
 
         it('should have TYPES.AuthMiddleware and TYPES.JsonContentType on changePassword', () => {
             const metadata = getMethodMetadata();
-            const meta = metadata.find((m) => m.key === 'changePassword');
+            const meta = metadata.find(m => m.key === 'changePassword');
 
             expect(meta).toBeDefined();
             expect(meta!.middleware).toContain(TYPES.AuthMiddleware);
@@ -686,8 +679,13 @@ describe('UserController', () => {
         it('should have TYPES.JsonContentType on register, login, refresh, and changePassword', () => {
             const metadata = getMethodMetadata();
 
-            for (const key of ['register', 'login', 'refresh', 'changePassword']) {
-                const meta = metadata.find((m) => m.key === key);
+            for (const key of [
+                'register',
+                'login',
+                'refresh',
+                'changePassword',
+            ]) {
+                const meta = metadata.find(m => m.key === key);
                 expect(meta).toBeDefined();
                 expect(meta!.middleware).toContain(TYPES.JsonContentType);
             }
@@ -697,7 +695,7 @@ describe('UserController', () => {
             const metadata = getMethodMetadata();
 
             for (const key of ['logout', 'getProfile']) {
-                const meta = metadata.find((m) => m.key === key);
+                const meta = metadata.find(m => m.key === key);
                 expect(meta).toBeDefined();
                 expect(meta!.middleware).not.toContain(TYPES.JsonContentType);
             }
@@ -705,71 +703,83 @@ describe('UserController', () => {
 
         it('should have validate(RegisterRequestSchema) on register endpoint', () => {
             const metadata = getMethodMetadata();
-            const meta = metadata.find((m) => m.key === 'register');
+            const meta = metadata.find(m => m.key === 'register');
             expect(meta).toBeDefined();
 
             const validateMiddleware = validate(RegisterRequestSchema);
             const hasValidateMiddleware = meta!.middleware.some(
-                (mw) => typeof mw === 'function' && mw.toString() === validateMiddleware.toString(),
+                mw =>
+                    typeof mw === 'function' &&
+                    mw.toString() === validateMiddleware.toString(),
             );
             expect(hasValidateMiddleware).toBe(true);
         });
 
         it('should have validate(LoginRequestSchema) on login endpoint', () => {
             const metadata = getMethodMetadata();
-            const meta = metadata.find((m) => m.key === 'login');
+            const meta = metadata.find(m => m.key === 'login');
             expect(meta).toBeDefined();
 
             const validateMiddleware = validate(LoginRequestSchema);
             const hasValidateMiddleware = meta!.middleware.some(
-                (mw) => typeof mw === 'function' && mw.toString() === validateMiddleware.toString(),
+                mw =>
+                    typeof mw === 'function' &&
+                    mw.toString() === validateMiddleware.toString(),
             );
             expect(hasValidateMiddleware).toBe(true);
         });
 
         it('should have validate(RefreshRequestSchema) on refresh endpoint', () => {
             const metadata = getMethodMetadata();
-            const meta = metadata.find((m) => m.key === 'refresh');
+            const meta = metadata.find(m => m.key === 'refresh');
             expect(meta).toBeDefined();
 
             const validateMiddleware = validate(RefreshRequestSchema);
             const hasValidateMiddleware = meta!.middleware.some(
-                (mw) => typeof mw === 'function' && mw.toString() === validateMiddleware.toString(),
+                mw =>
+                    typeof mw === 'function' &&
+                    mw.toString() === validateMiddleware.toString(),
             );
             expect(hasValidateMiddleware).toBe(true);
         });
 
         it('should have validate(UpdateProfileRequestSchema) on updateProfile endpoint', () => {
             const metadata = getMethodMetadata();
-            const meta = metadata.find((m) => m.key === 'updateProfile');
+            const meta = metadata.find(m => m.key === 'updateProfile');
             expect(meta).toBeDefined();
 
             const validateMiddleware = validate(UpdateProfileRequestSchema);
             const hasValidateMiddleware = meta!.middleware.some(
-                (mw) => typeof mw === 'function' && mw.toString() === validateMiddleware.toString(),
+                mw =>
+                    typeof mw === 'function' &&
+                    mw.toString() === validateMiddleware.toString(),
             );
             expect(hasValidateMiddleware).toBe(true);
         });
 
         it('should have validate(ChangePasswordRequestSchema) on changePassword endpoint', () => {
             const metadata = getMethodMetadata();
-            const meta = metadata.find((m) => m.key === 'changePassword');
+            const meta = metadata.find(m => m.key === 'changePassword');
             expect(meta).toBeDefined();
 
             const validateMiddleware = validate(ChangePasswordRequestSchema);
             const hasValidateMiddleware = meta!.middleware.some(
-                (mw) => typeof mw === 'function' && mw.toString() === validateMiddleware.toString(),
+                mw =>
+                    typeof mw === 'function' &&
+                    mw.toString() === validateMiddleware.toString(),
             );
             expect(hasValidateMiddleware).toBe(true);
         });
 
         it('should NOT have validate middleware on logout endpoint', () => {
             const metadata = getMethodMetadata();
-            const meta = metadata.find((m) => m.key === 'logout');
+            const meta = metadata.find(m => m.key === 'logout');
             expect(meta).toBeDefined();
 
             // Logout has no body validation — only auth middleware
-            const functionMiddleware = meta!.middleware.filter((mw) => typeof mw === 'function');
+            const functionMiddleware = meta!.middleware.filter(
+                mw => typeof mw === 'function',
+            );
             expect(functionMiddleware.length).toBe(0);
         });
     });
@@ -778,7 +788,9 @@ describe('UserController', () => {
         it('should include a message field in all error responses', async () => {
             // Test with 422 (validation error from service)
             mockService.register.mockRejectedValue(
-                new ValidationError('Validation failed', { email: ['Email is required'] }),
+                new ValidationError('Validation failed', {
+                    email: ['Email is required'],
+                }),
             );
             const req422 = createMockRequest({});
             const res422 = createMockResponse();
@@ -813,7 +825,9 @@ describe('UserController', () => {
         });
 
         it('should pass through domain error messages from the error class', async () => {
-            mockService.authenticate.mockRejectedValue(new InvalidCredentialsError());
+            mockService.authenticate.mockRejectedValue(
+                new InvalidCredentialsError(),
+            );
             const req = createMockRequest({
                 email: 'test@example.com',
                 password: 'wrong',
@@ -824,7 +838,9 @@ describe('UserController', () => {
 
             expect(res.body).toEqual({ message: 'Invalid email or password' });
 
-            mockService.getProfile.mockRejectedValue(new UserNotFoundError('uuid-99'));
+            mockService.getProfile.mockRejectedValue(
+                new UserNotFoundError('uuid-99'),
+            );
             const req2 = createMockRequest(undefined, { id: 'uuid-99' });
             const res2 = createMockResponse();
 

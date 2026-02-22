@@ -4,8 +4,8 @@ import jwt from 'jsonwebtoken';
 import type { UserRepository } from '../../../src/repositories/user-repository';
 import type { RefreshTokenRepository } from '../../../src/repositories/refresh-token-repository';
 import type { PasswordManagerService } from '../../../src/services/password-manager-service';
-import type { AppConfig } from '../../../src/config/schema';
 import type { AppSecrets } from '../../../src/config/secrets-schema';
+import { makeTestConfig } from '../../helpers/test-config';
 import type { UserResponseDto } from '../../../src/services/user-service';
 import { UserServiceImpl } from '../../../src/services/user-service';
 import { User } from '../../../src/entities/user';
@@ -36,31 +36,15 @@ const createMockPasswordManager = (): jest.Mocked<PasswordManagerService> => ({
     compare: jest.fn(),
 });
 
-const createMockRefreshTokenRepository = (): jest.Mocked<RefreshTokenRepository> => ({
-    save: jest.fn(),
-    findByTokenHash: jest.fn(),
-    deleteByTokenHash: jest.fn(),
-    deleteAllByUserId: jest.fn(),
-});
+const createMockRefreshTokenRepository =
+    (): jest.Mocked<RefreshTokenRepository> => ({
+        save: jest.fn(),
+        findByTokenHash: jest.fn(),
+        deleteByTokenHash: jest.fn(),
+        deleteAllByUserId: jest.fn(),
+    });
 
-const mockConfig: AppConfig = {
-    server: { port: 9000 },
-    database: { host: 'localhost', port: 5432, name: 'test' },
-    auth: {
-        accessToken: { expiresIn: '15m' },
-        refreshToken: { expiresIn: '7d' },
-        resetKey: { expiresIn: '15m' },
-    },
-    redis: { host: 'redis', port: 6379 },
-    rateLimit: {
-        login: { maxAttempts: 5, windowSeconds: 900 },
-        refresh: { maxAttempts: 10, windowSeconds: 900 },
-        resetKey: { maxAttempts: 3, windowSeconds: 900 },
-        validateResetKey: { maxAttempts: 10, windowSeconds: 900 },
-        resetPassword: { maxAttempts: 5, windowSeconds: 900 },
-    },
-    eventbus: { mode: 'emulated' as const },
-};
+const mockConfig = makeTestConfig();
 
 const mockSecrets: AppSecrets = {
     jwtSecret: 'test-jwt-secret',
@@ -95,7 +79,7 @@ const catchError = async <T>(promise: Promise<T>): Promise<ValidationError> => {
     let caught: unknown;
     try {
         await promise;
-    } catch (err) {
+    } catch (err: unknown) {
         caught = err;
     }
     return caught as ValidationError;
@@ -159,7 +143,9 @@ describe('UserServiceImpl', () => {
 
             await service.register(validRegisterData);
 
-            expect(mockPasswordManager.toHash).toHaveBeenCalledWith('StrongPass1');
+            expect(mockPasswordManager.toHash).toHaveBeenCalledWith(
+                'StrongPass1',
+            );
         });
 
         it('should call userRepository.create with the hashed password, not raw', async () => {
@@ -263,7 +249,9 @@ describe('UserServiceImpl', () => {
         it('should not call passwordManager or create when validation fails', async () => {
             const data = { ...validRegisterData, email: 'bad' };
 
-            await expect(service.register(data)).rejects.toThrow(ValidationError);
+            await expect(service.register(data)).rejects.toThrow(
+                ValidationError,
+            );
 
             expect(mockPasswordManager.toHash).not.toHaveBeenCalled();
             expect(mockRepo.create).not.toHaveBeenCalled();
@@ -307,7 +295,10 @@ describe('UserServiceImpl', () => {
             mockRepo.findByEmail.mockResolvedValue(user);
             mockPasswordManager.compare.mockResolvedValue(true);
 
-            const result = await service.authenticate('test@example.com', 'StrongPass1');
+            const result = await service.authenticate(
+                'test@example.com',
+                'StrongPass1',
+            );
 
             expect(result).toHaveProperty('accessToken', 'mock-jwt-token');
             expect(result).toHaveProperty('refreshToken');
@@ -319,7 +310,10 @@ describe('UserServiceImpl', () => {
             mockRepo.findByEmail.mockResolvedValue(user);
             mockPasswordManager.compare.mockResolvedValue(true);
 
-            const result = await service.authenticate('test@example.com', 'StrongPass1');
+            const result = await service.authenticate(
+                'test@example.com',
+                'StrongPass1',
+            );
 
             expect(result.refreshToken).toMatch(/^[0-9a-f]{64}$/);
         });
@@ -333,7 +327,8 @@ describe('UserServiceImpl', () => {
             await service.authenticate('test@example.com', 'StrongPass1');
 
             expect(mockRefreshTokenRepo.save).toHaveBeenCalledTimes(1);
-            const [tokenHash, userId, expiresAt] = mockRefreshTokenRepo.save.mock.calls[0];
+            const [tokenHash, userId, expiresAt] =
+                mockRefreshTokenRepo.save.mock.calls[0];
 
             // tokenHash should be a non-empty string (hashed, not the raw token)
             expect(typeof tokenHash).toBe('string');
@@ -391,13 +386,14 @@ describe('UserServiceImpl', () => {
                 'supplied-pw',
             );
         });
-
     });
 
     describe('refreshAccessToken', () => {
         const rawToken = 'a'.repeat(64); // 32-byte hex token
 
-        const createStoredRefreshToken = (overrides?: Partial<RefreshToken>): RefreshToken => {
+        const createStoredRefreshToken = (
+            overrides?: Partial<RefreshToken>,
+        ): RefreshToken => {
             const token = new RefreshToken();
             token.id = 'rt-uuid-1';
             token.tokenHash = 'stored-hash';
@@ -424,20 +420,22 @@ describe('UserServiceImpl', () => {
         it('should throw InvalidRefreshTokenError when token hash is not found in DB', async () => {
             mockRefreshTokenRepo.findByTokenHash.mockResolvedValue(null);
 
-            await expect(
-                service.refreshAccessToken(rawToken),
-            ).rejects.toThrow(InvalidRefreshTokenError);
+            await expect(service.refreshAccessToken(rawToken)).rejects.toThrow(
+                InvalidRefreshTokenError,
+            );
         });
 
         it('should throw InvalidRefreshTokenError when token is expired', async () => {
             const expiredToken = createStoredRefreshToken({
                 expiresAt: new Date(Date.now() - 1000), // 1 second in the past
             });
-            mockRefreshTokenRepo.findByTokenHash.mockResolvedValue(expiredToken);
+            mockRefreshTokenRepo.findByTokenHash.mockResolvedValue(
+                expiredToken,
+            );
 
-            await expect(
-                service.refreshAccessToken(rawToken),
-            ).rejects.toThrow(InvalidRefreshTokenError);
+            await expect(service.refreshAccessToken(rawToken)).rejects.toThrow(
+                InvalidRefreshTokenError,
+            );
         });
 
         it('should throw InvalidRefreshTokenError when user no longer exists', async () => {
@@ -445,9 +443,9 @@ describe('UserServiceImpl', () => {
             mockRefreshTokenRepo.findByTokenHash.mockResolvedValue(storedToken);
             mockRepo.findById.mockResolvedValue(null);
 
-            await expect(
-                service.refreshAccessToken(rawToken),
-            ).rejects.toThrow(InvalidRefreshTokenError);
+            await expect(service.refreshAccessToken(rawToken)).rejects.toThrow(
+                InvalidRefreshTokenError,
+            );
         });
 
         it('should perform token rotation: delete old hash and save new hash', async () => {
@@ -458,7 +456,9 @@ describe('UserServiceImpl', () => {
             await service.refreshAccessToken(rawToken);
 
             // Old token should be deleted
-            expect(mockRefreshTokenRepo.deleteByTokenHash).toHaveBeenCalledWith(storedToken.tokenHash);
+            expect(mockRefreshTokenRepo.deleteByTokenHash).toHaveBeenCalledWith(
+                storedToken.tokenHash,
+            );
 
             // New token should be saved
             expect(mockRefreshTokenRepo.save).toHaveBeenCalledTimes(1);
@@ -491,7 +491,6 @@ describe('UserServiceImpl', () => {
 
             expect(result.refreshToken).toMatch(/^[0-9a-f]{64}$/);
         });
-
     });
 
     describe('getProfile', () => {
@@ -582,7 +581,6 @@ describe('UserServiceImpl', () => {
 
             expect(result).not.toHaveProperty('passwordHash');
         });
-
     });
 
     describe('changePassword', () => {
@@ -594,7 +592,9 @@ describe('UserServiceImpl', () => {
         it('should throw ValidationError when newPassword is too short', async () => {
             const data = { currentPassword: 'OldP@ss1', newPassword: 'Ab1' };
 
-            const err = await catchError(service.changePassword('uuid-1', data));
+            const err = await catchError(
+                service.changePassword('uuid-1', data),
+            );
 
             expect(err).toBeInstanceOf(ValidationError);
             expect(err.errors).toHaveProperty('newPassword');
@@ -604,9 +604,14 @@ describe('UserServiceImpl', () => {
         });
 
         it('should throw ValidationError when newPassword has no uppercase letter', async () => {
-            const data = { currentPassword: 'OldP@ss1', newPassword: 'lowercase1' };
+            const data = {
+                currentPassword: 'OldP@ss1',
+                newPassword: 'lowercase1',
+            };
 
-            const err = await catchError(service.changePassword('uuid-1', data));
+            const err = await catchError(
+                service.changePassword('uuid-1', data),
+            );
 
             expect(err).toBeInstanceOf(ValidationError);
             expect(err.errors).toHaveProperty('newPassword');
@@ -616,9 +621,14 @@ describe('UserServiceImpl', () => {
         });
 
         it('should throw ValidationError when newPassword has no lowercase letter', async () => {
-            const data = { currentPassword: 'OldP@ss1', newPassword: 'UPPERCASE1' };
+            const data = {
+                currentPassword: 'OldP@ss1',
+                newPassword: 'UPPERCASE1',
+            };
 
-            const err = await catchError(service.changePassword('uuid-1', data));
+            const err = await catchError(
+                service.changePassword('uuid-1', data),
+            );
 
             expect(err).toBeInstanceOf(ValidationError);
             expect(err.errors).toHaveProperty('newPassword');
@@ -628,9 +638,14 @@ describe('UserServiceImpl', () => {
         });
 
         it('should throw ValidationError when newPassword has no digit', async () => {
-            const data = { currentPassword: 'OldP@ss1', newPassword: 'NoDigitsHere' };
+            const data = {
+                currentPassword: 'OldP@ss1',
+                newPassword: 'NoDigitsHere',
+            };
 
-            const err = await catchError(service.changePassword('uuid-1', data));
+            const err = await catchError(
+                service.changePassword('uuid-1', data),
+            );
 
             expect(err).toBeInstanceOf(ValidationError);
             expect(err.errors).toHaveProperty('newPassword');
@@ -642,7 +657,9 @@ describe('UserServiceImpl', () => {
         it('should collect multiple password strength errors in a single array', async () => {
             const data = { currentPassword: 'OldP@ss1', newPassword: '!!!' };
 
-            const err = await catchError(service.changePassword('uuid-1', data));
+            const err = await catchError(
+                service.changePassword('uuid-1', data),
+            );
 
             expect(err).toBeInstanceOf(ValidationError);
             expect(err.errors.newPassword.length).toBeGreaterThanOrEqual(3);
@@ -664,7 +681,10 @@ describe('UserServiceImpl', () => {
             mockRepo.findById.mockResolvedValue(null);
 
             await expect(
-                service.changePassword('nonexistent-id', validChangePasswordData),
+                service.changePassword(
+                    'nonexistent-id',
+                    validChangePasswordData,
+                ),
             ).rejects.toThrow(UserNotFoundError);
         });
 
@@ -711,7 +731,10 @@ describe('UserServiceImpl', () => {
 
             await service.changePassword('uuid-1', validChangePasswordData);
 
-            expect(mockRepo.updatePasswordHash).toHaveBeenCalledWith('uuid-1', 'new-hashed-pw');
+            expect(mockRepo.updatePasswordHash).toHaveBeenCalledWith(
+                'uuid-1',
+                'new-hashed-pw',
+            );
         });
 
         it('should call refreshTokenRepository.deleteAllByUserId to revoke all tokens', async () => {
@@ -722,7 +745,9 @@ describe('UserServiceImpl', () => {
 
             await service.changePassword('uuid-1', validChangePasswordData);
 
-            expect(mockRefreshTokenRepo.deleteAllByUserId).toHaveBeenCalledWith('uuid-1');
+            expect(mockRefreshTokenRepo.deleteAllByUserId).toHaveBeenCalledWith(
+                'uuid-1',
+            );
         });
 
         it('should return void on success', async () => {
@@ -731,7 +756,10 @@ describe('UserServiceImpl', () => {
             mockPasswordManager.toHash.mockResolvedValue('new-hashed-pw');
             mockRepo.updatePasswordHash.mockResolvedValue(true);
 
-            const result = await service.changePassword('uuid-1', validChangePasswordData);
+            const result = await service.changePassword(
+                'uuid-1',
+                validChangePasswordData,
+            );
 
             expect(result).toBeUndefined();
         });
@@ -746,14 +774,15 @@ describe('UserServiceImpl', () => {
                 service.changePassword('uuid-1', validChangePasswordData),
             ).rejects.toThrow(UserNotFoundError);
         });
-
     });
 
     describe('logout', () => {
         it('should call refreshTokenRepository.deleteAllByUserId with the given userId', async () => {
             await service.logout('uuid-1');
 
-            expect(mockRefreshTokenRepo.deleteAllByUserId).toHaveBeenCalledWith('uuid-1');
+            expect(mockRefreshTokenRepo.deleteAllByUserId).toHaveBeenCalledWith(
+                'uuid-1',
+            );
         });
 
         it('should not throw', async () => {
