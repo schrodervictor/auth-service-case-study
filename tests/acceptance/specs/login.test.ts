@@ -1,28 +1,12 @@
-import crypto from 'node:crypto';
 import supertest from 'supertest';
 
+import { BASE, validUserData } from './helpers/api';
 import { flushRateLimitKeys } from './helpers/redis';
 
 const request = supertest(process.env.API_URL ?? 'http://app:9000');
-const BASE = '/partner-app/api';
 
-function uniqueEmail(): string {
-    return `test-${crypto.randomUUID()}@example.com`;
-}
-
-async function registerUser(overrides?: Partial<{
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-}>) {
-    const data = {
-        email: uniqueEmail(),
-        password: 'StrongPass1',
-        firstName: 'Bob',
-        lastName: 'Jones',
-        ...overrides,
-    };
+async function registerUser() {
+    const data = validUserData();
     await request.post(`${BASE}/users/register`).send(data);
     return data;
 }
