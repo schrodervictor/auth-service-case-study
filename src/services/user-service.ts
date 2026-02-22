@@ -1,4 +1,6 @@
 import crypto from 'node:crypto';
+
+import { sha256 } from '../lib/hash';
 import jwt from 'jsonwebtoken';
 import { inject, injectable } from 'inversify';
 
@@ -153,10 +155,7 @@ export class UserServiceImpl implements UserService {
     }
 
     async refreshAccessToken(token: string): Promise<AuthResponseDto> {
-        const tokenHash = crypto
-            .createHash('sha256')
-            .update(token)
-            .digest('hex');
+        const tokenHash = sha256(token);
         const stored =
             await this.refreshTokenRepository.findByTokenHash(tokenHash);
 
@@ -246,10 +245,7 @@ export class UserServiceImpl implements UserService {
         }
 
         const plainKey = crypto.randomBytes(32).toString('base64url');
-        const keyHash = crypto
-            .createHash('sha256')
-            .update(plainKey)
-            .digest('hex');
+        const keyHash = sha256(plainKey);
         const expiresAt = this.computeExpiresAt(
             this.config.auth.resetKey.expiresIn,
         );
@@ -268,10 +264,7 @@ export class UserServiceImpl implements UserService {
     }
 
     async validateResetKey(resetKey: string): Promise<boolean> {
-        const keyHash = crypto
-            .createHash('sha256')
-            .update(resetKey)
-            .digest('hex');
+        const keyHash = sha256(resetKey);
         const stored =
             await this.passwordResetKeyRepository.findByKeyHash(keyHash);
 
@@ -290,10 +283,7 @@ export class UserServiceImpl implements UserService {
             });
         }
 
-        const keyHash = crypto
-            .createHash('sha256')
-            .update(resetKey)
-            .digest('hex');
+        const keyHash = sha256(resetKey);
         const stored =
             await this.passwordResetKeyRepository.findByKeyHash(keyHash);
 
@@ -339,10 +329,7 @@ export class UserServiceImpl implements UserService {
         });
 
         const rawRefreshToken = crypto.randomBytes(32).toString('hex');
-        const tokenHash = crypto
-            .createHash('sha256')
-            .update(rawRefreshToken)
-            .digest('hex');
+        const tokenHash = sha256(rawRefreshToken);
         await this.refreshTokenRepository.save(
             tokenHash,
             userId,
