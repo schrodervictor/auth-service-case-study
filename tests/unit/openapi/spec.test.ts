@@ -131,27 +131,29 @@ describe('OpenAPI Spec', () => {
             expect(responses['200']).toBeDefined();
         });
 
-        it('should define 201, 400, 409, 422 for POST /users/register', () => {
+        it('should define 201, 409, 415, 422 for POST /users/register', () => {
             const responses = openApiSpec.paths['/users/register'].post.responses;
             expect(responses['201']).toBeDefined();
-            expect(responses['400']).toBeDefined();
             expect(responses['409']).toBeDefined();
+            expect(responses['415']).toBeDefined();
             expect(responses['422']).toBeDefined();
         });
 
-        it('should define 200, 400, 401, 429 for POST /users/login', () => {
+        it('should define 200, 401, 415, 422, 429 for POST /users/login', () => {
             const responses = openApiSpec.paths['/users/login'].post.responses;
             expect(responses['200']).toBeDefined();
-            expect(responses['400']).toBeDefined();
             expect(responses['401']).toBeDefined();
+            expect(responses['415']).toBeDefined();
+            expect(responses['422']).toBeDefined();
             expect(responses['429']).toBeDefined();
         });
 
-        it('should define 200, 400, 401, 429 for POST /users/refresh', () => {
+        it('should define 200, 401, 415, 422, 429 for POST /users/refresh', () => {
             const responses = openApiSpec.paths['/users/refresh'].post.responses;
             expect(responses['200']).toBeDefined();
-            expect(responses['400']).toBeDefined();
             expect(responses['401']).toBeDefined();
+            expect(responses['415']).toBeDefined();
+            expect(responses['422']).toBeDefined();
             expect(responses['429']).toBeDefined();
         });
 
@@ -167,11 +169,12 @@ describe('OpenAPI Spec', () => {
             expect(responses['401']).toBeDefined();
         });
 
-        it('should define 200, 400, 401, 422 for PUT /users/profile', () => {
+        it('should define 200, 400, 401, 415, 422 for PUT /users/profile', () => {
             const responses = openApiSpec.paths['/users/profile'].put.responses;
             expect(responses['200']).toBeDefined();
             expect(responses['400']).toBeDefined();
             expect(responses['401']).toBeDefined();
+            expect(responses['415']).toBeDefined();
             expect(responses['422']).toBeDefined();
         });
     });

@@ -83,8 +83,8 @@ export const openApiSpec: OpenApiSpec = {
                             },
                         },
                     },
-                    '400': {
-                        description: 'Missing required fields',
+                    '415': {
+                        description: 'Unsupported Media Type',
                         content: {
                             'application/json': {
                                 schema: { $ref: '#/components/schemas/ErrorResponse' },
@@ -134,19 +134,27 @@ export const openApiSpec: OpenApiSpec = {
                             },
                         },
                     },
-                    '400': {
-                        description: 'Missing required fields',
+                    '401': {
+                        description: 'Invalid email or password',
                         content: {
                             'application/json': {
                                 schema: { $ref: '#/components/schemas/ErrorResponse' },
                             },
                         },
                     },
-                    '401': {
-                        description: 'Invalid email or password',
+                    '415': {
+                        description: 'Unsupported Media Type',
                         content: {
                             'application/json': {
                                 schema: { $ref: '#/components/schemas/ErrorResponse' },
+                            },
+                        },
+                    },
+                    '422': {
+                        description: 'Validation failed',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
                             },
                         },
                     },
@@ -191,19 +199,27 @@ export const openApiSpec: OpenApiSpec = {
                             },
                         },
                     },
-                    '400': {
-                        description: 'Missing required fields',
+                    '401': {
+                        description: 'Invalid or expired refresh token',
                         content: {
                             'application/json': {
                                 schema: { $ref: '#/components/schemas/ErrorResponse' },
                             },
                         },
                     },
-                    '401': {
-                        description: 'Invalid or expired refresh token',
+                    '415': {
+                        description: 'Unsupported Media Type',
                         content: {
                             'application/json': {
                                 schema: { $ref: '#/components/schemas/ErrorResponse' },
+                            },
+                        },
+                    },
+                    '422': {
+                        description: 'Validation failed',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
                             },
                         },
                     },
@@ -306,6 +322,14 @@ export const openApiSpec: OpenApiSpec = {
                     },
                     '401': {
                         description: 'Unauthorized',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ErrorResponse' },
+                            },
+                        },
+                    },
+                    '415': {
+                        description: 'Unsupported Media Type',
                         content: {
                             'application/json': {
                                 schema: { $ref: '#/components/schemas/ErrorResponse' },
