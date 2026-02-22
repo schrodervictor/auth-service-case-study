@@ -22,17 +22,19 @@ spec generation, the most practical approach is:
 This avoids JSDoc/decorator magic and keeps the spec as a first-class,
 type-checked artifact.
 
-### New Dependency
+### New Dependencies
 
 - `swagger-ui-express` (production) + `@types/swagger-ui-express` (dev)
+- `js-yaml` (production) + `@types/js-yaml` (dev) — for YAML spec serving
 
 ### Files to Create
 
-| File                              | Purpose                                               |
-| --------------------------------- | ----------------------------------------------------- |
-| `src/openapi/spec.ts`             | OpenAPI 3.0.3 spec object (exported as `openApiSpec`) |
-| `src/openapi/index.ts`            | Barrel re-export                                      |
-| `tests/unit/openapi/spec.test.ts` | Spec validation + structural tests                    |
+| File                                     | Purpose                                               |
+| ---------------------------------------- | ----------------------------------------------------- |
+| `src/openapi/spec.ts`                    | OpenAPI 3.0.3 spec object (exported as `openApiSpec`) |
+| `src/openapi/index.ts`                   | Barrel re-export                                      |
+| `tests/unit/openapi/spec.test.ts`        | Spec validation + structural tests                    |
+| `tests/acceptance/specs/openapi.test.ts` | Acceptance tests for docs endpoints                   |
 
 ### Files to Modify
 
@@ -224,4 +226,18 @@ returns HTML (status 200 or 301 redirect). This would go in
   - [x]Existing endpoints unaffected — `make test-unit` and
     `make test-acceptance` still pass
   - [x]`make typecheck` passes
+- **Status**: done
+
+### Milestone 3: Raw Spec Downloads + Acceptance Tests
+
+- **Description**: Serve the OpenAPI spec as downloadable JSON and YAML files,
+  and add acceptance tests for all docs endpoints.
+- **Acceptance Criteria**:
+  - [x] `js-yaml` added to `dependencies`, `@types/js-yaml` to `devDependencies`
+  - [x] `GET /partner-app/api/docs/spec.json` returns the spec as JSON
+  - [x] `GET /partner-app/api/docs/spec.yaml` returns the spec as YAML
+  - [x] JSON and YAML endpoints registered before swagger-ui catch-all
+  - [x] Acceptance tests in `tests/acceptance/specs/openapi.test.ts` (5 tests):
+        Swagger UI HTML, redirect, JSON spec, YAML spec, path coverage
+  - [x] `make test-acceptance` passes (35 tests, 7 suites)
 - **Status**: done

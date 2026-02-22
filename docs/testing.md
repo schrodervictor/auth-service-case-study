@@ -117,7 +117,8 @@ tests/
 │       ├── login.test.ts              # POST /users/login
 │       ├── profile.test.ts            # GET/PUT /users/profile
 │       ├── refresh.test.ts            # POST /users/refresh
-│       └── logout.test.ts            # POST /users/logout
+│       ├── logout.test.ts            # POST /users/logout
+│       └── openapi.test.ts           # OpenAPI docs (UI, JSON, YAML)
 ├── setup.ts             # Shared setup (sets CONFIG_PATH to config/test.json)
 ├── teardown.ts          # Shared teardown
 └── helpers.ts           # Shared test utilities
