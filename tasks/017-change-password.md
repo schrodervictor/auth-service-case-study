@@ -1,6 +1,6 @@
 # Task: Change Password
 
-## Status: pending
+## Status: done
 
 ## Context
 
@@ -209,16 +209,16 @@ Milestones 1 → 2 → 3 → 4 (strictly sequential).
   `updatePasswordHash()` method to the user repository interface and
   implementation.
 - **Acceptance Criteria**:
-  - [ ] `src/errors/incorrect-password-error.ts` exists, extends `AppError`,
+  - [x] `src/errors/incorrect-password-error.ts` exists, extends `AppError`,
         statusCode 401, message "Current password is incorrect"
-  - [ ] `src/errors/index.ts` exports `IncorrectPasswordError`
-  - [ ] `UserRepository` interface has
+  - [x] `src/errors/index.ts` exports `IncorrectPasswordError`
+  - [x] `UserRepository` interface has
         `updatePasswordHash(id, hash): Promise<boolean>`
-  - [ ] `UserRepositoryImpl` implements it using `this.repository.update()`
-  - [ ] Unit tests for the error class pass
-  - [ ] Unit tests for `updatePasswordHash` pass (success + not-found cases)
-  - [ ] `make test-unit` passes with no regressions
-- **Status**: pending
+  - [x] `UserRepositoryImpl` implements it using `this.repository.update()`
+  - [x] Unit tests for the error class pass
+  - [x] Unit tests for `updatePasswordHash` pass (success + not-found cases)
+  - [x] `make test-unit` passes with no regressions
+- **Status**: done
 
 ### Milestone 2: Service Layer
 
@@ -226,49 +226,49 @@ Milestones 1 → 2 → 3 → 4 (strictly sequential).
   implementation. Extract `validatePasswordStrength()` from `register()` to
   reuse in both methods.
 - **Acceptance Criteria**:
-  - [ ] `ChangePasswordDto` type defined in `user-service.ts`
-  - [ ] `changePassword(userId, data)` added to `UserService` interface
-  - [ ] `UserServiceImpl.changePassword()` validates input, verifies current
+  - [x] `ChangePasswordDto` type defined in `user-service.ts`
+  - [x] `changePassword(userId, data)` added to `UserService` interface
+  - [x] `UserServiceImpl.changePassword()` validates input, verifies current
         password, hashes new password, updates DB, revokes refresh tokens
-  - [ ] Private `validatePasswordStrength(password)` method extracted; called by
+  - [x] Private `validatePasswordStrength(password)` method extracted; called by
         both `register()` and `changePassword()`
-  - [ ] All existing `register()` tests still pass (no behavioral change)
-  - [ ] Unit tests cover: missing fields (422), weak password (422), user not
+  - [x] All existing `register()` tests still pass (no behavioral change)
+  - [x] Unit tests cover: missing fields (422), weak password (422), user not
         found, wrong current password (401), success path (204-equivalent)
-  - [ ] `make test-unit` passes
-- **Status**: pending
+  - [x] `make test-unit` passes
+- **Status**: done
 
 ### Milestone 3: Controller and OpenAPI
 
 - **Description**: Add the `PUT /password` handler to `UserController` and
   update the OpenAPI spec with the new endpoint and request schema.
 - **Acceptance Criteria**:
-  - [ ] `@httpPut('/password', TYPES.AuthMiddleware, TYPES.JsonContentType)`
+  - [x] `@httpPut('/password', TYPES.AuthMiddleware, TYPES.JsonContentType)`
         handler in `UserController`
-  - [ ] Handler returns 204 on success, maps errors correctly
-  - [ ] `UserNotFoundError` mapped to 401 (consistent with profile endpoints)
-  - [ ] OpenAPI spec has `/users/password` PUT with `ChangePasswordRequest`
+  - [x] Handler returns 204 on success, maps errors correctly
+  - [x] `UserNotFoundError` mapped to 401 (consistent with profile endpoints)
+  - [x] OpenAPI spec has `/users/password` PUT with `ChangePasswordRequest`
         schema, `bearerAuth` security, responses for 204, 401, 415, 422
-  - [ ] `ChangePasswordRequest` component schema added with `currentPassword`
+  - [x] `ChangePasswordRequest` component schema added with `currentPassword`
         and `newPassword` fields
-  - [ ] Controller unit tests pass
-  - [ ] OpenAPI unit tests pass
-  - [ ] `make test-unit` passes
-- **Status**: pending
+  - [x] Controller unit tests pass
+  - [x] OpenAPI unit tests pass
+  - [x] `make test-unit` passes
+- **Status**: done
 
 ### Milestone 4: Acceptance Tests
 
 - **Description**: End-to-end acceptance tests verifying the full change
   password flow including authentication, validation, and session invalidation.
 - **Acceptance Criteria**:
-  - [ ] `tests/acceptance/specs/change-password.test.ts` exists
-  - [ ] Test: valid change returns 204
-  - [ ] Test: login with old password fails (401) after change
-  - [ ] Test: login with new password succeeds (200) after change
-  - [ ] Test: wrong current password returns 401
-  - [ ] Test: weak new password returns 422 with structured errors
-  - [ ] Test: missing fields returns 422
-  - [ ] Test: unauthenticated request returns 401
-  - [ ] Test: wrong Content-Type returns 415
-  - [ ] `make test-acceptance` passes
-- **Status**: pending
+  - [x] `tests/acceptance/specs/change-password.test.ts` exists
+  - [x] Test: valid change returns 204
+  - [x] Test: login with old password fails (401) after change
+  - [x] Test: login with new password succeeds (200) after change
+  - [x] Test: wrong current password returns 401
+  - [x] Test: weak new password returns 422 with structured errors
+  - [x] Test: missing fields returns 422
+  - [x] Test: unauthenticated request returns 401
+  - [x] Test: wrong Content-Type returns 415
+  - [x] `make test-acceptance` passes
+- **Status**: done

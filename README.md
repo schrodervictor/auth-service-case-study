@@ -24,6 +24,7 @@ All routes are prefixed with `/partner-app/api`.
 | POST   | `/users/logout`   | Yes  | Invalidate refresh tokens (204)       |
 | GET    | `/users/profile`  | Yes  | Get current user profile (200)        |
 | PUT    | `/users/profile`  | Yes  | Update profile fields (200)           |
+| PUT    | `/users/password` | Yes  | Change password (204)                 |
 
 Interactive API documentation is available at `/partner-app/api/docs` (Swagger
 UI) when the service is running. The raw spec can be downloaded as

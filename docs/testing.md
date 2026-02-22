@@ -78,6 +78,7 @@ tests/
 │   │   ├── user.test.ts               # User entity metadata
 │   │   └── refresh-token.test.ts      # RefreshToken entity metadata
 │   ├── errors/
+│   │   ├── incorrect-password-error.test.ts
 │   │   ├── invalid-refresh-token-error.test.ts
 │   │   └── rate-limit-error.test.ts
 │   ├── middleware/
@@ -92,7 +93,7 @@ tests/
 │   │   └── refresh-token-repository.test.ts  # RefreshTokenRepository (mocked)
 │   ├── services/
 │   │   ├── password-manager-service.test.ts  # Hashing and comparison
-│   │   └── user-service.test.ts       # Register, auth, profile, refresh, logout
+│   │   └── user-service.test.ts       # Register, auth, profile, refresh, logout, changePassword
 │   ├── openapi/
 │   │   └── spec.test.ts               # OpenAPI spec structure and coverage
 │   └── shutdown.test.ts               # Graceful shutdown handler
@@ -119,6 +120,7 @@ tests/
 │       ├── profile.test.ts            # GET/PUT /users/profile
 │       ├── refresh.test.ts            # POST /users/refresh
 │       ├── logout.test.ts            # POST /users/logout
+│       ├── change-password.test.ts   # PUT /users/password
 │       └── openapi.test.ts           # OpenAPI docs (UI, JSON, YAML)
 ├── setup.ts             # Shared setup (sets CONFIG_PATH to config/test.json)
 ├── teardown.ts          # Shared teardown
