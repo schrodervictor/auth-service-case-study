@@ -13,16 +13,16 @@ export class RefreshToken {
     @PrimaryGeneratedColumn('uuid')
         id!: string;
 
-    @Column({ name: 'token_hash' })
+    @Column({ type: 'varchar', name: 'token_hash' })
         tokenHash!: string;
 
-    @Column({ name: 'user_id' })
+    @Column({ type: 'uuid', name: 'user_id' })
         userId!: string;
 
-    @Column({ name: 'expires_at' })
+    @Column({ type: 'timestamp', name: 'expires_at' })
         expiresAt!: Date;
 
-    @CreateDateColumn({ name: 'created_at' })
+    @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
         createdAt!: Date;
 
     @ManyToOne(() => User)

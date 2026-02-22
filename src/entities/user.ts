@@ -11,21 +11,21 @@ export class User {
     @PrimaryGeneratedColumn('uuid')
         id!: string;
 
-    @Column({ unique: true })
+    @Column({ type: 'varchar', unique: true })
         email!: string;
 
-    @Column({ name: 'password_hash' })
+    @Column({ type: 'varchar', name: 'password_hash' })
         passwordHash!: string;
 
-    @Column({ name: 'first_name' })
+    @Column({ type: 'varchar', name: 'first_name' })
         firstName!: string;
 
-    @Column({ name: 'last_name' })
+    @Column({ type: 'varchar', name: 'last_name' })
         lastName!: string;
 
-    @CreateDateColumn({ name: 'created_at' })
+    @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
         createdAt!: Date;
 
-    @UpdateDateColumn({ name: 'updated_at' })
+    @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
         updatedAt!: Date;
 }

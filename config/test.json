@@ -14,5 +14,19 @@
         "refreshToken": {
             "expiresIn": "7d"
         }
+    },
+    "redis": {
+        "host": "localhost",
+        "port": 6379
+    },
+    "rateLimit": {
+        "login": {
+            "maxAttempts": 5,
+            "windowSeconds": 900
+        },
+        "refresh": {
+            "maxAttempts": 10,
+            "windowSeconds": 900
+        }
     }
 }

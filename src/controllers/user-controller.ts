@@ -39,7 +39,7 @@ export class UserController extends BaseController {
         }
     }
 
-    @httpPost('/login')
+    @httpPost('/login', TYPES.LoginRateLimiter)
     async login(req: Request, res: Response): Promise<void> {
         try {
             const { email, password } = req.body ?? {};
@@ -57,7 +57,7 @@ export class UserController extends BaseController {
         }
     }
 
-    @httpPost('/refresh')
+    @httpPost('/refresh', TYPES.RefreshRateLimiter)
     async refresh(req: Request, res: Response): Promise<void> {
         try {
             const { refreshToken } = req.body ?? {};

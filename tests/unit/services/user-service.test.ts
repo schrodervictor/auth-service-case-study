@@ -48,6 +48,11 @@ const mockConfig: AppConfig = {
         accessToken: { expiresIn: '15m' },
         refreshToken: { expiresIn: '7d' },
     },
+    redis: { host: 'redis', port: 6379 },
+    rateLimit: {
+        login: { maxAttempts: 5, windowSeconds: 900 },
+        refresh: { maxAttempts: 10, windowSeconds: 900 },
+    },
 };
 
 const mockSecrets: AppSecrets = {

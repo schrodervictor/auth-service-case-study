@@ -64,6 +64,11 @@ describe('loadConfig', () => {
                     accessToken: { expiresIn: '30m' },
                     refreshToken: { expiresIn: '14d' },
                 },
+                redis: { host: 'redis', port: 6379 },
+                rateLimit: {
+                    login: { maxAttempts: 5, windowSeconds: 900 },
+                    refresh: { maxAttempts: 10, windowSeconds: 900 },
+                },
             });
         });
     });

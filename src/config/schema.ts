@@ -23,6 +23,28 @@ const authSchema = z.object({
     refreshToken: refreshTokenSchema.default({ expiresIn: '7d' }),
 });
 
+const redisSchema = z.object({
+    host: z.string().default('redis'),
+    port: z.number().default(6379),
+    password: z.string().optional(),
+});
+
+const rateLimitEndpointSchema = z.object({
+    maxAttempts: z.number(),
+    windowSeconds: z.number(),
+});
+
+const rateLimitSchema = z.object({
+    login: rateLimitEndpointSchema.default({
+        maxAttempts: 5,
+        windowSeconds: 900,
+    }),
+    refresh: rateLimitEndpointSchema.default({
+        maxAttempts: 10,
+        windowSeconds: 900,
+    }),
+});
+
 const ssmParametersSchema = z.object({
     jwtSecret: z.string(),
     databaseUser: z.string(),
@@ -40,6 +62,11 @@ export const configSchema = z.object({
     auth: authSchema.default({
         accessToken: { expiresIn: '15m' },
         refreshToken: { expiresIn: '7d' },
+    }),
+    redis: redisSchema.default({ host: 'redis', port: 6379 }),
+    rateLimit: rateLimitSchema.default({
+        login: { maxAttempts: 5, windowSeconds: 900 },
+        refresh: { maxAttempts: 10, windowSeconds: 900 },
     }),
     ssm: ssmSchema.optional(),
 });
