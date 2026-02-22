@@ -6,6 +6,7 @@ import {
     type RateLimitMiddlewareFunction,
     type RateLimitConfig,
 } from '../../../src/middleware/rate-limit-middleware';
+import { RedisClient } from '../../../src/redis/redis-client';
 
 /**
  * Integration tests for rate limit middleware against real Redis.
@@ -65,26 +66,28 @@ async function invokeMiddleware(
 }
 
 describe('Rate limit middleware integration (real Redis)', () => {
-    let redisClient: Redis;
+    let rawRedis: Redis;
+    let redisClient: RedisClient;
 
     beforeAll(async () => {
-        redisClient = new Redis(REDIS_OPTIONS);
+        rawRedis = new Redis(REDIS_OPTIONS);
+        redisClient = new RedisClient(rawRedis);
         // Verify connection
-        const pong = await redisClient.ping();
+        const pong = await rawRedis.ping();
         if (pong !== 'PONG') {
             throw new Error(`Redis connection failed: expected PONG, got ${pong}`);
         }
     });
 
     afterAll(async () => {
-        await redisClient.quit();
+        await rawRedis.quit();
     });
 
     beforeEach(async () => {
         // Clean up all rate limit keys before each test
-        const keys = await redisClient.keys('rateLimit:*');
+        const keys = await rawRedis.keys('rateLimit:*');
         if (keys.length > 0) {
-            await redisClient.del(...keys);
+            await rawRedis.del(...keys);
         }
     });
 
@@ -266,7 +269,7 @@ describe('Rate limit middleware integration (real Redis)', () => {
             const next = createMockNext();
             await invokeMiddleware(middleware, req, res, next);
 
-            const ttl = await redisClient.ttl(`rateLimit:login:${ip}`);
+            const ttl = await rawRedis.ttl(`rateLimit:login:${ip}`);
             expect(ttl).toBeGreaterThan(0);
             expect(ttl).toBeLessThanOrEqual(30);
         });
