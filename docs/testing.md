@@ -41,7 +41,7 @@ make test-acceptance
 
 This will:
 
-1. Start the full stack (`app` + `postgres`)
+1. Start the full stack (`app` + `postgres` + `redis`)
 2. Wait for the app health-check to pass
 3. Run the `acceptance` container (Jest runs and exits)
 4. Tear down all containers
@@ -63,48 +63,62 @@ excluded because they require the full stack and run in a separate container.
 
 ```
 tests/
-├── unit/                        # No external dependencies
+├── unit/                          # No external dependencies
 │   ├── config/
-│   │   ├── loader.test.ts       # Config loading and Zod validation
-│   │   └── di-integration.test.ts  # DI container bindings
+│   │   ├── config-schema.test.ts      # Zod config schema validation
+│   │   ├── loader.test.ts             # Config loading
+│   │   ├── secrets-schema.test.ts     # Secrets schema validation
+│   │   ├── secrets-loader.test.ts     # Secrets loader (file + SSM backends)
+│   │   └── di-integration.test.ts     # DI container bindings
 │   ├── controllers/
-│   │   └── user-controller.test.ts  # UserController routes (mocked UserService)
+│   │   └── user-controller.test.ts    # UserController routes (mocked service)
 │   ├── database/
-│   │   └── data-source.test.ts  # DataSource factory and credentials loader
+│   │   └── data-source.test.ts        # DataSource factory and credentials
 │   ├── entities/
-│   │   └── user.test.ts         # User entity metadata (TypeORM decorators)
+│   │   ├── user.test.ts               # User entity metadata
+│   │   └── refresh-token.test.ts      # RefreshToken entity metadata
+│   ├── errors/
+│   │   ├── invalid-refresh-token-error.test.ts
+│   │   └── rate-limit-error.test.ts
 │   ├── middleware/
-│   │   └── rate-limit-middleware.test.ts  # Rate limit middleware (mocked Redis)
+│   │   ├── auth-middleware.test.ts     # Auth middleware (JWT verification)
+│   │   └── rate-limit-middleware.test.ts  # Rate limit (mocked Redis)
+│   ├── redis/
+│   │   ├── redis-client.test.ts       # RedisClient facade (incr/expire/ttl/quit)
+│   │   └── redis-client-factory.test.ts  # Redis factory (connect + fail-open)
 │   ├── repositories/
-│   │   └── user-repository.test.ts  # UserRepository methods (mocked TypeORM)
+│   │   ├── user-repository.test.ts    # UserRepository (mocked TypeORM)
+│   │   └── refresh-token-repository.test.ts  # RefreshTokenRepository (mocked)
 │   ├── services/
-│   │   └── password-manager-service.test.ts  # Hashing and comparison logic
-│   └── example.test.ts
-├── integration/                 # Requires PostgreSQL + Redis
+│   │   ├── password-manager-service.test.ts  # Hashing and comparison
+│   │   └── user-service.test.ts       # Register, auth, profile, refresh, logout
+│   └── shutdown.test.ts               # Graceful shutdown handler
+├── integration/                   # Requires PostgreSQL + Redis
 │   ├── database/
-│   │   └── connection.test.ts   # DB connectivity, migrations, CRUD roundtrip
+│   │   └── connection.test.ts         # DB connectivity, migrations, CRUD
 │   ├── middleware/
 │   │   └── rate-limit-middleware.test.ts  # Rate limiting against real Redis
-│   ├── repositories/
-│   │   └── user-repository.test.ts  # UserRepository CRUD against real DB
-│   └── example.test.ts
-├── acceptance/                  # Separate Docker container (black-box)
+│   └── repositories/
+│       ├── user-repository.test.ts    # UserRepository against real DB
+│       └── refresh-token-repository.test.ts  # RefreshTokenRepository against DB
+├── acceptance/                    # Separate Docker container (black-box)
 │   ├── Dockerfile
 │   ├── package.json
 │   ├── tsconfig.json
 │   ├── jest.config.json
 │   └── specs/
 │       ├── helpers/
-│       │   └── api.ts               # Shared helpers (validUserData, BASE, auth)
-│       ├── example.test.ts          # Health-check smoke test
-│       ├── registration.test.ts     # POST /users/register
-│       ├── login.test.ts            # POST /users/login
-│       ├── profile.test.ts          # GET/PUT /users/profile
-│       ├── refresh.test.ts          # POST /users/refresh
-│       └── logout.test.ts           # POST /users/logout
-├── setup.ts           # Shared setup (sets CONFIG_PATH to config/test.json)
-├── teardown.ts        # Shared teardown
-└── helpers.ts         # Shared test utilities
+│       │   ├── api.ts                 # Shared helpers (validUserData, auth)
+│       │   └── redis.ts               # Redis flush helper (rate limit reset)
+│       ├── health-check.test.ts       # GET /health-check smoke test
+│       ├── registration.test.ts       # POST /users/register
+│       ├── login.test.ts              # POST /users/login
+│       ├── profile.test.ts            # GET/PUT /users/profile
+│       ├── refresh.test.ts            # POST /users/refresh
+│       └── logout.test.ts            # POST /users/logout
+├── setup.ts             # Shared setup (sets CONFIG_PATH to config/test.json)
+├── teardown.ts          # Shared teardown
+└── helpers.ts           # Shared test utilities
 ```
 
 ## When to Use Which Layer
