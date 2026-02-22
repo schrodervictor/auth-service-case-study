@@ -1,6 +1,6 @@
 # Task: Health Check with Dependency Status
 
-## Status: pending
+## Status: done
 
 ## Context
 
@@ -149,19 +149,19 @@ so expect `{ status: "healthy" }`.
   temporarily stops working (the old one is removed, the new one is not yet
   implemented).
 - **Acceptance Criteria**:
-  - [ ] `RedisClient.ping()` returns `true` when underlying client responds
-  - [ ] `RedisClient.ping()` returns `false` when client is null
-  - [ ] `RedisClient.ping()` returns `false` and logs warning on error
-  - [ ] Unit tests for `ping()` added to `tests/unit/redis/redis-client.test.ts`
-  - [ ] `BaseController` no longer has `@controller('/health-check')` or
+  - [x] `RedisClient.ping()` returns `true` when underlying client responds
+  - [x] `RedisClient.ping()` returns `false` when client is null
+  - [x] `RedisClient.ping()` returns `false` and logs warning on error
+  - [x] Unit tests for `ping()` added to `tests/unit/redis/redis-client.test.ts`
+  - [x] `BaseController` no longer has `@controller('/health-check')` or
         `healthCheck()` method
-  - [ ] `BaseController` is a plain abstract class extending
+  - [x] `BaseController` is a plain abstract class extending
         `BaseHttpController`
-  - [ ] Side-effect import of `'./lib/base-controller'` removed from
+  - [x] Side-effect import of `'./lib/base-controller'` removed from
         `src/inversify.config.ts` (line 5)
-  - [ ] `make test-unit` passes (health check acceptance tests may fail
+  - [x] `make test-unit` passes (health check acceptance tests may fail
         temporarily)
-- **Status**: pending
+- **Status**: done
 
 ### Milestone 2: HealthCheckController with Dependency Status
 
@@ -169,45 +169,45 @@ so expect `{ status: "healthy" }`.
   `HealthCheckController` with dependency probing and the three-state response
   format (healthy / degraded / unhealthy).
 - **Acceptance Criteria**:
-  - [ ] `HealthCheckController` has constructor with `@inject(TYPES.DataSource)`
+  - [x] `HealthCheckController` has constructor with `@inject(TYPES.DataSource)`
         and `@inject(TYPES.RedisClient)`
-  - [ ] `@httpGet('/')` method probes both dependencies
-  - [ ] Returns 200 with `{ status: "healthy" }` when all deps are up
-  - [ ] Returns 200 with `{ status: "degraded" }` when cache is down but DB is
+  - [x] `@httpGet('/')` method probes both dependencies
+  - [x] Returns 200 with `{ status: "healthy" }` when all deps are up
+  - [x] Returns 200 with `{ status: "degraded" }` when cache is down but DB is
         up
-  - [ ] Returns 503 with `{ status: "unhealthy" }` when DB is down
-  - [ ] Response body contains ONLY the `status` field — no dependency details
-  - [ ] New unit test file
+  - [x] Returns 503 with `{ status: "unhealthy" }` when DB is down
+  - [x] Response body contains ONLY the `status` field — no dependency details
+  - [x] New unit test file
         `tests/unit/controllers/health-check-controller.test.ts` with all
         scenarios
-  - [ ] `make test-unit` passes
-- **Status**: pending
+  - [x] `make test-unit` passes
+- **Status**: done
 
 ### Milestone 3: OpenAPI Spec Update
 
 - **Description**: Update the OpenAPI spec to reflect the new health check
   response schema and the 503 response.
 - **Acceptance Criteria**:
-  - [ ] `/health-check` GET `200` response uses `HealthCheckResponse` schema
+  - [x] `/health-check` GET `200` response uses `HealthCheckResponse` schema
         with `status` enum (`healthy`, `degraded`)
-  - [ ] `/health-check` GET has `503` response for unhealthy state with same
+  - [x] `/health-check` GET has `503` response for unhealthy state with same
         schema (status: `unhealthy`)
-  - [ ] `HealthCheckResponse` schema added to `components.schemas`
-  - [ ] Old `message` property removed from health check response
-  - [ ] OpenAPI unit tests updated
-  - [ ] `make test-unit` passes
-- **Status**: pending
+  - [x] `HealthCheckResponse` schema added to `components.schemas`
+  - [x] Old `message` property removed from health check response
+  - [x] OpenAPI unit tests updated
+  - [x] `make test-unit` passes
+- **Status**: done
 
 ### Milestone 4: Acceptance Tests
 
 - **Description**: Update acceptance tests to verify the new health check
   response format against the live Docker environment.
 - **Acceptance Criteria**:
-  - [ ] `GET /partner-app/api/health-check` returns 200
-  - [ ] Response body has `status: "healthy"`
-  - [ ] Response body does NOT contain `message` field (old format removed)
-  - [ ] `make test-acceptance` passes
-- **Status**: pending
+  - [x] `GET /partner-app/api/health-check` returns 200
+  - [x] Response body has `status: "healthy"`
+  - [x] Response body does NOT contain `message` field (old format removed)
+  - [x] `make test-acceptance` passes
+- **Status**: done
 
 ## Implementation Order
 

@@ -15,16 +15,16 @@ A microservice for user registration, authentication, and profile management.
 
 All routes are prefixed with `/partner-app/api`.
 
-| Method | Path              | Auth | Description                           |
-| ------ | ----------------- | ---- | ------------------------------------- |
-| GET    | `/health-check`   | No   | Health-check (200 OK)                 |
-| POST   | `/users/register` | No   | Register a new user (201)             |
-| POST   | `/users/login`    | No   | Authenticate and get token pair (200) |
-| POST   | `/users/refresh`  | No   | Refresh access token (200)            |
-| POST   | `/users/logout`   | Yes  | Invalidate refresh tokens (204)       |
-| GET    | `/users/profile`  | Yes  | Get current user profile (200)        |
-| PUT    | `/users/profile`  | Yes  | Update profile fields (200)           |
-| PUT    | `/users/password` | Yes  | Change password (204)                 |
+| Method | Path              | Auth | Description                                   |
+| ------ | ----------------- | ---- | --------------------------------------------- |
+| GET    | `/health-check`   | No   | Health check with dependency status (200/503) |
+| POST   | `/users/register` | No   | Register a new user (201)                     |
+| POST   | `/users/login`    | No   | Authenticate and get token pair (200)         |
+| POST   | `/users/refresh`  | No   | Refresh access token (200)                    |
+| POST   | `/users/logout`   | Yes  | Invalidate refresh tokens (204)               |
+| GET    | `/users/profile`  | Yes  | Get current user profile (200)                |
+| PUT    | `/users/profile`  | Yes  | Update profile fields (200)                   |
+| PUT    | `/users/password` | Yes  | Change password (204)                         |
 
 Interactive API documentation is available at `/partner-app/api/docs` (Swagger
 UI) when the service is running. The raw spec can be downloaded as
@@ -35,6 +35,9 @@ UI) when the service is running. The raw spec can be downloaded as
 
 - **JWT Authentication**: Access + refresh token pair with token rotation
 - **Password Hashing**: `crypto.scrypt` with `timingSafeEqual` comparison
+- **Health Check**: Probes PostgreSQL and Redis on every request. Returns
+  `{ status: "healthy" }` (200), `{ "status": "degraded" }` (200, cache down),
+  or `{ "status": "unhealthy" }` (503, database down)
 - **Rate Limiting**: Redis-backed fixed-window counter on login and refresh
   endpoints. Fail-open — degrades gracefully if Redis is unavailable
 - **Graceful Shutdown**: Handles SIGTERM/SIGINT with ordered cleanup (drain
