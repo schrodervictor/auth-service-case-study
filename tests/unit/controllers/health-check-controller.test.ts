@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 
 import { HealthCheckController } from '../../../src/controllers/health-check-controller';
 import type { RedisClient } from '../../../src/redis/redis-client';
@@ -49,7 +49,7 @@ describe('HealthCheckController', () => {
             mockRedisClient.ping.mockResolvedValue(true);
             const res = createMockResponse();
 
-            await controller.healthCheck(res as Response);
+            await controller.healthCheck({} as Request, res as Response);
 
             expect(res.statusCode).toBe(200);
             expect(res.body).toEqual({ status: 'healthy' });
@@ -60,7 +60,7 @@ describe('HealthCheckController', () => {
             mockRedisClient.ping.mockResolvedValue(false);
             const res = createMockResponse();
 
-            await controller.healthCheck(res as Response);
+            await controller.healthCheck({} as Request, res as Response);
 
             expect(res.statusCode).toBe(200);
             expect(res.body).toEqual({ status: 'degraded' });
@@ -71,7 +71,7 @@ describe('HealthCheckController', () => {
             mockRedisClient.ping.mockResolvedValue(true);
             const res = createMockResponse();
 
-            await controller.healthCheck(res as Response);
+            await controller.healthCheck({} as Request, res as Response);
 
             expect(res.statusCode).toBe(503);
             expect(res.body).toEqual({ status: 'unhealthy' });
@@ -82,7 +82,7 @@ describe('HealthCheckController', () => {
             mockRedisClient.ping.mockResolvedValue(false);
             const res = createMockResponse();
 
-            await controller.healthCheck(res as Response);
+            await controller.healthCheck({} as Request, res as Response);
 
             expect(res.statusCode).toBe(503);
             expect(res.body).toEqual({ status: 'unhealthy' });
@@ -93,7 +93,7 @@ describe('HealthCheckController', () => {
             mockRedisClient.ping.mockResolvedValue(true);
             const res = createMockResponse();
 
-            await controller.healthCheck(res as Response);
+            await controller.healthCheck({} as Request, res as Response);
 
             expect(res.statusCode).toBe(503);
             expect(res.body).toEqual({ status: 'unhealthy' });
@@ -104,7 +104,7 @@ describe('HealthCheckController', () => {
             mockRedisClient.ping.mockResolvedValue(true);
             const res = createMockResponse();
 
-            await controller.healthCheck(res as Response);
+            await controller.healthCheck({} as Request, res as Response);
 
             expect(Object.keys(res.body as object)).toEqual(['status']);
         });
@@ -127,7 +127,7 @@ describe('HealthCheckController', () => {
             });
 
             const res = createMockResponse();
-            await controller.healthCheck(res as Response);
+            await controller.healthCheck({} as Request, res as Response);
 
             // Both should start before either ends (parallel execution)
             expect(callOrder.indexOf('db-start')).toBeLessThan(callOrder.indexOf('db-end'));
