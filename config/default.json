@@ -46,6 +46,6 @@
     },
     "eventbus": {
         "mode": "emulated",
-        "outputPath": "/tmp/eventbus.jsonl"
+        "outputPath": "/tmp/eventbus/events.jsonl"
     }
 }
