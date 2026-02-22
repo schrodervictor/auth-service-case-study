@@ -2,8 +2,9 @@ import type { Request, Response, NextFunction } from 'express';
 
 import { requireJsonContentType } from '../../../src/middleware/content-type-middleware';
 
-const createMockRequest = (method: string, isJson: string | false): Partial<Request> => ({
+const createMockRequest = (method: string, isJson: string | false, contentType?: string): Partial<Request> => ({
     method,
+    headers: contentType ? { 'content-type': contentType } : {},
     is: jest.fn().mockImplementation((type: string) => {
         if (type === 'json') return isJson;
         return false;
@@ -31,7 +32,7 @@ const createMockNext = (): jest.Mock<NextFunction> => jest.fn();
 describe('requireJsonContentType', () => {
     describe('rejects non-JSON content types', () => {
         it('should return 415 for POST with non-JSON content type', () => {
-            const req = createMockRequest('POST', false);
+            const req = createMockRequest('POST', false, 'text/plain');
             const res = createMockResponse();
             const next = createMockNext();
 
@@ -43,7 +44,7 @@ describe('requireJsonContentType', () => {
         });
 
         it('should return 415 for PUT with non-JSON content type', () => {
-            const req = createMockRequest('PUT', false);
+            const req = createMockRequest('PUT', false, 'text/plain');
             const res = createMockResponse();
             const next = createMockNext();
 
@@ -53,17 +54,18 @@ describe('requireJsonContentType', () => {
             expect(res.body).toEqual({ message: 'Content-Type must be application/json' });
             expect(next).not.toHaveBeenCalled();
         });
+    });
 
-        it('should return 415 for POST with no Content-Type header', () => {
+    describe('passes through bodyless POST requests', () => {
+        it('should call next() for POST with no Content-Type header', () => {
             const req = createMockRequest('POST', false);
             const res = createMockResponse();
             const next = createMockNext();
 
             requireJsonContentType(req as Request, res as Response, next);
 
-            expect(res.statusCode).toBe(415);
-            expect(res.body).toEqual({ message: 'Content-Type must be application/json' });
-            expect(next).not.toHaveBeenCalled();
+            expect(next).toHaveBeenCalled();
+            expect(res.status).not.toHaveBeenCalled();
         });
     });
 
@@ -117,7 +119,7 @@ describe('requireJsonContentType', () => {
 
     describe('response format', () => {
         it('should return { message: "Content-Type must be application/json" } on 415', () => {
-            const req = createMockRequest('POST', false);
+            const req = createMockRequest('POST', false, 'text/plain');
             const res = createMockResponse();
             const next = createMockNext();
 
