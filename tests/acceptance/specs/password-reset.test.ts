@@ -1,6 +1,6 @@
 import supertest from 'supertest';
 
-import { BASE, registerAndLogin, validUserData } from './helpers/api';
+import { BASE, registerAndLogin } from './helpers/api';
 import { flushRateLimitKeys } from './helpers/redis';
 import { clearEventbusFile, getResetKeyForEmail } from './helpers/eventbus';
 
