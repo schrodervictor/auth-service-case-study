@@ -10,6 +10,7 @@ import { loadSecrets } from './config/secrets-loader';
 import { createContainer } from './inversify.config';
 import { createDataSource } from './database';
 import { createRedisClient } from './redis/redis-client-factory';
+import { createShutdownHandler } from './shutdown';
 // import { exampleEventHandler } from './events/handlers';
 
 (async () => {
@@ -52,9 +53,18 @@ import { createRedisClient } from './redis/redis-client-factory';
 
         const server = app.build();
 
-        server.listen(config.server.port, () => {
+        const httpServer = server.listen(config.server.port, () => {
             console.log(`Server listening on port ${config.server.port}`);
         });
+
+        const shutdown = createShutdownHandler({
+            server: httpServer,
+            dataSource,
+            redisClient,
+        });
+
+        process.on('SIGTERM', shutdown);
+        process.on('SIGINT', shutdown);
     } catch (err) {
         console.error('Failed to start application:', err);
         process.exit(1);

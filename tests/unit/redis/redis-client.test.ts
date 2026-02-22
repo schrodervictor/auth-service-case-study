@@ -4,6 +4,7 @@ const createMockIoredis = () => ({
     incr: jest.fn(),
     expire: jest.fn(),
     ttl: jest.fn(),
+    quit: jest.fn(),
 });
 
 describe('RedisClient', () => {
@@ -85,6 +86,36 @@ describe('RedisClient', () => {
 
             expect(await client.ttl('key')).toBe(-1);
             expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('connection lost'));
+
+            warnSpy.mockRestore();
+        });
+    });
+
+    describe('quit()', () => {
+        it('should resolve without error when client is null', async () => {
+            const client = new RedisClient(null);
+
+            await expect(client.quit()).resolves.toBeUndefined();
+        });
+
+        it('should delegate to underlying client quit()', async () => {
+            const mock = createMockIoredis();
+            mock.quit.mockResolvedValue('OK');
+            const client = new RedisClient(mock as never);
+
+            await client.quit();
+
+            expect(mock.quit).toHaveBeenCalled();
+        });
+
+        it('should swallow errors and log warning on failure', async () => {
+            const warnSpy = jest.spyOn(console, 'error').mockImplementation();
+            const mock = createMockIoredis();
+            mock.quit.mockRejectedValue(new Error('ECONNRESET'));
+            const client = new RedisClient(mock as never);
+
+            await expect(client.quit()).resolves.toBeUndefined();
+            expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('ECONNRESET'));
 
             warnSpy.mockRestore();
         });
