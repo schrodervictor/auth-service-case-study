@@ -326,14 +326,6 @@ export const openApiSpec: OpenApiSpec = {
                             },
                         },
                     },
-                    '400': {
-                        description: 'At least one field is required',
-                        content: {
-                            'application/json': {
-                                schema: { $ref: '#/components/schemas/ErrorResponse' },
-                            },
-                        },
-                    },
                     '401': {
                         description: 'Unauthorized',
                         content: {
