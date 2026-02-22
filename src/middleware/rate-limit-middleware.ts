@@ -22,7 +22,7 @@ export function createRateLimitMiddleware(
     endpointKey: string,
     config: RateLimitConfig,
 ): RateLimitMiddlewareFunction {
-    return ((req: Request, res: Response, next: NextFunction): void | Promise<void> => {
+    return ((req: Request, res: Response, next: NextFunction) => {
         if (redisClient == null) {
             next();
             return;
@@ -31,24 +31,16 @@ export function createRateLimitMiddleware(
         const ip = req.ip ?? 'unknown';
         const key = `rateLimit:${endpointKey}:${ip}`;
 
-        return redisClient
-            .incr(key)
-            .then(async (count) => {
-                if (count === 1) {
-                    await redisClient.expire(key, config.windowSeconds);
-                }
-
-                if (count > config.maxAttempts) {
-                    const ttl = await redisClient.ttl(key);
-                    const retryAfter = ttl > 0 ? ttl : config.windowSeconds;
-                    res.set('Retry-After', String(retryAfter));
+        return checkRateLimit(redisClient, key, config)
+            .then((result) => {
+                if (result.allowed) {
+                    next();
+                } else {
+                    res.set('Retry-After', String(result.retryAfter));
                     res.status(429).json({
                         message: 'Too many requests. Please try again later.',
                     });
-                    return;
                 }
-
-                next();
             })
             .catch((error: unknown) => {
                 const message = error instanceof Error ? error.message : String(error);
@@ -56,4 +48,26 @@ export function createRateLimitMiddleware(
                 next();
             });
     }) as RateLimitMiddlewareFunction;
+}
+
+async function checkRateLimit(
+    redis: RedisLike,
+    key: string,
+    config: RateLimitConfig,
+): Promise<{ allowed: true } | { allowed: false; retryAfter: number }> {
+    const count = await redis.incr(key);
+
+    // INCR creates the key without expiration — set TTL on the first request
+    // so the counter resets automatically after the window elapses.
+    if (count === 1) {
+        await redis.expire(key, config.windowSeconds);
+    }
+
+    if (count > config.maxAttempts) {
+        const ttl = await redis.ttl(key);
+        const retryAfter = ttl > 0 ? ttl : config.windowSeconds;
+        return { allowed: false, retryAfter };
+    }
+
+    return { allowed: true };
 }
