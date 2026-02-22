@@ -3,54 +3,32 @@ import { makeTestConfig } from '../../helpers/test-config';
 
 const VALID_CONFIG = makeTestConfig();
 
-describe('configSchema — required fields', () => {
+describe('configSchema — required sections', () => {
     it('should parse a valid full config', () => {
         const result = configSchema.safeParse(VALID_CONFIG);
 
         expect(result.success).toBe(true);
     });
 
-    it('should reject when server section is missing', () => {
-        const { server: _, ...config } = VALID_CONFIG;
-        const result = configSchema.safeParse(config);
+    const requiredSections = [
+        'server',
+        'database',
+        'auth',
+        'redis',
+        'rateLimit',
+        'eventbus',
+    ];
 
-        expect(result.success).toBe(false);
-    });
+    it.each(requiredSections)(
+        'should reject when %s section is missing',
+        section => {
+            const { [section]: _, ...config } =
+                VALID_CONFIG as Record<string, unknown>;
+            const result = configSchema.safeParse(config);
 
-    it('should reject when database section is missing', () => {
-        const { database: _, ...config } = VALID_CONFIG;
-        const result = configSchema.safeParse(config);
-
-        expect(result.success).toBe(false);
-    });
-
-    it('should reject when auth section is missing', () => {
-        const { auth: _, ...config } = VALID_CONFIG;
-        const result = configSchema.safeParse(config);
-
-        expect(result.success).toBe(false);
-    });
-
-    it('should reject when redis section is missing', () => {
-        const { redis: _, ...config } = VALID_CONFIG;
-        const result = configSchema.safeParse(config);
-
-        expect(result.success).toBe(false);
-    });
-
-    it('should reject when rateLimit section is missing', () => {
-        const { rateLimit: _, ...config } = VALID_CONFIG;
-        const result = configSchema.safeParse(config);
-
-        expect(result.success).toBe(false);
-    });
-
-    it('should reject when eventbus section is missing', () => {
-        const { eventbus: _, ...config } = VALID_CONFIG;
-        const result = configSchema.safeParse(config);
-
-        expect(result.success).toBe(false);
-    });
+            expect(result.success).toBe(false);
+        },
+    );
 });
 
 describe('configSchema — ssm section', () => {
@@ -109,6 +87,27 @@ describe('configSchema — ssm section', () => {
     });
 });
 
+describe('configSchema — auth section', () => {
+    it('should accept custom resetKey expiresIn', () => {
+        const result = configSchema.parse({
+            ...VALID_CONFIG,
+            auth: { ...VALID_CONFIG.auth, resetKey: { expiresIn: '30m' } },
+        });
+
+        expect(result.auth.resetKey.expiresIn).toBe('30m');
+    });
+
+    it('should reject missing resetKey section', () => {
+        const { resetKey: _, ...authWithoutResetKey } = VALID_CONFIG.auth;
+        const result = configSchema.safeParse({
+            ...VALID_CONFIG,
+            auth: authWithoutResetKey,
+        });
+
+        expect(result.success).toBe(false);
+    });
+});
+
 describe('configSchema — redis section', () => {
     it('should accept custom redis values', () => {
         const input = {
@@ -151,22 +150,30 @@ describe('configSchema — redis section', () => {
 });
 
 describe('configSchema — rateLimit section', () => {
-    it('should accept custom rate limit values', () => {
-        const input = {
-            ...VALID_CONFIG,
-            rateLimit: {
-                ...VALID_CONFIG.rateLimit,
-                login: { maxAttempts: 3, windowSeconds: 600 },
-            },
-        };
+    const rateLimitKeys = [
+        { key: 'login', maxAttempts: 3, windowSeconds: 600 },
+        { key: 'refresh', maxAttempts: 8, windowSeconds: 600 },
+        { key: 'resetKey', maxAttempts: 5, windowSeconds: 600 },
+        { key: 'validateResetKey', maxAttempts: 20, windowSeconds: 1800 },
+        { key: 'resetPassword', maxAttempts: 10, windowSeconds: 300 },
+    ];
 
-        const result = configSchema.parse(input);
+    it.each(rateLimitKeys)(
+        'should accept custom $key rate limit values',
+        ({ key, maxAttempts, windowSeconds }) => {
+            const result = configSchema.parse({
+                ...VALID_CONFIG,
+                rateLimit: {
+                    ...VALID_CONFIG.rateLimit,
+                    [key]: { maxAttempts, windowSeconds },
+                },
+            });
 
-        expect(result.rateLimit.login).toEqual({
-            maxAttempts: 3,
-            windowSeconds: 600,
-        });
-    });
+            expect(
+                (result.rateLimit as Record<string, unknown>)[key],
+            ).toEqual({ maxAttempts, windowSeconds });
+        },
+    );
 
     it('should reject non-number maxAttempts', () => {
         const result = configSchema.safeParse({
