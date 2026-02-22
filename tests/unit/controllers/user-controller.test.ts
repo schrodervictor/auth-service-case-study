@@ -19,6 +19,7 @@ const createMockUserService = (): jest.Mocked<UserService> => ({
     logout: jest.fn(),
     getProfile: jest.fn(),
     updateProfile: jest.fn(),
+    changePassword: jest.fn(),
 });
 
 const createMockRequest = (

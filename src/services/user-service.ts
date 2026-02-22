@@ -7,6 +7,7 @@ import type { AppSecrets } from '../config/secrets-schema';
 import type { User } from '../entities/user';
 import {
     EmailAlreadyExistsError,
+    IncorrectPasswordError,
     InvalidCredentialsError,
     InvalidRefreshTokenError,
     UserNotFoundError,
@@ -38,6 +39,11 @@ export type UserResponseDto = {
     updatedAt: Date;
 };
 
+export type ChangePasswordDto = {
+    currentPassword: string;
+    newPassword: string;
+};
+
 export type AuthResponseDto = {
     accessToken: string;
     refreshToken: string;
@@ -53,6 +59,7 @@ export interface UserService {
         userId: string,
         data: UpdateProfileDto,
     ): Promise<UserResponseDto>;
+    changePassword(userId: string, data: ChangePasswordDto): Promise<void>;
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -82,18 +89,7 @@ export class UserServiceImpl implements UserService {
         if (!data.password) {
             passwordErrors.push('Password is required');
         } else {
-            if (data.password.length < 8) {
-                passwordErrors.push('Password must be at least 8 characters long');
-            }
-            if (!/[A-Z]/.test(data.password)) {
-                passwordErrors.push('Password must contain at least one uppercase letter');
-            }
-            if (!/[a-z]/.test(data.password)) {
-                passwordErrors.push('Password must contain at least one lowercase letter');
-            }
-            if (!/[0-9]/.test(data.password)) {
-                passwordErrors.push('Password must contain at least one number');
-            }
+            passwordErrors.push(...this.validatePasswordStrength(data.password));
         }
         if (passwordErrors.length > 0) {
             errors.password = passwordErrors;
@@ -208,6 +204,64 @@ export class UserServiceImpl implements UserService {
         }
 
         return this.toUserResponse(updatedUser);
+    }
+
+    async changePassword(userId: string, data: ChangePasswordDto): Promise<void> {
+        const errors: Record<string, string[]> = {};
+
+        if (!data.currentPassword) {
+            errors.currentPassword = ['Current password is required'];
+        }
+
+        const newPasswordErrors: string[] = [];
+        if (!data.newPassword) {
+            newPasswordErrors.push('New password is required');
+        } else {
+            newPasswordErrors.push(...this.validatePasswordStrength(data.newPassword));
+        }
+        if (newPasswordErrors.length > 0) {
+            errors.newPassword = newPasswordErrors;
+        }
+
+        if (Object.keys(errors).length > 0) {
+            throw new ValidationError('Validation failed', errors);
+        }
+
+        const user = await this.userRepository.findById(userId);
+        if (!user) {
+            throw new UserNotFoundError(userId);
+        }
+
+        const isMatch = await this.passwordManager.compare(user.passwordHash, data.currentPassword);
+        if (!isMatch) {
+            throw new IncorrectPasswordError();
+        }
+
+        const hashedPassword = await this.passwordManager.toHash(data.newPassword);
+
+        const updated = await this.userRepository.updatePasswordHash(userId, hashedPassword);
+        if (!updated) {
+            throw new UserNotFoundError(userId);
+        }
+
+        await this.refreshTokenRepository.deleteAllByUserId(userId);
+    }
+
+    private validatePasswordStrength(password: string): string[] {
+        const errors: string[] = [];
+        if (password.length < 8) {
+            errors.push('Password must be at least 8 characters long');
+        }
+        if (!/[A-Z]/.test(password)) {
+            errors.push('Password must contain at least one uppercase letter');
+        }
+        if (!/[a-z]/.test(password)) {
+            errors.push('Password must contain at least one lowercase letter');
+        }
+        if (!/[0-9]/.test(password)) {
+            errors.push('Password must contain at least one number');
+        }
+        return errors;
     }
 
     private async generateTokenPair(userId: string): Promise<AuthResponseDto> {
