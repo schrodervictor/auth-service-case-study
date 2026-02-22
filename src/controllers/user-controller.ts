@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import { inject } from 'inversify';
 import { controller, httpGet, httpPost, httpPut } from 'inversify-express-utils';
 
-import { AppError, UserNotFoundError, ValidationError } from '../errors';
+import { AppError, InvalidResetKeyError, UserNotFoundError, ValidationError } from '../errors';
 import { BaseController } from '../lib/base-controller';
 import { TYPES } from '../lib/types';
 import type { AuthenticatedRequest } from '../middleware/auth-middleware';
@@ -12,7 +12,10 @@ import {
     LoginRequestSchema,
     RefreshRequestSchema,
     RegisterRequestSchema,
+    ResetKeyRequestSchema,
+    ResetPasswordRequestSchema,
     UpdateProfileRequestSchema,
+    ValidateResetKeyRequestSchema,
 } from '../schemas/user-schemas';
 import type { UserService } from '../services/user-service';
 
@@ -126,6 +129,47 @@ export class UserController extends BaseController {
         } catch (error) {
             if (error instanceof UserNotFoundError) {
                 res.status(401).json({ message: 'Unauthorized' });
+                return;
+            }
+            this.handleError(res, error);
+        }
+    }
+
+    @httpPost('/reset-key', TYPES.JsonContentType, validate(ResetKeyRequestSchema), TYPES.ResetKeyRateLimiter)
+    async requestResetKey(req: Request, res: Response): Promise<void> {
+        try {
+            const { email } = req.body;
+            await this.userService.requestPasswordReset(email);
+            res.status(200).json({
+                message: 'If an account with that email exists, a reset key has been generated.',
+            });
+        } catch (error) {
+            this.handleError(res, error);
+        }
+    }
+
+    @httpPost('/validate-reset-key', TYPES.JsonContentType, validate(ValidateResetKeyRequestSchema), TYPES.ValidateResetKeyRateLimiter)
+    async validateResetKey(req: Request, res: Response): Promise<void> {
+        try {
+            const { resetKey } = req.body;
+            const valid = await this.userService.validateResetKey(resetKey);
+            res.status(200).json({ valid });
+        } catch (error) {
+            this.handleError(res, error);
+        }
+    }
+
+    @httpPost('/password/reset', TYPES.JsonContentType, validate(ResetPasswordRequestSchema), TYPES.ResetPasswordRateLimiter)
+    async resetPassword(req: Request, res: Response): Promise<void> {
+        try {
+            const { resetKey, newPassword } = req.body;
+            await this.userService.resetPassword(resetKey, newPassword);
+            res.status(200).json({
+                message: 'Password has been reset successfully.',
+            });
+        } catch (error) {
+            if (error instanceof InvalidResetKeyError) {
+                res.status(400).json({ message: error.message });
                 return;
             }
             this.handleError(res, error);

@@ -18,9 +18,14 @@ const refreshTokenSchema = z.object({
     expiresIn: z.string().default('7d'),
 });
 
+const resetKeySchema = z.object({
+    expiresIn: z.string().default('15m'),
+});
+
 const authSchema = z.object({
     accessToken: accessTokenSchema.default({ expiresIn: '15m' }),
     refreshToken: refreshTokenSchema.default({ expiresIn: '7d' }),
+    resetKey: resetKeySchema.default({ expiresIn: '15m' }),
 });
 
 const redisSchema = z.object({
@@ -43,6 +48,18 @@ const rateLimitSchema = z.object({
         maxAttempts: 10,
         windowSeconds: 900,
     }),
+    resetKey: rateLimitEndpointSchema.default({
+        maxAttempts: 3,
+        windowSeconds: 900,
+    }),
+    validateResetKey: rateLimitEndpointSchema.default({
+        maxAttempts: 10,
+        windowSeconds: 900,
+    }),
+    resetPassword: rateLimitEndpointSchema.default({
+        maxAttempts: 5,
+        windowSeconds: 900,
+    }),
 });
 
 const ssmParametersSchema = z.object({
@@ -56,19 +73,39 @@ const ssmSchema = z.object({
     parameters: ssmParametersSchema,
 });
 
+const emulatedEventbusSchema = z.object({
+    mode: z.literal('emulated'),
+    outputPath: z.string().optional(),
+});
+
+const realEventbusSchema = z.object({
+    mode: z.literal('real'),
+    kafka: z.record(z.string(), z.unknown()).default({}),
+});
+
+const eventbusSchema = z.union([
+    emulatedEventbusSchema,
+    realEventbusSchema,
+]);
+
 export const configSchema = z.object({
     server: serverSchema.default({ port: 9000 }),
     database: databaseSchema,
     auth: authSchema.default({
         accessToken: { expiresIn: '15m' },
         refreshToken: { expiresIn: '7d' },
+        resetKey: { expiresIn: '15m' },
     }),
     redis: redisSchema.default({ host: 'redis', port: 6379 }),
     rateLimit: rateLimitSchema.default({
         login: { maxAttempts: 5, windowSeconds: 900 },
         refresh: { maxAttempts: 10, windowSeconds: 900 },
+        resetKey: { maxAttempts: 3, windowSeconds: 900 },
+        validateResetKey: { maxAttempts: 10, windowSeconds: 900 },
+        resetPassword: { maxAttempts: 5, windowSeconds: 900 },
     }),
     ssm: ssmSchema.optional(),
+    eventbus: eventbusSchema.default({ mode: 'real', kafka: {} }),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;

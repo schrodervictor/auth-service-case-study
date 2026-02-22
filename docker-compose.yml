@@ -1,3 +1,6 @@
+volumes:
+  eventbus-data:
+
 services:
   app:
     build:
@@ -14,6 +17,7 @@ services:
       - ./src:/app/src
       - ./tests:/app/tests
       - ./config:/app/config
+      - eventbus-data:/tmp/eventbus
     depends_on:
       postgres:
         condition: service_healthy
@@ -55,8 +59,10 @@ services:
       context: ./tests/acceptance
     environment:
       API_URL: http://app:9000
+      EVENTBUS_PATH: /tmp/eventbus/events.jsonl
     volumes:
       - ./tests/acceptance/specs:/app/specs
+      - eventbus-data:/tmp/eventbus
     depends_on:
       app:
         condition: service_started

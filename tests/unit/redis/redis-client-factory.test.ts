@@ -1,3 +1,4 @@
+import { silenceConsole, type CapturedConsole } from '../../helpers/test-console';
 import type { AppConfig } from '../../../src/config/schema';
 import { TYPES } from '../../../src/lib/types';
 import { createRedisClient } from '../../../src/redis/redis-client-factory';
@@ -11,12 +12,17 @@ const MOCK_CONFIG: AppConfig = {
     auth: {
         accessToken: { expiresIn: '15m' },
         refreshToken: { expiresIn: '7d' },
+        resetKey: { expiresIn: '15m' },
     },
     redis: { host: 'redis', port: 6379 },
     rateLimit: {
         login: { maxAttempts: 5, windowSeconds: 900 },
         refresh: { maxAttempts: 10, windowSeconds: 900 },
+        resetKey: { maxAttempts: 3, windowSeconds: 900 },
+        validateResetKey: { maxAttempts: 10, windowSeconds: 900 },
+        resetPassword: { maxAttempts: 5, windowSeconds: 900 },
     },
+    eventbus: { mode: 'emulated' as const },
 };
 
 describe('TYPES.RedisClient', () => {
@@ -106,38 +112,40 @@ describe('createRedisClient', () => {
     });
 
     it('should return a RedisClient when Redis connection fails (fail-open)', async () => {
+        const captured = silenceConsole('error');
         mockRedisInstance.ping.mockRejectedValue(new Error('Connection refused'));
 
         const client = await createRedisClient(MOCK_CONFIG);
 
         expect(client).toBeInstanceOf(RedisClient);
+        captured.restore();
     });
 
     it('should log an error when Redis connection fails', async () => {
-        const errorSpy = jest.spyOn(console, 'error').mockImplementation();
+        const captured = silenceConsole('error');
         mockRedisInstance.ping.mockRejectedValue(new Error('Connection refused'));
 
         await createRedisClient(MOCK_CONFIG);
 
-        expect(errorSpy).toHaveBeenCalled();
-        expect(errorSpy.mock.calls[0][0]).toMatch(/RATE-LIMIT DEGRADED/);
+        expect(captured.error.length).toBeGreaterThan(0);
+        expect(captured.error[0]).toMatch(/RATE-LIMIT DEGRADED/);
 
-        errorSpy.mockRestore();
+        captured.restore();
     });
 
     it('should include the error cause in the log', async () => {
-        const errorSpy = jest.spyOn(console, 'error').mockImplementation();
+        const captured = silenceConsole('error');
         mockRedisInstance.ping.mockRejectedValue(new Error('ECONNREFUSED'));
 
         await createRedisClient(MOCK_CONFIG);
 
-        const logMessage = errorSpy.mock.calls.map(c => c.join(' ')).join(' ');
-        expect(logMessage).toContain('ECONNREFUSED');
+        expect(captured.error.join(' ')).toContain('ECONNREFUSED');
 
-        errorSpy.mockRestore();
+        captured.restore();
     });
 
     it('should return a RedisClient when Redis constructor throws (fail-open)', async () => {
+        const captured = silenceConsole('error');
         Redis.mockImplementation(() => {
             throw new Error('Invalid host');
         });
@@ -145,19 +153,20 @@ describe('createRedisClient', () => {
         const client = await createRedisClient(MOCK_CONFIG);
 
         expect(client).toBeInstanceOf(RedisClient);
+        captured.restore();
     });
 
     it('should log an error when Redis constructor throws', async () => {
-        const errorSpy = jest.spyOn(console, 'error').mockImplementation();
+        const captured = silenceConsole('error');
         Redis.mockImplementation(() => {
             throw new Error('Invalid host');
         });
 
         await createRedisClient(MOCK_CONFIG);
 
-        expect(errorSpy).toHaveBeenCalled();
-        expect(errorSpy.mock.calls[0][0]).toMatch(/RATE-LIMIT DEGRADED/);
+        expect(captured.error.length).toBeGreaterThan(0);
+        expect(captured.error[0]).toMatch(/RATE-LIMIT DEGRADED/);
 
-        errorSpy.mockRestore();
+        captured.restore();
     });
 });

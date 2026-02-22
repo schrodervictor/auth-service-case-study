@@ -222,6 +222,9 @@ describe('configSchema — rateLimit section', () => {
             expect(result.rateLimit).toEqual({
                 login: { maxAttempts: 5, windowSeconds: 900 },
                 refresh: { maxAttempts: 10, windowSeconds: 900 },
+                resetKey: { maxAttempts: 3, windowSeconds: 900 },
+                validateResetKey: { maxAttempts: 10, windowSeconds: 900 },
+                resetPassword: { maxAttempts: 5, windowSeconds: 900 },
             });
         });
 
@@ -379,6 +382,52 @@ describe('configSchema — rateLimit section', () => {
 
             expect(result.success).toBe(false);
         });
+    });
+});
+
+describe('configSchema — eventbus section', () => {
+    it('should apply default eventbus config when section is omitted', () => {
+        const result = configSchema.parse(MINIMAL_CONFIG);
+
+        expect(result.eventbus).toEqual({ mode: 'real', kafka: {} });
+    });
+
+    it('should accept explicit emulated mode with outputPath', () => {
+        const result = configSchema.parse({
+            ...MINIMAL_CONFIG,
+            eventbus: { mode: 'emulated', outputPath: '/tmp/events.jsonl' },
+        });
+
+        expect(result.eventbus.mode).toBe('emulated');
+        expect((result.eventbus as { outputPath?: string }).outputPath).toBe('/tmp/events.jsonl');
+    });
+
+    it('should accept explicit real mode with kafka settings', () => {
+        const result = configSchema.parse({
+            ...MINIMAL_CONFIG,
+            eventbus: { mode: 'real', kafka: { brokers: 'localhost:9092' } },
+        });
+
+        expect(result.eventbus.mode).toBe('real');
+        expect((result.eventbus as { kafka: Record<string, unknown> }).kafka).toEqual({ brokers: 'localhost:9092' });
+    });
+
+    it('should default kafka to empty object for real mode', () => {
+        const result = configSchema.parse({
+            ...MINIMAL_CONFIG,
+            eventbus: { mode: 'real' },
+        });
+
+        expect((result.eventbus as { kafka: Record<string, unknown> }).kafka).toEqual({});
+    });
+
+    it('should reject invalid mode', () => {
+        const result = configSchema.safeParse({
+            ...MINIMAL_CONFIG,
+            eventbus: { mode: 'invalid' },
+        });
+
+        expect(result.success).toBe(false);
     });
 });
 

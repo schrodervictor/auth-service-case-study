@@ -49,12 +49,17 @@ const mockConfig: AppConfig = {
     auth: {
         accessToken: { expiresIn: '15m' },
         refreshToken: { expiresIn: '7d' },
+        resetKey: { expiresIn: '15m' },
     },
     redis: { host: 'redis', port: 6379 },
     rateLimit: {
         login: { maxAttempts: 5, windowSeconds: 900 },
         refresh: { maxAttempts: 10, windowSeconds: 900 },
+        resetKey: { maxAttempts: 3, windowSeconds: 900 },
+        validateResetKey: { maxAttempts: 10, windowSeconds: 900 },
+        resetPassword: { maxAttempts: 5, windowSeconds: 900 },
     },
+    eventbus: { mode: 'emulated' as const },
 };
 
 const mockSecrets: AppSecrets = {
@@ -106,7 +111,21 @@ describe('UserServiceImpl', () => {
         mockRepo = createMockUserRepository();
         mockPasswordManager = createMockPasswordManager();
         mockRefreshTokenRepo = createMockRefreshTokenRepository();
-        service = new UserServiceImpl(mockRepo, mockPasswordManager, mockConfig, mockSecrets, mockRefreshTokenRepo);
+        service = new UserServiceImpl(
+            mockRepo,
+            mockPasswordManager,
+            mockConfig,
+            mockSecrets,
+            mockRefreshTokenRepo,
+            {
+                save: jest.fn(),
+                findByKeyHash: jest.fn(),
+                deleteByKeyHash: jest.fn(),
+                deleteAllByUserId: jest.fn(),
+                deleteExpired: jest.fn(),
+            } as any,
+            { publish: jest.fn() } as any,
+        );
     });
 
     afterEach(() => {

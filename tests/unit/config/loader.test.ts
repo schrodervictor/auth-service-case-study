@@ -63,12 +63,17 @@ describe('loadConfig', () => {
                 auth: {
                     accessToken: { expiresIn: '30m' },
                     refreshToken: { expiresIn: '14d' },
+                    resetKey: { expiresIn: '15m' },
                 },
                 redis: { host: 'redis', port: 6379 },
                 rateLimit: {
                     login: { maxAttempts: 5, windowSeconds: 900 },
                     refresh: { maxAttempts: 10, windowSeconds: 900 },
+                    resetKey: { maxAttempts: 3, windowSeconds: 900 },
+                    validateResetKey: { maxAttempts: 10, windowSeconds: 900 },
+                    resetPassword: { maxAttempts: 5, windowSeconds: 900 },
                 },
+                eventbus: { mode: 'real', kafka: {} },
             });
         });
     });

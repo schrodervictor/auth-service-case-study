@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import { json } from 'body-parser';
 import { InversifyExpressServer } from 'inversify-express-utils';
 
-// import { createKafkaClient, Producer, Consumer } from '@marta/eventbus/dist';
+import { createKafkaClient, Producer, Consumer } from './eventbus';
 
 import yaml from 'js-yaml';
 import swaggerUi from 'swagger-ui-express';
@@ -15,7 +15,7 @@ import { createDataSource } from './database';
 import { openApiSpec } from './openapi';
 import { createRedisClient } from './redis/redis-client-factory';
 import { createShutdownHandler } from './shutdown';
-// import { exampleEventHandler } from './events/handlers';
+import { TYPES } from './lib/types';
 
 (async () => {
     try {
@@ -34,18 +34,17 @@ import { createShutdownHandler } from './shutdown';
 
         const diContainer = createContainer(config, dataSource, secrets, redisClient);
 
-        // Create Kafka producer and consumer instance
-        // const kafkaClient = await createKafkaClient();
-        // const producer = new Producer(kafkaClient);
-        // const consumer = new Consumer(kafkaClient, 'test-service-group');
+        // Create eventbus producer and consumer
+        const kafkaClient = await createKafkaClient();
+        const producer = new Producer(kafkaClient);
+        const consumer = new Consumer(kafkaClient, 'test-service-group');
 
-        // Subscribe to all the topics the service is interested in
+        // Subscribe to topics when handlers are available
         // await consumer.subscribe([
         //     { topic: 'test-topic', eventHandler: exampleEventHandler },
         // ]);
 
-        // Bind producer instance to the DI container so it can be accessed from anywhere
-        // diContainer.bind(TYPES.producer).toConstantValue(producer);
+        diContainer.bind(TYPES.Producer).toConstantValue(producer);
 
         // Create app server
         const app = new InversifyExpressServer(diContainer, null, {

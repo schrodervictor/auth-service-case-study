@@ -72,15 +72,18 @@ tests/
 │   │   └── di-integration.test.ts     # DI container bindings
 │   ├── controllers/
 │   │   ├── health-check-controller.test.ts  # HealthCheckController (mocked DataSource + RedisClient)
-│   │   └── user-controller.test.ts    # UserController routes (mocked service)
+│   │   ├── user-controller.test.ts    # UserController routes (mocked service)
+│   │   └── user-controller-password-reset.test.ts  # Password reset routes (mocked service)
 │   ├── database/
 │   │   └── data-source.test.ts        # DataSource factory and credentials
 │   ├── entities/
 │   │   ├── user.test.ts               # User entity metadata
-│   │   └── refresh-token.test.ts      # RefreshToken entity metadata
+│   │   ├── refresh-token.test.ts      # RefreshToken entity metadata
+│   │   └── password-reset-key.test.ts # PasswordResetKey entity metadata
 │   ├── errors/
 │   │   ├── incorrect-password-error.test.ts
 │   │   ├── invalid-refresh-token-error.test.ts
+│   │   ├── invalid-reset-key-error.test.ts
 │   │   └── rate-limit-error.test.ts
 │   ├── middleware/
 │   │   ├── auth-middleware.test.ts     # Auth middleware (JWT verification)
@@ -92,14 +95,16 @@ tests/
 │   │   └── redis-client-factory.test.ts  # Redis factory (connect + fail-open)
 │   ├── repositories/
 │   │   ├── user-repository.test.ts    # UserRepository (mocked TypeORM)
-│   │   └── refresh-token-repository.test.ts  # RefreshTokenRepository (mocked)
+│   │   ├── refresh-token-repository.test.ts  # RefreshTokenRepository (mocked)
+│   │   └── password-reset-key-repository.test.ts  # PasswordResetKeyRepository (mocked)
 │   ├── services/
 │   │   ├── password-manager-service.test.ts  # Hashing and comparison
-│   │   └── user-service.test.ts       # Register, auth, profile, refresh, logout, changePassword
+│   │   ├── user-service.test.ts       # Register, auth, profile, refresh, logout, changePassword
+│   │   └── user-service-password-reset.test.ts  # requestPasswordReset, validateResetKey, resetPassword
 │   ├── openapi/
 │   │   └── spec.test.ts               # OpenAPI spec structure and coverage
 │   ├── schemas/
-│   │   └── user-schemas.test.ts       # Zod request body schemas (5 schemas)
+│   │   └── user-schemas.test.ts       # Zod request body schemas (8 schemas)
 │   └── shutdown.test.ts               # Graceful shutdown handler
 ├── integration/                   # Requires PostgreSQL + Redis
 │   ├── database/
@@ -125,6 +130,7 @@ tests/
 │       ├── refresh.test.ts            # POST /users/refresh
 │       ├── logout.test.ts            # POST /users/logout
 │       ├── change-password.test.ts   # PUT /users/password
+│       ├── password-reset.test.ts    # POST /users/reset-key, /validate-reset-key, /password/reset
 │       └── openapi.test.ts           # OpenAPI docs (UI, JSON, YAML)
 ├── setup.ts             # Shared setup (sets CONFIG_PATH to config/test.json)
 ├── teardown.ts          # Shared teardown
