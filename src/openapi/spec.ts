@@ -104,6 +104,10 @@ export const openApiSpec: OpenApiSpec = {
                         content: {
                             'application/json': {
                                 schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                                example: {
+                                    message: 'Validation failed',
+                                    errors: { email: ['Email is required'], password: ['Password is required'] },
+                                },
                             },
                         },
                     },
@@ -155,6 +159,10 @@ export const openApiSpec: OpenApiSpec = {
                         content: {
                             'application/json': {
                                 schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                                example: {
+                                    message: 'Validation failed',
+                                    errors: { email: ['Email is required'], password: ['Password is required'] },
+                                },
                             },
                         },
                     },
@@ -220,6 +228,10 @@ export const openApiSpec: OpenApiSpec = {
                         content: {
                             'application/json': {
                                 schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                                example: {
+                                    message: 'Validation failed',
+                                    errors: { refreshToken: ['Refresh token is required'] },
+                                },
                             },
                         },
                     },
@@ -333,6 +345,10 @@ export const openApiSpec: OpenApiSpec = {
                         content: {
                             'application/json': {
                                 schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                                example: {
+                                    message: 'Validation failed',
+                                    errors: { firstName: ['First name cannot be empty'] },
+                                },
                             },
                         },
                     },
@@ -379,7 +395,7 @@ export const openApiSpec: OpenApiSpec = {
                             type: 'array',
                             items: { type: 'string' },
                         },
-                        example: { email: ['must be a valid email address'] },
+                        example: { field: ['Error message for this field'] },
                     },
                 },
                 required: ['message', 'errors'],
