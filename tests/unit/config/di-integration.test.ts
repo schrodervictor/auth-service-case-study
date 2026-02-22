@@ -8,8 +8,10 @@ import type { AppConfig } from '../../../src/config/schema';
 import type { AppSecrets } from '../../../src/config/secrets-schema';
 import { makeTestConfig } from '../../helpers/test-config';
 import { PasswordManagerServiceImpl } from '../../../src/services/password-manager-service';
+import { UserServiceImpl } from '../../../src/services/user-service';
 import { UserRepositoryImpl } from '../../../src/repositories/user-repository';
 import { RefreshTokenRepositoryImpl } from '../../../src/repositories/refresh-token-repository';
+import { PasswordResetKeyRepositoryImpl } from '../../../src/repositories/password-reset-key-repository';
 import { createAuthMiddleware } from '../../../src/middleware/auth-middleware';
 import { createRateLimitMiddleware } from '../../../src/middleware/rate-limit-middleware';
 import { RedisClient } from '../../../src/redis/redis-client';
@@ -42,378 +44,135 @@ const MOCK_DATA_SOURCE = {
 
 const MOCK_REDIS_CLIENT = new RedisClient(null);
 
-describe('DI container config integration', () => {
-    describe('config binding', () => {
-        it('should return a Container instance', () => {
-            const container = createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
+describe('DI container integration', () => {
+    let container: Container;
 
-            expect(container).toBeInstanceOf(Container);
+    beforeEach(() => {
+        jest.clearAllMocks();
+        container = createContainer(
+            VALID_CONFIG,
+            MOCK_DATA_SOURCE,
+            MOCK_SECRETS,
+            MOCK_REDIS_CLIENT,
+        );
+        container.bind(TYPES.Producer).toConstantValue({});
+    });
+
+    it('should return a Container instance', () => {
+        expect(container).toBeInstanceOf(Container);
+    });
+
+    const allBindings = [
+        'Config',
+        'DataSource',
+        'Secrets',
+        'RedisClient',
+        'UserService',
+        'PasswordManagerService',
+        'UserRepository',
+        'RefreshTokenRepository',
+        'PasswordResetKeyRepository',
+        'AuthMiddleware',
+        'JsonContentType',
+        'LoginRateLimiter',
+        'RefreshRateLimiter',
+        'ResetKeyRateLimiter',
+        'ValidateResetKeyRateLimiter',
+        'ResetPasswordRateLimiter',
+    ];
+
+    it.each(allBindings)('should bind TYPES.%s', name => {
+        expect(
+            container.isBound(TYPES[name as keyof typeof TYPES]),
+        ).toBe(true);
+    });
+
+    describe('constant bindings', () => {
+        it('should resolve Config to the provided config', () => {
+            expect(container.get(TYPES.Config)).toEqual(VALID_CONFIG);
         });
 
-        it('should bind config under TYPES.Config', () => {
-            const container = createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            expect(container.isBound(TYPES.Config)).toBe(true);
+        it('should resolve Secrets to the provided secrets', () => {
+            expect(container.get(TYPES.Secrets)).toEqual(MOCK_SECRETS);
         });
 
-        it('should retrieve the config object with correct values', () => {
-            const container = createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            const config = container.get<AppConfig>(TYPES.Config);
-
-            expect(config).toEqual(VALID_CONFIG);
+        it('should resolve DataSource to the provided data source', () => {
+            expect(container.get(TYPES.DataSource)).toBe(MOCK_DATA_SOURCE);
         });
 
-        it('should bind config as a constant (same reference on multiple gets)', () => {
-            const container = createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            const first = container.get<AppConfig>(TYPES.Config);
-            const second = container.get<AppConfig>(TYPES.Config);
-
-            expect(first).toBe(second);
+        it('should resolve RedisClient to the provided client', () => {
+            expect(container.get(TYPES.RedisClient)).toBe(MOCK_REDIS_CLIENT);
         });
     });
 
-    describe('PasswordManagerService binding', () => {
-        it('should bind TYPES.PasswordManagerService in the container', () => {
-            const container = createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
+    const implBindings = [
+        { name: 'UserService', impl: UserServiceImpl },
+        { name: 'PasswordManagerService', impl: PasswordManagerServiceImpl },
+        { name: 'UserRepository', impl: UserRepositoryImpl },
+        { name: 'RefreshTokenRepository', impl: RefreshTokenRepositoryImpl },
+        {
+            name: 'PasswordResetKeyRepository',
+            impl: PasswordResetKeyRepositoryImpl,
+        },
+    ];
 
-            expect(container.isBound(TYPES.PasswordManagerService)).toBe(true);
-        });
+    it.each(implBindings)(
+        'should resolve $name to correct implementation',
+        ({ name, impl }) => {
+            expect(
+                container.get(TYPES[name as keyof typeof TYPES]),
+            ).toBeInstanceOf(impl);
+        },
+    );
 
-        it('should resolve PasswordManagerService to a PasswordManagerServiceImpl instance', () => {
-            const container = createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            const service = container.get(TYPES.PasswordManagerService);
-
-            expect(service).toBeInstanceOf(PasswordManagerServiceImpl);
-        });
-    });
-
-    describe('UserRepository binding', () => {
-        it('should bind TYPES.UserRepository in the container', () => {
-            const container = createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            expect(container.isBound(TYPES.UserRepository)).toBe(true);
-        });
-
-        it('should resolve UserRepository to a UserRepositoryImpl instance', () => {
-            const container = createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            const repository = container.get(TYPES.UserRepository);
-
-            expect(repository).toBeInstanceOf(UserRepositoryImpl);
-        });
-    });
-
-    describe('RefreshTokenRepository binding', () => {
-        it('should bind TYPES.RefreshTokenRepository in the container', () => {
-            const container = createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            expect(container.isBound(TYPES.RefreshTokenRepository)).toBe(true);
-        });
-
-        it('should resolve RefreshTokenRepository to a RefreshTokenRepositoryImpl instance', () => {
-            const container = createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            const repository = container.get(TYPES.RefreshTokenRepository);
-
-            expect(repository).toBeInstanceOf(RefreshTokenRepositoryImpl);
-        });
-    });
-
-    describe('secrets binding', () => {
-        it('should have TYPES.Secrets symbol defined', () => {
-            expect(TYPES.Secrets).toBeDefined();
-            expect(typeof TYPES.Secrets).toBe('symbol');
-        });
-
-        it('should require secrets as 3rd parameter to createContainer', () => {
-            // secrets is required — calling without it should throw
-            expect(() =>
-                createContainer(
-                    VALID_CONFIG,
-                    MOCK_DATA_SOURCE,
-                    undefined as unknown as AppSecrets,
-                    MOCK_REDIS_CLIENT,
-                ),
-            ).toThrow();
-        });
-
-        it('should bind secrets under TYPES.Secrets', () => {
-            const container = createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            expect(container.isBound(TYPES.Secrets)).toBe(true);
-        });
-
-        it('should retrieve the secrets object with correct values', () => {
-            const container = createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            const secrets = container.get<AppSecrets>(TYPES.Secrets);
-
-            expect(secrets).toEqual(MOCK_SECRETS);
-        });
-
-        it('should bind secrets as a constant (same reference on multiple gets)', () => {
-            const container = createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            const first = container.get<AppSecrets>(TYPES.Secrets);
-            const second = container.get<AppSecrets>(TYPES.Secrets);
-
-            expect(first).toBe(second);
-        });
-
-        it('should pass secrets.jwtSecret to createAuthMiddleware', () => {
-            createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
+    describe('middleware factory calls', () => {
+        it('should pass jwtSecret to createAuthMiddleware', () => {
             expect(createAuthMiddleware).toHaveBeenCalledWith(
                 MOCK_SECRETS.jwtSecret,
             );
         });
-    });
 
-    describe('RedisClient binding', () => {
-        it('should have TYPES.RedisClient symbol defined', () => {
-            expect(TYPES.RedisClient).toBeDefined();
-            expect(typeof TYPES.RedisClient).toBe('symbol');
-        });
+        const rateLimitCases = [
+            'login',
+            'refresh',
+            'resetKey',
+            'validateResetKey',
+            'resetPassword',
+        ];
 
-        it('should bind TYPES.RedisClient in the container', () => {
-            const container = createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            expect(container.isBound(TYPES.RedisClient)).toBe(true);
-        });
-
-        it('should retrieve the Redis client with correct reference', () => {
-            const container = createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            const client = container.get(TYPES.RedisClient);
-
-            expect(client).toBe(MOCK_REDIS_CLIENT);
-        });
-
-        it('should bind RedisClient as a constant (same reference on multiple gets)', () => {
-            const container = createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            const first = container.get(TYPES.RedisClient);
-            const second = container.get(TYPES.RedisClient);
-
-            expect(first).toBe(second);
-        });
-    });
-
-    describe('rate limit middleware bindings', () => {
-        it('should have TYPES.LoginRateLimiter symbol defined', () => {
-            expect(TYPES.LoginRateLimiter).toBeDefined();
-            expect(typeof TYPES.LoginRateLimiter).toBe('symbol');
-        });
-
-        it('should have TYPES.RefreshRateLimiter symbol defined', () => {
-            expect(TYPES.RefreshRateLimiter).toBeDefined();
-            expect(typeof TYPES.RefreshRateLimiter).toBe('symbol');
-        });
-
-        it('should bind TYPES.LoginRateLimiter in the container', () => {
-            const container = createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            expect(container.isBound(TYPES.LoginRateLimiter)).toBe(true);
-        });
-
-        it('should bind TYPES.RefreshRateLimiter in the container', () => {
-            const container = createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            expect(container.isBound(TYPES.RefreshRateLimiter)).toBe(true);
-        });
-
-        it('should call createRateLimitMiddleware for login with correct args', () => {
-            createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            expect(createRateLimitMiddleware).toHaveBeenCalledWith(
-                MOCK_REDIS_CLIENT,
-                'login',
-                VALID_CONFIG.rateLimit.login,
-            );
-        });
-
-        it('should call createRateLimitMiddleware for refresh with correct args', () => {
-            createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            expect(createRateLimitMiddleware).toHaveBeenCalledWith(
-                MOCK_REDIS_CLIENT,
-                'refresh',
-                VALID_CONFIG.rateLimit.refresh,
-            );
-        });
-
-        it('should pass redisClient to createRateLimitMiddleware', () => {
-            createContainer(
-                VALID_CONFIG,
-                MOCK_DATA_SOURCE,
-                MOCK_SECRETS,
-                MOCK_REDIS_CLIENT,
-            );
-
-            expect(createRateLimitMiddleware).toHaveBeenCalledWith(
-                MOCK_REDIS_CLIENT,
-                'login',
-                expect.any(Object),
-            );
-            expect(createRateLimitMiddleware).toHaveBeenCalledWith(
-                MOCK_REDIS_CLIENT,
-                'refresh',
-                expect.any(Object),
-            );
-        });
-    });
-
-    describe('createContainer 4th parameter (redisClient)', () => {
-        it('should accept redisClient as 4th parameter', () => {
-            expect(() =>
-                createContainer(
-                    VALID_CONFIG,
-                    MOCK_DATA_SOURCE,
-                    MOCK_SECRETS,
+        it.each(rateLimitCases)(
+            'should call createRateLimitMiddleware for %s',
+            key => {
+                expect(createRateLimitMiddleware).toHaveBeenCalledWith(
                     MOCK_REDIS_CLIENT,
-                ),
-            ).not.toThrow();
-        });
-
-        it('should accept RedisClient as 4th parameter', () => {
-            const client = new RedisClient(null);
-            expect(() =>
-                createContainer(
-                    VALID_CONFIG,
-                    MOCK_DATA_SOURCE,
-                    MOCK_SECRETS,
-                    client,
-                ),
-            ).not.toThrow();
-        });
+                    key,
+                    VALID_CONFIG.rateLimit[
+                        key as keyof typeof VALID_CONFIG.rateLimit
+                    ],
+                );
+            },
+        );
     });
 
-    describe('invalid config', () => {
-        it('should throw when config is null', () => {
+    describe('invalid arguments', () => {
+        it.each([
+            { label: 'null config', config: null, secrets: MOCK_SECRETS },
+            {
+                label: 'undefined config',
+                config: undefined,
+                secrets: MOCK_SECRETS,
+            },
+            {
+                label: 'undefined secrets',
+                config: VALID_CONFIG,
+                secrets: undefined,
+            },
+        ])('should throw with $label', ({ config, secrets }) => {
             expect(() =>
                 createContainer(
-                    null as unknown as AppConfig,
+                    config as unknown as AppConfig,
                     MOCK_DATA_SOURCE,
-                    MOCK_SECRETS,
-                    MOCK_REDIS_CLIENT,
-                ),
-            ).toThrow();
-        });
-
-        it('should throw when config is undefined', () => {
-            expect(() =>
-                createContainer(
-                    undefined as unknown as AppConfig,
-                    MOCK_DATA_SOURCE,
-                    MOCK_SECRETS,
+                    secrets as unknown as AppSecrets,
                     MOCK_REDIS_CLIENT,
                 ),
             ).toThrow();
