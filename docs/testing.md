@@ -82,6 +82,7 @@ tests/
 │   │   └── rate-limit-error.test.ts
 │   ├── middleware/
 │   │   ├── auth-middleware.test.ts     # Auth middleware (JWT verification)
+│   │   ├── content-type-middleware.test.ts  # Content-Type validation (415 responses)
 │   │   └── rate-limit-middleware.test.ts  # Rate limit (mocked Redis)
 │   ├── redis/
 │   │   ├── redis-client.test.ts       # RedisClient facade (incr/expire/ttl/quit)

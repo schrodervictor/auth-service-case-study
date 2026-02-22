@@ -39,6 +39,9 @@ UI) when the service is running. The raw spec can be downloaded as
 - **Graceful Shutdown**: Handles SIGTERM/SIGINT with ordered cleanup (drain
   connections, close DB pool, disconnect Redis) and configurable timeout
 - **Secrets Management**: File-based (dev/test) or AWS SSM (production)
+- **Structured Error Responses**: Missing or invalid fields return 422 with
+  per-field errors (`{ message, errors: { field: ["..."] } }`). Wrong
+  `Content-Type` on POST/PUT returns 415 before the body is parsed
 
 ## Getting Started
 

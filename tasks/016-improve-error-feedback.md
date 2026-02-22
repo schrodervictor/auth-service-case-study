@@ -1,6 +1,6 @@
 # Task: Improve API Error Feedback
 
-## Status: pending
+## Status: done
 
 ## Context
 
@@ -126,20 +126,20 @@ Each method needs null checks BEFORE format validation:
   Media Type when it's wrong or missing. Wire it into the Express app after
   `json()`.
 - **Acceptance Criteria**:
-  - [ ] New file `src/middleware/content-type-middleware.ts` exports a
+  - [x] New file `src/middleware/content-type-middleware.ts` exports a
         middleware function
-  - [ ] Middleware returns 415 with
+  - [x] Middleware returns 415 with
         `{ message: "Content-Type must be application/json" }` when POST/PUT
         request does not have `application/json` content type
-  - [ ] Middleware calls `next()` for GET/DELETE requests
-  - [ ] Middleware calls `next()` for POST/PUT with correct Content-Type
-  - [ ] Middleware calls `next()` for Content-Type with charset params
+  - [x] Middleware calls `next()` for GET/DELETE requests
+  - [x] Middleware calls `next()` for POST/PUT with correct Content-Type
+  - [x] Middleware calls `next()` for Content-Type with charset params
         (`application/json; charset=utf-8`)
-  - [ ] Unit tests in `tests/unit/middleware/content-type-middleware.test.ts`
-  - [ ] Middleware is wired in `src/index.ts` inside `app.setConfig()` after
+  - [x] Unit tests in `tests/unit/middleware/content-type-middleware.test.ts`
+  - [x] Middleware is wired in `src/index.ts` inside `app.setConfig()` after
         `app.use(json())`
-  - [ ] `make test-unit` passes
-- **Status**: pending
+  - [x] `make test-unit` passes
+- **Status**: done
 
 ### Milestone 2: Move Field Validation to Service Layer
 
@@ -149,21 +149,21 @@ Each method needs null checks BEFORE format validation:
   errors. This gives clients a single, consistent error format for all input
   validation failures.
 - **Acceptance Criteria**:
-  - [ ] `register()` handles null/undefined email →
+  - [x] `register()` handles null/undefined email →
         `{ email: ['Email is required'] }`
-  - [ ] `register()` handles null/undefined password →
+  - [x] `register()` handles null/undefined password →
         `{ password: ['Password is required'] }`
-  - [ ] `register()` handles null firstName/lastName → field-specific errors
-  - [ ] `register()` with ALL null fields → ValidationError with all 4 fields
-  - [ ] `authenticate()` handles null email → ValidationError
-  - [ ] `authenticate()` handles null password → ValidationError
-  - [ ] `refreshAccessToken()` handles null/empty token → ValidationError
-  - [ ] Controller register/login/refresh: no more manual field checks
-  - [ ] Controller updateProfile: keeps existing "at least one field" check
-  - [ ] Service tests added for all null/undefined scenarios
-  - [ ] Controller tests updated: 400 "missing fields" tests removed/replaced
-  - [ ] `make test-unit` passes
-- **Status**: pending
+  - [x] `register()` handles null firstName/lastName → field-specific errors
+  - [x] `register()` with ALL null fields → ValidationError with all 4 fields
+  - [x] `authenticate()` handles null email → ValidationError
+  - [x] `authenticate()` handles null password → ValidationError
+  - [x] `refreshAccessToken()` handles null/empty token → ValidationError
+  - [x] Controller register/login/refresh: no more manual field checks
+  - [x] Controller updateProfile: keeps existing "at least one field" check
+  - [x] Service tests added for all null/undefined scenarios
+  - [x] Controller tests updated: 400 "missing fields" tests removed/replaced
+  - [x] `make test-unit` passes
+- **Status**: done
 
 ### Milestone 3: Update OpenAPI Spec
 
@@ -171,30 +171,30 @@ Each method needs null checks BEFORE format validation:
   with a request body, and replace 400 "missing fields" responses with 422
   ValidationError responses on register, login, and refresh.
 - **Acceptance Criteria**:
-  - [ ] All endpoints with a `requestBody` (register, login, refresh,
+  - [x] All endpoints with a `requestBody` (register, login, refresh,
         updateProfile) have a `415` response entry
-  - [ ] Register, login, refresh: 400 "missing fields" replaced with 422
+  - [x] Register, login, refresh: 400 "missing fields" replaced with 422
         ValidationError referencing the ValidationErrorResponse schema
-  - [ ] OpenAPI unit tests updated if status code assertions changed
-  - [ ] `make test-unit` passes
-- **Status**: pending
+  - [x] OpenAPI unit tests updated if status code assertions changed
+  - [x] `make test-unit` passes
+- **Status**: done
 
 ### Milestone 4: Acceptance Tests
 
 - **Description**: Update acceptance tests to verify the unified 422 validation
   error responses and 415 Content-Type responses across all endpoints.
 - **Acceptance Criteria**:
-  - [ ] `POST /register` with `Content-Type: text/plain` returns 415
-  - [ ] `POST /login` with `Content-Type: text/plain` returns 415
-  - [ ] `POST /refresh` with `Content-Type: text/plain` returns 415
-  - [ ] `PUT /profile` with `Content-Type: text/plain` returns 415
-  - [ ] `POST /register` with missing email returns 422 with
+  - [x] `POST /register` with `Content-Type: text/plain` returns 415
+  - [x] `POST /login` with `Content-Type: text/plain` returns 415
+  - [x] `POST /refresh` with `Content-Type: text/plain` returns 415
+  - [x] `PUT /profile` with `Content-Type: text/plain` returns 415
+  - [x] `POST /register` with missing email returns 422 with
         `{ errors: { email: [...] } }`
-  - [ ] `POST /login` with empty body returns 422 with structured errors
-  - [ ] `POST /refresh` with empty body returns 422 with structured errors
-  - [ ] Existing acceptance tests updated (400 → 422 where applicable)
-  - [ ] `make test-acceptance` passes
-- **Status**: pending
+  - [x] `POST /login` with empty body returns 422 with structured errors
+  - [x] `POST /refresh` with empty body returns 422 with structured errors
+  - [x] Existing acceptance tests updated (400 → 422 where applicable)
+  - [x] `make test-acceptance` passes
+- **Status**: done
 
 ## Implementation Order
 
