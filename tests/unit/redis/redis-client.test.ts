@@ -53,8 +53,8 @@ describe('RedisClient', () => {
     });
 
     describe('error handling (fail-open)', () => {
-        it('incr should return 0 and log warning on error', async () => {
-            const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+        it('incr should return 0 and log error on failure', async () => {
+            const warnSpy = jest.spyOn(console, 'error').mockImplementation();
             const mock = createMockIoredis();
             mock.incr.mockRejectedValue(new Error('ECONNREFUSED'));
             const client = new RedisClient(mock as never);
@@ -65,8 +65,8 @@ describe('RedisClient', () => {
             warnSpy.mockRestore();
         });
 
-        it('expire should return 0 and log warning on error', async () => {
-            const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+        it('expire should return 0 and log error on failure', async () => {
+            const warnSpy = jest.spyOn(console, 'error').mockImplementation();
             const mock = createMockIoredis();
             mock.expire.mockRejectedValue(new Error('timeout'));
             const client = new RedisClient(mock as never);
@@ -77,8 +77,8 @@ describe('RedisClient', () => {
             warnSpy.mockRestore();
         });
 
-        it('ttl should return -1 and log warning on error', async () => {
-            const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+        it('ttl should return -1 and log error on failure', async () => {
+            const warnSpy = jest.spyOn(console, 'error').mockImplementation();
             const mock = createMockIoredis();
             mock.ttl.mockRejectedValue(new Error('connection lost'));
             const client = new RedisClient(mock as never);

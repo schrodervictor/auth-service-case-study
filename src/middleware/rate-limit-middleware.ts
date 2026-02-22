@@ -13,6 +13,15 @@ export interface RateLimitConfig {
     windowSeconds: number;
 }
 
+/**
+ * Creates an Express middleware that enforces per-IP rate limiting using a
+ * Redis-backed fixed-window counter.
+ *
+ * Rate limiting is a security enhancement (brute-force protection), not a
+ * core feature. When Redis is unavailable the {@link RedisClient} facade
+ * returns safe defaults, so the middleware degrades gracefully — requests
+ * pass through unthrottled and the unavailability is logged for DevOps.
+ */
 export function createRateLimitMiddleware(
     redisClient: RedisClient,
     endpointKey: string,

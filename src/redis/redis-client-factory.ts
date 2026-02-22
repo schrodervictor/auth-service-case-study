@@ -3,6 +3,13 @@ import Redis from 'ioredis';
 import type { AppConfig } from '../config/schema';
 import { RedisClient } from './redis-client';
 
+/**
+ * Attempts to connect to Redis and returns a {@link RedisClient} facade.
+ *
+ * If the connection fails, a RedisClient backed by `null` is returned so
+ * the service starts without rate limiting (fail-open). The failure is
+ * logged as a warning for DevOps visibility.
+ */
 export async function createRedisClient(config: AppConfig): Promise<RedisClient> {
     let client: Redis | undefined;
     try {
@@ -22,7 +29,10 @@ export async function createRedisClient(config: AppConfig): Promise<RedisClient>
         return new RedisClient(client);
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        console.warn(`Redis connection failed: ${message}`);
+        console.error(
+            `[RATE-LIMIT DEGRADED] Redis connection failed at startup — ` +
+            `rate limiting is DISABLED. Cause: ${message}`,
+        );
         if (client) {
             client.quit().catch(() => {});
         }

@@ -1,5 +1,15 @@
 import type Redis from 'ioredis';
 
+/**
+ * Facade over ioredis that implements a fail-open strategy.
+ *
+ * Redis is used exclusively for rate limiting — a security enhancement, but
+ * not mission-critical. When Redis is unreachable or unavailable, this facade
+ * returns safe defaults (incr→0, expire→0, ttl→-1) so the application
+ * gracefully degrades to "no rate limiting" rather than rejecting legitimate
+ * users. Every failure is logged as a warning so DevOps can detect and
+ * intervene promptly.
+ */
 export class RedisClient {
     constructor(private readonly client: Redis | null) {}
 
@@ -38,6 +48,9 @@ export class RedisClient {
 
     private logWarning(operation: string, error: unknown): void {
         const message = error instanceof Error ? error.message : String(error);
-        console.warn(`Redis ${operation} failed: ${message}`);
+        console.error(
+            `[RATE-LIMIT DEGRADED] Redis ${operation} failed — ` +
+            `rate limiting skipped for this request. Cause: ${message}`,
+        );
     }
 }

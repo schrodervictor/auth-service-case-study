@@ -113,28 +113,28 @@ describe('createRedisClient', () => {
         expect(client).toBeInstanceOf(RedisClient);
     });
 
-    it('should log a warning when Redis connection fails', async () => {
-        const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    it('should log an error when Redis connection fails', async () => {
+        const errorSpy = jest.spyOn(console, 'error').mockImplementation();
         mockRedisInstance.ping.mockRejectedValue(new Error('Connection refused'));
 
         await createRedisClient(MOCK_CONFIG);
 
-        expect(warnSpy).toHaveBeenCalled();
-        expect(warnSpy.mock.calls[0][0]).toMatch(/redis/i);
+        expect(errorSpy).toHaveBeenCalled();
+        expect(errorSpy.mock.calls[0][0]).toMatch(/RATE-LIMIT DEGRADED/);
 
-        warnSpy.mockRestore();
+        errorSpy.mockRestore();
     });
 
-    it('should include the error message in the warning log', async () => {
-        const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    it('should include the error cause in the log', async () => {
+        const errorSpy = jest.spyOn(console, 'error').mockImplementation();
         mockRedisInstance.ping.mockRejectedValue(new Error('ECONNREFUSED'));
 
         await createRedisClient(MOCK_CONFIG);
 
-        const warnMessage = warnSpy.mock.calls.map(c => c.join(' ')).join(' ');
-        expect(warnMessage).toContain('ECONNREFUSED');
+        const logMessage = errorSpy.mock.calls.map(c => c.join(' ')).join(' ');
+        expect(logMessage).toContain('ECONNREFUSED');
 
-        warnSpy.mockRestore();
+        errorSpy.mockRestore();
     });
 
     it('should return a RedisClient when Redis constructor throws (fail-open)', async () => {
@@ -147,16 +147,17 @@ describe('createRedisClient', () => {
         expect(client).toBeInstanceOf(RedisClient);
     });
 
-    it('should log a warning when Redis constructor throws', async () => {
-        const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    it('should log an error when Redis constructor throws', async () => {
+        const errorSpy = jest.spyOn(console, 'error').mockImplementation();
         Redis.mockImplementation(() => {
             throw new Error('Invalid host');
         });
 
         await createRedisClient(MOCK_CONFIG);
 
-        expect(warnSpy).toHaveBeenCalled();
+        expect(errorSpy).toHaveBeenCalled();
+        expect(errorSpy.mock.calls[0][0]).toMatch(/RATE-LIMIT DEGRADED/);
 
-        warnSpy.mockRestore();
+        errorSpy.mockRestore();
     });
 });
