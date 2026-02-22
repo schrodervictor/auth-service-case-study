@@ -1,6 +1,6 @@
 # Task: Rate Limiting with Redis
 
-## Status: pending
+## Status: done
 
 ## Context
 
@@ -310,126 +310,126 @@ Update `app.depends_on` to include `redis` with `condition: service_healthy`.
 - **Description**: Extend the Zod config schema with `redis` and `rateLimit`
   sections. Update `config/default.json` and `config/test.json`.
 - **Acceptance Criteria**:
-  - [ ] `redisSchema` with `host` (default `'redis'`), `port` (default `6379`),
+  - [x] `redisSchema` with `host` (default `'redis'`), `port` (default `6379`),
         optional `password`
-  - [ ] `rateLimitEndpointSchema` with `maxAttempts` (number) and
+  - [x] `rateLimitEndpointSchema` with `maxAttempts` (number) and
         `windowSeconds` (number)
-  - [ ] `rateLimitSchema` with `login` (default 5/900) and `refresh` (default
+  - [x] `rateLimitSchema` with `login` (default 5/900) and `refresh` (default
         10/900) sub-objects
-  - [ ] Both added to `configSchema` with sensible `.default()` values
-  - [ ] `AppConfig` type correctly infers the new sections
-  - [ ] `config/default.json` includes `redis` and `rateLimit` sections
-  - [ ] `config/test.json` includes `redis` (host `localhost` for isolated runs)
+  - [x] Both added to `configSchema` with sensible `.default()` values
+  - [x] `AppConfig` type correctly infers the new sections
+  - [x] `config/default.json` includes `redis` and `rateLimit` sections
+  - [x] `config/test.json` includes `redis` (host `localhost` for isolated runs)
         and `rateLimit` sections
-  - [ ] Unit tests: schema parses with defaults, custom values override, invalid
+  - [x] Unit tests: schema parses with defaults, custom values override, invalid
         values rejected
 - **Red phase**: Write schema unit tests first (extend existing config tests or
   create new ones)
 - **Green phase**: Modify `src/config/schema.ts`, update JSON config files
-- **Status**: pending
+- **Status**: done
 
 ### Milestone 2: Redis Client Factory
 
 - **Description**: Create a factory function that connects to Redis and handles
   failures gracefully (returns `null` on connection failure).
 - **Acceptance Criteria**:
-  - [ ] `src/redis/redis-client-factory.ts` exports
+  - [x] `src/redis/redis-client-factory.ts` exports
         `createRedisClient(config: AppConfig): Promise<Redis | null>`
-  - [ ] On successful connection: returns `Redis` instance
-  - [ ] On connection failure: logs warning, returns `null`
-  - [ ] `TYPES.RedisClient` symbol added to `src/lib/types.ts`
-  - [ ] Unit tests: mock `ioredis` constructor, test success path (returns
+  - [x] On successful connection: returns `Redis` instance
+  - [x] On connection failure: logs warning, returns `null`
+  - [x] `TYPES.RedisClient` symbol added to `src/lib/types.ts`
+  - [x] Unit tests: mock `ioredis` constructor, test success path (returns
         client), test failure path (returns `null`, logs warning)
 - **Red phase**: Write unit tests for `createRedisClient` (mock ioredis)
 - **Green phase**: Implement `src/redis/redis-client-factory.ts`, add DI symbol
-- **Status**: pending
+- **Status**: done
 
 ### Milestone 3: Rate Limit Middleware
 
 - **Description**: Create `createRateLimitMiddleware` factory following the
   existing auth middleware pattern.
 - **Acceptance Criteria**:
-  - [ ] `src/middleware/rate-limit-middleware.ts` exports
+  - [x] `src/middleware/rate-limit-middleware.ts` exports
         `createRateLimitMiddleware`, `RateLimitMiddlewareFunction`,
         `RateLimitConfig` types
-  - [ ] Under limit → calls `next()`
-  - [ ] Over limit → responds 429 with
+  - [x] Under limit → calls `next()`
+  - [x] Over limit → responds 429 with
         `{ message: "Too many requests. Please try again later." }` and
         `Retry-After` header
-  - [ ] First request sets `EXPIRE` on the Redis key
-  - [ ] Redis error → logs warning, calls `next()` (fail-open)
-  - [ ] `null` Redis client → calls `next()` immediately (no-op)
-  - [ ] Key format: `rateLimit:{endpointKey}:{req.ip}`
-  - [ ] Handles `undefined` `req.ip` gracefully (fallback key)
-  - [ ] `RateLimitError` class in `src/errors/rate-limit-error.ts` (429)
-  - [ ] `TYPES.LoginRateLimiter` and `TYPES.RefreshRateLimiter` symbols added
-  - [ ] Full unit test suite with mocked Redis client
+  - [x] First request sets `EXPIRE` on the Redis key
+  - [x] Redis error → logs warning, calls `next()` (fail-open)
+  - [x] `null` Redis client → calls `next()` immediately (no-op)
+  - [x] Key format: `rateLimit:{endpointKey}:{req.ip}`
+  - [x] Handles `undefined` `req.ip` gracefully (fallback key)
+  - [x] `RateLimitError` class in `src/errors/rate-limit-error.ts` (429)
+  - [x] `TYPES.LoginRateLimiter` and `TYPES.RefreshRateLimiter` symbols added
+  - [x] Full unit test suite with mocked Redis client
 - **Red phase**: Write comprehensive unit tests for the middleware factory
 - **Green phase**: Implement `rate-limit-middleware.ts`, `rate-limit-error.ts`,
   add DI symbols
-- **Status**: pending
+- **Status**: done
 
 ### Milestone 4: DI Wiring + Controller Integration
 
 - **Description**: Wire rate limit middleware into the DI container and apply to
   login and refresh endpoints.
 - **Acceptance Criteria**:
-  - [ ] `createContainer` accepts `redisClient: Redis | null` as 4th parameter
-  - [ ] `TYPES.LoginRateLimiter` bound to
+  - [x] `createContainer` accepts `redisClient: Redis | null` as 4th parameter
+  - [x] `TYPES.LoginRateLimiter` bound to
         `createRateLimitMiddleware(redisClient, 'login', config.rateLimit.login)`
-  - [ ] `TYPES.RefreshRateLimiter` bound to
+  - [x] `TYPES.RefreshRateLimiter` bound to
         `createRateLimitMiddleware(redisClient, 'refresh', config.rateLimit.refresh)`
-  - [ ] `TYPES.RedisClient` bound to constant value
-  - [ ] `@httpPost('/login', TYPES.LoginRateLimiter)` on `UserController.login`
-  - [ ] `@httpPost('/refresh', TYPES.RefreshRateLimiter)` on
+  - [x] `TYPES.RedisClient` bound to constant value
+  - [x] `@httpPost('/login', TYPES.LoginRateLimiter)` on `UserController.login`
+  - [x] `@httpPost('/refresh', TYPES.RefreshRateLimiter)` on
         `UserController.refresh`
-  - [ ] `src/index.ts` calls `createRedisClient(config)` and passes result to
+  - [x] `src/index.ts` calls `createRedisClient(config)` and passes result to
         `createContainer`
-  - [ ] Existing unit tests for UserController still pass (middleware is applied
+  - [x] Existing unit tests for UserController still pass (middleware is applied
         at decorator level, not in controller logic)
 - **Red phase**: Write/update DI container tests verifying new bindings
 - **Green phase**: Modify `inversify.config.ts`, `user-controller.ts`,
   `index.ts`
-- **Status**: pending
+- **Status**: done
 
 ### Milestone 5: Docker Compose + Config Files
 
 - **Description**: Add Redis service to docker-compose and ensure all services
   start correctly.
 - **Acceptance Criteria**:
-  - [ ] `redis` service in `docker-compose.yml` (redis:7-alpine, healthcheck)
-  - [ ] `app` service `depends_on` includes `redis` with
+  - [x] `redis` service in `docker-compose.yml` (redis:7-alpine, healthcheck)
+  - [x] `app` service `depends_on` includes `redis` with
         `condition: service_healthy`
-  - [ ] `config/default.json` `redis.host` is `'redis'` (docker service name)
-  - [ ] `config/test.json` `redis.host` is `'redis'` (for
+  - [x] `config/default.json` `redis.host` is `'redis'` (docker service name)
+  - [x] `config/test.json` `redis.host` is `'redis'` (for
         `make test-integration` which runs inside Docker)
-  - [ ] `make up` starts Redis alongside Postgres and the app
-  - [ ] App starts successfully even if Redis is unavailable (fail-open
+  - [x] `make up` starts Redis alongside Postgres and the app
+  - [x] App starts successfully even if Redis is unavailable (fail-open
         verified)
 - **Red phase**: N/A (infrastructure change — verified by running `make up`)
 - **Green phase**: Modify `docker-compose.yml`, verify startup
-- **Status**: pending
+- **Status**: done
 
 ### Milestone 6: Integration Tests
 
 - **Description**: Test rate limiting against a real Redis instance via
   docker-compose.
 - **Acceptance Criteria**:
-  - [ ] `tests/integration/middleware/rate-limit-middleware.test.ts`
-  - [ ] Test: requests under limit pass through
-  - [ ] Test: request at limit+1 returns 429 with correct body
-  - [ ] Test: `Retry-After` header is present and numeric
-  - [ ] Test: counter resets after window expires (use a small windowSeconds
+  - [x] `tests/integration/middleware/rate-limit-middleware.test.ts`
+  - [x] Test: requests under limit pass through
+  - [x] Test: request at limit+1 returns 429 with correct body
+  - [x] Test: `Retry-After` header is present and numeric
+  - [x] Test: counter resets after window expires (use a small windowSeconds
         like 2 for test speed)
-  - [ ] Test: different IPs / endpoint keys have independent counters
-  - [ ] Uses real Redis connection (host: `redis`, port: `6379` — matches
+  - [x] Test: different IPs / endpoint keys have independent counters
+  - [x] Uses real Redis connection (host: `redis`, port: `6379` — matches
         docker-compose)
-  - [ ] Follows existing integration test patterns (see
+  - [x] Follows existing integration test patterns (see
         `tests/integration/repositories/refresh-token-repository.test.ts`)
 - **Red phase**: Write integration tests
 - **Green phase**: Tests should pass against implementation from prior
   milestones
-- **Status**: pending
+- **Status**: done
 
 ## Implementation Order
 

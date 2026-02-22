@@ -7,6 +7,7 @@ A microservice for user registration, authentication, and profile management.
 - **Runtime:** Node.js with TypeScript
 - **Framework:** Express.js with inversify-express-utils
 - **Database:** PostgreSQL with TypeORM
+- **Cache / Rate limiting:** Redis (ioredis)
 - **DI Container:** Inversify
 - **Testing:** Jest with Supertest
 
@@ -30,7 +31,7 @@ make down
 | Command                 | Description                                           |
 | ----------------------- | ----------------------------------------------------- |
 | `make build`            | Build the Docker image                                |
-| `make up`               | Start the dev stack (app + postgres)                  |
+| `make up`               | Start the dev stack (app + postgres + redis)          |
 | `make down`             | Stop all containers                                   |
 | `make test`             | Run all test layers (unit + integration + acceptance) |
 | `make test-unit`        | Run unit tests (no external deps)                     |

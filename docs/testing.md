@@ -5,11 +5,11 @@
 This project uses three test layers, each with different scope, speed, and
 dependency requirements.
 
-| Layer           | Purpose                          | External Deps | Speed  |
-| --------------- | -------------------------------- | ------------- | ------ |
-| **Unit**        | Pure logic, isolated functions   | None          | Fast   |
-| **Integration** | DB queries, service interactions | PostgreSQL    | Medium |
-| **Acceptance**  | Black-box HTTP against the API   | Full stack    | Slow   |
+| Layer           | Purpose                          | External Deps      | Speed  |
+| --------------- | -------------------------------- | ------------------ | ------ |
+| **Unit**        | Pure logic, isolated functions   | None               | Fast   |
+| **Integration** | DB queries, service interactions | PostgreSQL + Redis | Medium |
+| **Acceptance**  | Black-box HTTP against the API   | Full stack         | Slow   |
 
 ## Running Tests
 
@@ -23,7 +23,7 @@ make test-unit
 
 ### Integration tests
 
-Require a running PostgreSQL instance (provided by docker-compose).
+Require running PostgreSQL and Redis instances (provided by docker-compose).
 
 ```bash
 make test-integration
@@ -73,14 +73,18 @@ tests/
 │   │   └── data-source.test.ts  # DataSource factory and credentials loader
 │   ├── entities/
 │   │   └── user.test.ts         # User entity metadata (TypeORM decorators)
+│   ├── middleware/
+│   │   └── rate-limit-middleware.test.ts  # Rate limit middleware (mocked Redis)
 │   ├── repositories/
 │   │   └── user-repository.test.ts  # UserRepository methods (mocked TypeORM)
 │   ├── services/
 │   │   └── password-manager-service.test.ts  # Hashing and comparison logic
 │   └── example.test.ts
-├── integration/                 # Requires PostgreSQL
+├── integration/                 # Requires PostgreSQL + Redis
 │   ├── database/
 │   │   └── connection.test.ts   # DB connectivity, migrations, CRUD roundtrip
+│   ├── middleware/
+│   │   └── rate-limit-middleware.test.ts  # Rate limiting against real Redis
 │   ├── repositories/
 │   │   └── user-repository.test.ts  # UserRepository CRUD against real DB
 │   └── example.test.ts
