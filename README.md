@@ -15,16 +15,19 @@ A microservice for user registration, authentication, and profile management.
 
 All routes are prefixed with `/partner-app/api`.
 
-| Method | Path              | Auth | Description                                   |
-| ------ | ----------------- | ---- | --------------------------------------------- |
-| GET    | `/health-check`   | No   | Health check with dependency status (200/503) |
-| POST   | `/users/register` | No   | Register a new user (201)                     |
-| POST   | `/users/login`    | No   | Authenticate and get token pair (200)         |
-| POST   | `/users/refresh`  | No   | Refresh access token (200)                    |
-| POST   | `/users/logout`   | Yes  | Invalidate refresh tokens (204)               |
-| GET    | `/users/profile`  | Yes  | Get current user profile (200)                |
-| PUT    | `/users/profile`  | Yes  | Update profile fields (200)                   |
-| PUT    | `/users/password` | Yes  | Change password (204)                         |
+| Method | Path                        | Auth | Description                                   |
+| ------ | --------------------------- | ---- | --------------------------------------------- |
+| GET    | `/health-check`             | No   | Health check with dependency status (200/503) |
+| POST   | `/users/register`           | No   | Register a new user (201)                     |
+| POST   | `/users/login`              | No   | Authenticate and get token pair (200)         |
+| POST   | `/users/refresh`            | No   | Refresh access token (200)                    |
+| POST   | `/users/logout`             | Yes  | Invalidate refresh tokens (204)               |
+| GET    | `/users/profile`            | Yes  | Get current user profile (200)                |
+| PUT    | `/users/profile`            | Yes  | Update profile fields (200)                   |
+| PUT    | `/users/password`           | Yes  | Change password (204)                         |
+| POST   | `/users/reset-key`          | No   | Request a password reset key (200)            |
+| POST   | `/users/validate-reset-key` | No   | Check if a reset key is valid (200)           |
+| POST   | `/users/password/reset`     | No   | Reset password using a valid key (200)        |
 
 Interactive API documentation is available at `/partner-app/api/docs` (Swagger
 UI) when the service is running. The raw spec can be downloaded as
@@ -38,14 +41,21 @@ UI) when the service is running. The raw spec can be downloaded as
 - **Health Check**: Probes PostgreSQL and Redis on every request. Returns
   `{ status: "healthy" }` (200), `{ "status": "degraded" }` (200, cache down),
   or `{ "status": "unhealthy" }` (503, database down)
-- **Rate Limiting**: Redis-backed fixed-window counter on login and refresh
-  endpoints. Fail-open — degrades gracefully if Redis is unavailable
+- **Rate Limiting**: Redis-backed fixed-window counter on login, refresh, and
+  password reset endpoints. Fail-open — degrades gracefully if Redis is
+  unavailable
 - **Graceful Shutdown**: Handles SIGTERM/SIGINT with ordered cleanup (drain
   connections, close DB pool, disconnect Redis) and configurable timeout
 - **Secrets Management**: File-based (dev/test) or AWS SSM (production)
 - **Structured Error Responses**: Missing or invalid fields return 422 with
   per-field errors (`{ message, errors: { field: ["..."] } }`). Wrong
   `Content-Type` on POST/PUT returns 415 before the body is parsed
+- **Password Reset**: Three-step flow — request a time-limited reset key via
+  email, optionally validate it, then use it to set a new password. Keys are
+  SHA-256 hashed before storage, single-use, and expire after 15 minutes
+  (default). A `PASSWORD_RESET_REQUESTED` domain event carries the plain key to
+  downstream consumers (e.g., an email service). All three endpoints are rate
+  limited
 
 ## Getting Started
 

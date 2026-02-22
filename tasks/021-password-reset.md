@@ -1,6 +1,6 @@
 # Task: Password Reset
 
-## Status: pending
+## Status: done
 
 ## Context
 
@@ -437,97 +437,97 @@ Document rate-limit 429 responses for all three endpoints.
 - **Description**: Create the `password_reset_keys` table, TypeORM entity,
   repository (interface + impl), error class, and DI symbols.
 - **Acceptance Criteria**:
-  - [ ] Migration `1740200000000-CreatePasswordResetKeysTable` creates the table
+  - [x] Migration `1740200000000-CreatePasswordResetKeysTable` creates the table
         with correct schema, FK, and indexes
-  - [ ] `PasswordResetKey` entity matches the table schema exactly
-  - [ ] `PasswordResetKeyRepository` interface has 5 methods: `save`,
+  - [x] `PasswordResetKey` entity matches the table schema exactly
+  - [x] `PasswordResetKeyRepository` interface has 5 methods: `save`,
         `findByKeyHash`, `deleteByKeyHash`, `deleteAllByUserId`, `deleteExpired`
-  - [ ] `PasswordResetKeyRepositoryImpl` is `@injectable()` and injects
+  - [x] `PasswordResetKeyRepositoryImpl` is `@injectable()` and injects
         `TYPES.DataSource`
-  - [ ] `save` enforces single-key-per-user (deletes old keys first) and runs
+  - [x] `save` enforces single-key-per-user (deletes old keys first) and runs
         lazy expired-key cleanup
-  - [ ] `InvalidResetKeyError` extends `AppError` with `statusCode: 400`
-  - [ ] 4 new DI symbols added to `TYPES`
-  - [ ] Entity and migration registered in `src/database/data-source.ts`
-  - [ ] Repository exported from `src/repositories/index.ts`
-  - [ ] Unit tests for entity, repository, and error class all pass
-- **Status**: pending
+  - [x] `InvalidResetKeyError` extends `AppError` with `statusCode: 400`
+  - [x] 4 new DI symbols added to `TYPES`
+  - [x] Entity and migration registered in `src/database/data-source.ts`
+  - [x] Repository exported from `src/repositories/index.ts`
+  - [x] Unit tests for entity, repository, and error class all pass
+- **Status**: done
 
 ### Milestone 2: Config, Schemas, and Event
 
 - **Description**: Add config schema entries, Zod request schemas, and the
   domain event constant.
 - **Acceptance Criteria**:
-  - [ ] `auth.resetKey.expiresIn` added to config schema with default `'15m'`
-  - [ ] Three rate-limit entries added: `resetKey`, `validateResetKey`,
+  - [x] `auth.resetKey.expiresIn` added to config schema with default `'15m'`
+  - [x] Three rate-limit entries added: `resetKey`, `validateResetKey`,
         `resetPassword`
-  - [ ] `config/default.json` and `config/test.json` updated with new sections
-  - [ ] `ResetKeyRequestSchema`, `ValidateResetKeyRequestSchema`,
+  - [x] `config/default.json` and `config/test.json` updated with new sections
+  - [x] `ResetKeyRequestSchema`, `ValidateResetKeyRequestSchema`,
         `ResetPasswordRequestSchema` added to `src/schemas/user-schemas.ts`
-  - [ ] `PASSWORD_RESET_REQUESTED` added to `DomainEvents`
-  - [ ] Config Zod validation still passes for existing configs
-  - [ ] All existing tests still pass (no regressions)
-- **Status**: pending
+  - [x] `PASSWORD_RESET_REQUESTED` added to `DomainEvents`
+  - [x] Config Zod validation still passes for existing configs
+  - [x] All existing tests still pass (no regressions)
+- **Status**: done
 
 ### Milestone 3: Service Layer
 
 - **Description**: Implement `requestPasswordReset`, `validateResetKey`, and
   `resetPassword` in `UserService`.
 - **Acceptance Criteria**:
-  - [ ] Three new methods added to `UserService` interface
-  - [ ] `UserServiceImpl` injects `TYPES.PasswordResetKeyRepository` and
+  - [x] Three new methods added to `UserService` interface
+  - [x] `UserServiceImpl` injects `TYPES.PasswordResetKeyRepository` and
         `TYPES.Producer`
-  - [ ] `requestPasswordReset` returns silently for non-existent email (no
+  - [x] `requestPasswordReset` returns silently for non-existent email (no
         error, no event)
-  - [ ] `requestPasswordReset` generates URL-safe key, hashes with SHA-256,
+  - [x] `requestPasswordReset` generates URL-safe key, hashes with SHA-256,
         stores, and publishes `PASSWORD_RESET_REQUESTED` event with plain key
-  - [ ] `validateResetKey` returns `true` for valid non-expired keys, `false`
+  - [x] `validateResetKey` returns `true` for valid non-expired keys, `false`
         otherwise
-  - [ ] `resetPassword` validates password strength, verifies key, updates
+  - [x] `resetPassword` validates password strength, verifies key, updates
         password, deletes key, revokes all refresh tokens
-  - [ ] `resetPassword` throws `InvalidResetKeyError` for bad/expired keys
-  - [ ] `resetPassword` throws `ValidationError` for weak passwords
-  - [ ] Expiration TTL computed from `config.auth.resetKey.expiresIn` (reuse
+  - [x] `resetPassword` throws `InvalidResetKeyError` for bad/expired keys
+  - [x] `resetPassword` throws `ValidationError` for weak passwords
+  - [x] Expiration TTL computed from `config.auth.resetKey.expiresIn` (reuse
         existing parsing logic)
-  - [ ] Unit tests cover all happy paths and error paths
-  - [ ] All existing tests still pass
-- **Status**: pending
+  - [x] Unit tests cover all happy paths and error paths
+  - [x] All existing tests still pass
+- **Status**: done
 
 ### Milestone 4: Controller + DI Wiring
 
 - **Description**: Add three route handlers to `UserController`, wire up DI
   bindings (repository + rate limiters), and update the OpenAPI spec.
 - **Acceptance Criteria**:
-  - [ ] `POST /users/reset-key` returns 200 with generic message regardless of
+  - [x] `POST /users/reset-key` returns 200 with generic message regardless of
         email existence
-  - [ ] `POST /users/validate-reset-key` returns 200 with `{ valid: boolean }`
-  - [ ] `POST /users/password/reset` returns 200 on success, 400 on invalid key,
+  - [x] `POST /users/validate-reset-key` returns 200 with `{ valid: boolean }`
+  - [x] `POST /users/password/reset` returns 200 on success, 400 on invalid key,
         422 on weak password
-  - [ ] All three endpoints are rate limited (429 after threshold)
-  - [ ] All three endpoints validate request body via Zod (422 on invalid input)
-  - [ ] All three endpoints require JSON Content-Type (415 on wrong type)
-  - [ ] `PasswordResetKeyRepository` bound in DI container
-  - [ ] Three rate-limit middlewares bound in DI container
-  - [ ] OpenAPI spec updated with 3 new paths and component schemas
-  - [ ] Controller unit tests pass
-  - [ ] All existing tests still pass
-- **Status**: pending
+  - [x] All three endpoints are rate limited (429 after threshold)
+  - [x] All three endpoints validate request body via Zod (422 on invalid input)
+  - [x] All three endpoints require JSON Content-Type (415 on wrong type)
+  - [x] `PasswordResetKeyRepository` bound in DI container
+  - [x] Three rate-limit middlewares bound in DI container
+  - [x] OpenAPI spec updated with 3 new paths and component schemas
+  - [x] Controller unit tests pass
+  - [x] All existing tests still pass
+- **Status**: done
 
 ### Milestone 5: Acceptance Tests
 
 - **Description**: End-to-end acceptance tests validating the full password
   reset flow through the Docker stack.
 - **Acceptance Criteria**:
-  - [ ] Reset key request for existing email returns 200
-  - [ ] Reset key request for non-existent email returns 200 (same response)
-  - [ ] Valid reset key validates as `{ valid: true }`
-  - [ ] Invalid/random reset key validates as `{ valid: false }`
-  - [ ] Password reset with valid key succeeds, new password works for login
-  - [ ] Old password fails after reset
-  - [ ] Password reset with invalid key returns 400
-  - [ ] Password reset with weak password returns 422
-  - [ ] Reset key is single-use (second reset attempt returns 400)
-  - [ ] Refresh tokens are revoked after password reset
-  - [ ] Rate limiting returns 429 on all three endpoints
-  - [ ] All acceptance tests pass via `make test-acceptance`
-- **Status**: pending
+  - [x] Reset key request for existing email returns 200
+  - [x] Reset key request for non-existent email returns 200 (same response)
+  - [x] Valid reset key validates as `{ valid: true }`
+  - [x] Invalid/random reset key validates as `{ valid: false }`
+  - [x] Password reset with valid key succeeds, new password works for login
+  - [x] Old password fails after reset
+  - [x] Password reset with invalid key returns 400
+  - [x] Password reset with weak password returns 422
+  - [x] Reset key is single-use (second reset attempt returns 400)
+  - [x] Refresh tokens are revoked after password reset
+  - [x] Rate limiting returns 429 on all three endpoints
+  - [x] All acceptance tests pass via `make test-acceptance`
+- **Status**: done
