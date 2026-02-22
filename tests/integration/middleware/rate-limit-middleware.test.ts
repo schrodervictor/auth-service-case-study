@@ -71,7 +71,9 @@ describe('Rate limit middleware integration (real Redis)', () => {
         redisClient = new Redis(REDIS_OPTIONS);
         // Verify connection
         const pong = await redisClient.ping();
-        expect(pong).toBe('PONG');
+        if (pong !== 'PONG') {
+            throw new Error(`Redis connection failed: expected PONG, got ${pong}`);
+        }
     });
 
     afterAll(async () => {
