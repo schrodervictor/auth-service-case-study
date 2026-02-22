@@ -10,10 +10,14 @@ import {
     IncorrectPasswordError,
     InvalidCredentialsError,
     InvalidRefreshTokenError,
+    InvalidResetKeyError,
     UserNotFoundError,
     ValidationError,
 } from '../errors';
+import { DomainEvents } from '../eventbus/domain-events';
+import type { Producer } from '../eventbus/producer';
 import { TYPES } from '../lib/types';
+import type { PasswordResetKeyRepository } from '../repositories/password-reset-key-repository';
 import type { RefreshTokenRepository } from '../repositories/refresh-token-repository';
 import type { UserRepository } from '../repositories/user-repository';
 import type { PasswordManagerService } from './password-manager-service';
@@ -60,6 +64,9 @@ export interface UserService {
         data: UpdateProfileDto,
     ): Promise<UserResponseDto>;
     changePassword(userId: string, data: ChangePasswordDto): Promise<void>;
+    requestPasswordReset(email: string): Promise<void>;
+    validateResetKey(resetKey: string): Promise<boolean>;
+    resetPassword(resetKey: string, newPassword: string): Promise<void>;
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -72,6 +79,8 @@ export class UserServiceImpl implements UserService {
         @inject(TYPES.Config) private readonly config: AppConfig,
         @inject(TYPES.Secrets) private readonly secrets: AppSecrets,
         @inject(TYPES.RefreshTokenRepository) private readonly refreshTokenRepository: RefreshTokenRepository,
+        @inject(TYPES.PasswordResetKeyRepository) private readonly passwordResetKeyRepository: PasswordResetKeyRepository,
+        @inject(TYPES.Producer) private readonly producer: Producer,
     ) {}
 
     async register(data: RegisterUserDto): Promise<UserResponseDto> {
@@ -200,6 +209,62 @@ export class UserServiceImpl implements UserService {
         await this.refreshTokenRepository.deleteAllByUserId(userId);
     }
 
+    async requestPasswordReset(email: string): Promise<void> {
+        const user = await this.userRepository.findByEmail(email);
+        if (!user) {
+            return;
+        }
+
+        const plainKey = crypto.randomBytes(32).toString('base64url');
+        const keyHash = crypto.createHash('sha256').update(plainKey).digest('hex');
+        const expiresAt = this.computeExpiresAt(this.config.auth.resetKey.expiresIn);
+
+        await this.passwordResetKeyRepository.save(keyHash, user.id, expiresAt);
+
+        await this.producer.publish({
+            topic: 'user-events',
+            events: [{
+                type: DomainEvents.PASSWORD_RESET_REQUESTED,
+                data: { email, resetKey: plainKey },
+            }],
+        });
+    }
+
+    async validateResetKey(resetKey: string): Promise<boolean> {
+        const keyHash = crypto.createHash('sha256').update(resetKey).digest('hex');
+        const stored = await this.passwordResetKeyRepository.findByKeyHash(keyHash);
+
+        if (!stored || stored.expiresAt < new Date()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    async resetPassword(resetKey: string, newPassword: string): Promise<void> {
+        const passwordErrors = this.validatePasswordStrength(newPassword);
+        if (passwordErrors.length > 0) {
+            throw new ValidationError('Validation failed', { newPassword: passwordErrors });
+        }
+
+        const keyHash = crypto.createHash('sha256').update(resetKey).digest('hex');
+        const stored = await this.passwordResetKeyRepository.findByKeyHash(keyHash);
+
+        if (!stored || stored.expiresAt < new Date()) {
+            throw new InvalidResetKeyError();
+        }
+
+        const user = await this.userRepository.findById(stored.userId);
+        if (!user) {
+            throw new InvalidResetKeyError();
+        }
+
+        const hashedPassword = await this.passwordManager.toHash(newPassword);
+        await this.userRepository.updatePasswordHash(stored.userId, hashedPassword);
+        await this.passwordResetKeyRepository.deleteByKeyHash(keyHash);
+        await this.refreshTokenRepository.deleteAllByUserId(stored.userId);
+    }
+
     private validatePasswordStrength(password: string): string[] {
         const errors: string[] = [];
         if (password.length < 8) {
@@ -226,16 +291,15 @@ export class UserServiceImpl implements UserService {
 
         const rawRefreshToken = crypto.randomBytes(32).toString('hex');
         const tokenHash = crypto.createHash('sha256').update(rawRefreshToken).digest('hex');
-        await this.refreshTokenRepository.save(tokenHash, userId, this.computeRefreshExpiresAt());
+        await this.refreshTokenRepository.save(tokenHash, userId, this.computeExpiresAt(this.config.auth.refreshToken.expiresIn));
 
         return { accessToken, refreshToken: rawRefreshToken };
     }
 
-    private computeRefreshExpiresAt(): Date {
-        const expiresIn = this.config.auth.refreshToken.expiresIn;
+    private computeExpiresAt(expiresIn: string): Date {
         const match = expiresIn.match(/^(\d+)([smhd])$/);
         if (!match) {
-            throw new Error(`Invalid refreshToken.expiresIn format: ${expiresIn}`);
+            throw new Error(`Invalid expiresIn format: ${expiresIn}`);
         }
 
         const value = parseInt(match[1], 10);

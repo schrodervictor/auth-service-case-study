@@ -111,7 +111,21 @@ describe('UserServiceImpl', () => {
         mockRepo = createMockUserRepository();
         mockPasswordManager = createMockPasswordManager();
         mockRefreshTokenRepo = createMockRefreshTokenRepository();
-        service = new UserServiceImpl(mockRepo, mockPasswordManager, mockConfig, mockSecrets, mockRefreshTokenRepo);
+        service = new UserServiceImpl(
+            mockRepo,
+            mockPasswordManager,
+            mockConfig,
+            mockSecrets,
+            mockRefreshTokenRepo,
+            {
+                save: jest.fn(),
+                findByKeyHash: jest.fn(),
+                deleteByKeyHash: jest.fn(),
+                deleteAllByUserId: jest.fn(),
+                deleteExpired: jest.fn(),
+            } as any,
+            { publish: jest.fn() } as any,
+        );
     });
 
     afterEach(() => {
