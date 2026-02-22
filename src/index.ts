@@ -5,10 +5,13 @@ import { InversifyExpressServer } from 'inversify-express-utils';
 
 // import { createKafkaClient, Producer, Consumer } from '@marta/eventbus/dist';
 
+import swaggerUi from 'swagger-ui-express';
+
 import { loadConfig } from './config';
 import { loadSecrets } from './config/secrets-loader';
 import { createContainer } from './inversify.config';
 import { createDataSource } from './database';
+import { openApiSpec } from './openapi';
 import { createRedisClient } from './redis/redis-client-factory';
 import { createShutdownHandler } from './shutdown';
 // import { exampleEventHandler } from './events/handlers';
@@ -49,6 +52,11 @@ import { createShutdownHandler } from './shutdown';
         });
         app.setConfig(app => {
             app.use(json());
+            app.use(
+                '/partner-app/api/docs',
+                swaggerUi.serve,
+                swaggerUi.setup(openApiSpec),
+            );
         });
 
         const server = app.build();
