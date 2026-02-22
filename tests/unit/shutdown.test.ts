@@ -142,7 +142,7 @@ describe('createShutdownHandler', () => {
         const handler = createShutdownHandler({ ...toShutdownDeps(deps), drainTimeoutMs: 5000 });
 
         // Start the handler but don't await (it will hang on destroy)
-        const handlerPromise = handler();
+        const _handlerPromise = handler();
 
         // Advance timers past the drain timeout
         jest.advanceTimersByTime(5000);
