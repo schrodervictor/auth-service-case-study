@@ -24,24 +24,45 @@ describe('POST /users/register', () => {
         expect(res.body).not.toHaveProperty('passwordHash');
     });
 
-    it('should return 400 when required fields are missing', async () => {
-        const res = await request.post(`${BASE}/users/register`).send({});
+    it('should return 422 with structured errors when body is empty', async () => {
+        const res = await request
+            .post(`${BASE}/users/register`)
+            .set('Content-Type', 'application/json')
+            .send({});
 
-        expect(res.status).toBe(400);
+        expect(res.status).toBe(422);
+        expect(res.body).toHaveProperty('message', 'Validation failed');
+        expect(res.body).toHaveProperty('errors');
+        expect(res.body.errors).toHaveProperty('email');
+        expect(res.body.errors).toHaveProperty('password');
     });
 
-    it('should return 400 when email is missing', async () => {
+    it('should return 422 when email is missing', async () => {
         const { email: _email, ...data } = validUserData();
         const res = await request.post(`${BASE}/users/register`).send(data);
 
-        expect(res.status).toBe(400);
+        expect(res.status).toBe(422);
+        expect(res.body).toHaveProperty('errors');
+        expect(res.body.errors).toHaveProperty('email');
     });
 
-    it('should return 400 when password is missing', async () => {
+    it('should return 422 when password is missing', async () => {
         const { password: _password, ...data } = validUserData();
         const res = await request.post(`${BASE}/users/register`).send(data);
 
-        expect(res.status).toBe(400);
+        expect(res.status).toBe(422);
+        expect(res.body).toHaveProperty('errors');
+        expect(res.body.errors).toHaveProperty('password');
+    });
+
+    it('should return 415 when Content-Type is not application/json', async () => {
+        const res = await request
+            .post(`${BASE}/users/register`)
+            .set('Content-Type', 'text/plain')
+            .send('not json');
+
+        expect(res.status).toBe(415);
+        expect(res.body).toEqual({ message: 'Content-Type must be application/json' });
     });
 
     it('should return 409 when email already exists', async () => {

@@ -38,11 +38,28 @@ describe('POST /users/refresh', () => {
         expect(res.status).toBe(401);
     });
 
-    it('should return 400 when refreshToken field is missing', async () => {
+    it('should return 422 with structured errors when refreshToken field is missing', async () => {
         await flushRateLimitKeys();
-        const res = await request.post(`${BASE}/users/refresh`).send({});
+        const res = await request
+            .post(`${BASE}/users/refresh`)
+            .set('Content-Type', 'application/json')
+            .send({});
 
-        expect(res.status).toBe(400);
+        expect(res.status).toBe(422);
+        expect(res.body).toHaveProperty('message', 'Validation failed');
+        expect(res.body).toHaveProperty('errors');
+        expect(res.body.errors).toHaveProperty('refreshToken');
+    });
+
+    it('should return 415 when Content-Type is not application/json', async () => {
+        await flushRateLimitKeys();
+        const res = await request
+            .post(`${BASE}/users/refresh`)
+            .set('Content-Type', 'text/plain')
+            .send('not json');
+
+        expect(res.status).toBe(415);
+        expect(res.body).toEqual({ message: 'Content-Type must be application/json' });
     });
 
     it('should invalidate old refresh token after rotation', async () => {

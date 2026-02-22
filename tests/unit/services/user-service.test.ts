@@ -288,6 +288,58 @@ describe('UserServiceImpl', () => {
             expect(mockRepo.create).not.toHaveBeenCalled();
         });
 
+        it('should throw ValidationError when email is null', async () => {
+            const data = { ...validRegisterData, email: null } as any;
+
+            const err = await catchError(service.register(data));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('email');
+            expect(err.errors.email).toContain('Email is required');
+        });
+
+        it('should throw ValidationError when password is null', async () => {
+            const data = { ...validRegisterData, password: null } as any;
+
+            const err = await catchError(service.register(data));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('password');
+            expect(err.errors.password).toContain('Password is required');
+        });
+
+        it('should throw ValidationError when firstName is null', async () => {
+            const data = { ...validRegisterData, firstName: null } as any;
+
+            const err = await catchError(service.register(data));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('firstName');
+            expect(err.errors.firstName).toContain('First name is required');
+        });
+
+        it('should throw ValidationError when lastName is null', async () => {
+            const data = { ...validRegisterData, lastName: null } as any;
+
+            const err = await catchError(service.register(data));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('lastName');
+            expect(err.errors.lastName).toContain('Last name is required');
+        });
+
+        it('should throw ValidationError with all 4 field errors when all fields are null', async () => {
+            const data = { email: null, password: null, firstName: null, lastName: null } as any;
+
+            const err = await catchError(service.register(data));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('email');
+            expect(err.errors).toHaveProperty('password');
+            expect(err.errors).toHaveProperty('firstName');
+            expect(err.errors).toHaveProperty('lastName');
+        });
+
         it('should collect multiple password errors in a single array', async () => {
             const data = { ...validRegisterData, password: '!!!' };
 
@@ -400,6 +452,38 @@ describe('UserServiceImpl', () => {
                 'supplied-pw',
             );
         });
+
+        it('should throw ValidationError when email is null', async () => {
+            const err = await catchError(service.authenticate(null as any, 'StrongPass1'));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('email');
+            expect(err.errors.email).toContain('Email is required');
+        });
+
+        it('should throw ValidationError when password is null', async () => {
+            const err = await catchError(service.authenticate('test@example.com', null as any));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('password');
+            expect(err.errors.password).toContain('Password is required');
+        });
+
+        it('should throw ValidationError when email is empty string', async () => {
+            const err = await catchError(service.authenticate('', 'StrongPass1'));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('email');
+            expect(err.errors.email).toContain('Email is required');
+        });
+
+        it('should throw ValidationError with both fields when email and password are null', async () => {
+            const err = await catchError(service.authenticate(null as any, null as any));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('email');
+            expect(err.errors).toHaveProperty('password');
+        });
     });
 
     describe('refreshAccessToken', () => {
@@ -498,6 +582,22 @@ describe('UserServiceImpl', () => {
             const result = await service.refreshAccessToken(rawToken);
 
             expect(result.refreshToken).toMatch(/^[0-9a-f]{64}$/);
+        });
+
+        it('should throw ValidationError when token is null', async () => {
+            const err = await catchError(service.refreshAccessToken(null as any));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('refreshToken');
+            expect(err.errors.refreshToken).toContain('Refresh token is required');
+        });
+
+        it('should throw ValidationError when token is empty string', async () => {
+            const err = await catchError(service.refreshAccessToken(''));
+
+            expect(err).toBeInstanceOf(ValidationError);
+            expect(err.errors).toHaveProperty('refreshToken');
+            expect(err.errors.refreshToken).toContain('Refresh token is required');
         });
     });
 

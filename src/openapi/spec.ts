@@ -83,8 +83,8 @@ export const openApiSpec: OpenApiSpec = {
                             },
                         },
                     },
-                    '400': {
-                        description: 'Missing required fields',
+                    '415': {
+                        description: 'Unsupported Media Type',
                         content: {
                             'application/json': {
                                 schema: { $ref: '#/components/schemas/ErrorResponse' },
@@ -104,6 +104,10 @@ export const openApiSpec: OpenApiSpec = {
                         content: {
                             'application/json': {
                                 schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                                example: {
+                                    message: 'Validation failed',
+                                    errors: { email: ['Email is required'], password: ['Password is required'] },
+                                },
                             },
                         },
                     },
@@ -134,19 +138,31 @@ export const openApiSpec: OpenApiSpec = {
                             },
                         },
                     },
-                    '400': {
-                        description: 'Missing required fields',
+                    '401': {
+                        description: 'Invalid email or password',
                         content: {
                             'application/json': {
                                 schema: { $ref: '#/components/schemas/ErrorResponse' },
                             },
                         },
                     },
-                    '401': {
-                        description: 'Invalid email or password',
+                    '415': {
+                        description: 'Unsupported Media Type',
                         content: {
                             'application/json': {
                                 schema: { $ref: '#/components/schemas/ErrorResponse' },
+                            },
+                        },
+                    },
+                    '422': {
+                        description: 'Validation failed',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                                example: {
+                                    message: 'Validation failed',
+                                    errors: { email: ['Email is required'], password: ['Password is required'] },
+                                },
                             },
                         },
                     },
@@ -191,19 +207,31 @@ export const openApiSpec: OpenApiSpec = {
                             },
                         },
                     },
-                    '400': {
-                        description: 'Missing required fields',
+                    '401': {
+                        description: 'Invalid or expired refresh token',
                         content: {
                             'application/json': {
                                 schema: { $ref: '#/components/schemas/ErrorResponse' },
                             },
                         },
                     },
-                    '401': {
-                        description: 'Invalid or expired refresh token',
+                    '415': {
+                        description: 'Unsupported Media Type',
                         content: {
                             'application/json': {
                                 schema: { $ref: '#/components/schemas/ErrorResponse' },
+                            },
+                        },
+                    },
+                    '422': {
+                        description: 'Validation failed',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                                example: {
+                                    message: 'Validation failed',
+                                    errors: { refreshToken: ['Refresh token is required'] },
+                                },
                             },
                         },
                     },
@@ -317,6 +345,10 @@ export const openApiSpec: OpenApiSpec = {
                         content: {
                             'application/json': {
                                 schema: { $ref: '#/components/schemas/ValidationErrorResponse' },
+                                example: {
+                                    message: 'Validation failed',
+                                    errors: { firstName: ['First name cannot be empty'] },
+                                },
                             },
                         },
                     },
@@ -363,7 +395,7 @@ export const openApiSpec: OpenApiSpec = {
                             type: 'array',
                             items: { type: 'string' },
                         },
-                        example: { email: ['must be a valid email address'] },
+                        example: { field: ['Error message for this field'] },
                     },
                 },
                 required: ['message', 'errors'],

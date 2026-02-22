@@ -53,17 +53,36 @@ describe('POST /users/login', () => {
         expect(res.status).toBe(401);
     });
 
-    it('should return 400 when required fields are missing', async () => {
-        const res = await request.post(`${BASE}/users/login`).send({});
+    it('should return 422 with structured errors when body is empty', async () => {
+        const res = await request
+            .post(`${BASE}/users/login`)
+            .set('Content-Type', 'application/json')
+            .send({});
 
-        expect(res.status).toBe(400);
+        expect(res.status).toBe(422);
+        expect(res.body).toHaveProperty('message', 'Validation failed');
+        expect(res.body).toHaveProperty('errors');
+        expect(res.body.errors).toHaveProperty('email');
+        expect(res.body.errors).toHaveProperty('password');
     });
 
-    it('should return 400 when password is missing', async () => {
+    it('should return 422 when password is missing', async () => {
         const res = await request.post(`${BASE}/users/login`).send({
             email: 'someone@example.com',
         });
 
-        expect(res.status).toBe(400);
+        expect(res.status).toBe(422);
+        expect(res.body).toHaveProperty('errors');
+        expect(res.body.errors).toHaveProperty('password');
+    });
+
+    it('should return 415 when Content-Type is not application/json', async () => {
+        const res = await request
+            .post(`${BASE}/users/login`)
+            .set('Content-Type', 'text/plain')
+            .send('not json');
+
+        expect(res.status).toBe(415);
+        expect(res.body).toEqual({ message: 'Content-Type must be application/json' });
     });
 });
