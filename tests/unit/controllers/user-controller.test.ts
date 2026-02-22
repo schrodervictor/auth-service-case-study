@@ -102,70 +102,30 @@ describe('UserController', () => {
             });
         });
 
-        it('should return 400 when email is missing', async () => {
-            const req = createMockRequest({
-                password: 'StrongPass1!',
-                firstName: 'John',
-                lastName: 'Doe',
+        it('should pass undefined fields through to service and return 422 when service throws ValidationError', async () => {
+            mockService.register.mockRejectedValue(
+                new ValidationError('Validation failed', {
+                    email: ['Email is required'],
+                    password: ['Password is required'],
+                    firstName: ['First name is required'],
+                    lastName: ['Last name is required'],
+                }),
+            );
+            const req = createMockRequest({});
+            const res = createMockResponse();
+
+            await controller.register(req as Request, res as Response);
+
+            expect(res.statusCode).toBe(422);
+            expect(res.body).toEqual({
+                message: 'Validation failed',
+                errors: {
+                    email: ['Email is required'],
+                    password: ['Password is required'],
+                    firstName: ['First name is required'],
+                    lastName: ['Last name is required'],
+                },
             });
-            const res = createMockResponse();
-
-            await controller.register(req as Request, res as Response);
-
-            expect(res.statusCode).toBe(400);
-            expect(res.body).toEqual({ message: 'Missing required fields' });
-        });
-
-        it('should return 400 when password is missing', async () => {
-            const req = createMockRequest({
-                email: 'test@example.com',
-                firstName: 'John',
-                lastName: 'Doe',
-            });
-            const res = createMockResponse();
-
-            await controller.register(req as Request, res as Response);
-
-            expect(res.statusCode).toBe(400);
-            expect(res.body).toEqual({ message: 'Missing required fields' });
-        });
-
-        it('should return 400 when firstName is missing', async () => {
-            const req = createMockRequest({
-                email: 'test@example.com',
-                password: 'StrongPass1!',
-                lastName: 'Doe',
-            });
-            const res = createMockResponse();
-
-            await controller.register(req as Request, res as Response);
-
-            expect(res.statusCode).toBe(400);
-            expect(res.body).toEqual({ message: 'Missing required fields' });
-        });
-
-        it('should return 400 when lastName is missing', async () => {
-            const req = createMockRequest({
-                email: 'test@example.com',
-                password: 'StrongPass1!',
-                firstName: 'John',
-            });
-            const res = createMockResponse();
-
-            await controller.register(req as Request, res as Response);
-
-            expect(res.statusCode).toBe(400);
-            expect(res.body).toEqual({ message: 'Missing required fields' });
-        });
-
-        it('should return 400 when body is empty/undefined', async () => {
-            const req = createMockRequest(undefined);
-            const res = createMockResponse();
-
-            await controller.register(req as Request, res as Response);
-
-            expect(res.statusCode).toBe(400);
-            expect(res.body).toEqual({ message: 'Missing required fields' });
         });
 
         it('should return 409 when service throws EmailAlreadyExistsError', async () => {
@@ -301,24 +261,26 @@ describe('UserController', () => {
             );
         });
 
-        it('should return 400 when email is missing', async () => {
-            const req = createMockRequest({ password: 'StrongPass1!' });
+        it('should pass undefined fields through to service and return 422 when service throws ValidationError', async () => {
+            mockService.authenticate.mockRejectedValue(
+                new ValidationError('Validation failed', {
+                    email: ['Email is required'],
+                    password: ['Password is required'],
+                }),
+            );
+            const req = createMockRequest({});
             const res = createMockResponse();
 
             await controller.login(req as Request, res as Response);
 
-            expect(res.statusCode).toBe(400);
-            expect(res.body).toEqual({ message: 'Missing required fields' });
-        });
-
-        it('should return 400 when password is missing', async () => {
-            const req = createMockRequest({ email: 'test@example.com' });
-            const res = createMockResponse();
-
-            await controller.login(req as Request, res as Response);
-
-            expect(res.statusCode).toBe(400);
-            expect(res.body).toEqual({ message: 'Missing required fields' });
+            expect(res.statusCode).toBe(422);
+            expect(res.body).toEqual({
+                message: 'Validation failed',
+                errors: {
+                    email: ['Email is required'],
+                    password: ['Password is required'],
+                },
+            });
         });
 
         it('should return 401 when service throws InvalidCredentialsError', async () => {
@@ -529,14 +491,24 @@ describe('UserController', () => {
             expect(mockService.refreshAccessToken).toHaveBeenCalledWith('old-token-hex');
         });
 
-        it('should return 400 when refreshToken is missing from body', async () => {
+        it('should pass undefined refreshToken through to service and return 422 when service throws ValidationError', async () => {
+            mockService.refreshAccessToken.mockRejectedValue(
+                new ValidationError('Validation failed', {
+                    refreshToken: ['Refresh token is required'],
+                }),
+            );
             const req = createMockRequest({});
             const res = createMockResponse();
 
             await controller.refresh(req as Request, res as Response);
 
-            expect(res.statusCode).toBe(400);
-            expect(res.body).toEqual({ message: 'Missing required fields' });
+            expect(res.statusCode).toBe(422);
+            expect(res.body).toEqual({
+                message: 'Validation failed',
+                errors: {
+                    refreshToken: ['Refresh token is required'],
+                },
+            });
         });
 
         it('should return 401 when service throws InvalidRefreshTokenError', async () => {
@@ -653,11 +625,14 @@ describe('UserController', () => {
 
     describe('Error response format', () => {
         it('should include a message field in all error responses', async () => {
-            // Test with 400 (missing fields)
-            const req400 = createMockRequest(undefined);
-            const res400 = createMockResponse();
-            await controller.register(req400 as Request, res400 as Response);
-            expect(res400.body).toHaveProperty('message');
+            // Test with 422 (validation error from service)
+            mockService.register.mockRejectedValue(
+                new ValidationError('Validation failed', { email: ['Email is required'] }),
+            );
+            const req422 = createMockRequest({});
+            const res422 = createMockResponse();
+            await controller.register(req422 as Request, res422 as Response);
+            expect(res422.body).toHaveProperty('message');
 
             // Test with 409 (domain error)
             mockService.register.mockRejectedValue(
