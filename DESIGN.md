@@ -229,6 +229,29 @@ named with a `marta-{env}-` prefix.
   parameter ARNs only — no wildcard access. The K8s service account is annotated
   with this role ARN, so pods automatically receive temporary credentials.
 
+## Kubernetes Deployment (Helm)
+
+The app is deployed to EKS via a Helm chart in `deployment/`. The chart produces
+six resources: Deployment, Service, ServiceAccount, ConfigMap, and optionally an
+Ingress.
+
+**Config as ConfigMap**: The app's entire JSON config is rendered from
+`values.config` into a ConfigMap and mounted at `/app/config/config.json`. The
+`CONFIG_PATH` env var points there. A `checksum/config` pod annotation triggers
+rolling restarts when config values change.
+
+**No K8s Secrets**: Application secrets (JWT key, DB credentials) are fetched at
+runtime from AWS SSM via the IRSA-annotated service account — not stored as K8s
+Secrets. This avoids etcd-level secret exposure and leverages IAM for access
+control.
+
+**Health probes**: Both liveness and readiness probes hit
+`GET /partner-app/api/health-check`. Readiness starts checking after 5s (fast
+failure detection), liveness after 10s (avoids killing slow-starting pods).
+
+**ALB Ingress**: An optional `networking.k8s.io/v1` Ingress with ALB annotations
+routes traffic to the NodePort service on `/partner-app`.
+
 ## Trade-offs & Future Improvements
 
 1. **Token blacklisting**: Access tokens can't be revoked before expiry. A

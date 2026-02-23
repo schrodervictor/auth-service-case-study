@@ -1,0 +1,70 @@
+replicaCount: 2
+
+image:
+  repository: ""
+  tag: latest
+  pullPolicy: Always
+
+serviceAccount:
+  name: marta
+  annotations:
+    eks.amazonaws.com/role-arn: ""
+
+service:
+  type: NodePort
+  port: 9000
+
+ingress:
+  enabled: true
+  annotations:
+    alb.ingress.kubernetes.io/healthcheck-path: /partner-app/api/health-check
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+config:
+  server:
+    port: 9000
+  database:
+    host: ""
+    port: 5432
+    name: case_study_db
+  auth:
+    accessToken:
+      expiresIn: "15m"
+    refreshToken:
+      expiresIn: "7d"
+    resetKey:
+      expiresIn: "15m"
+  redis:
+    host: ""
+    port: 6379
+  rateLimit:
+    login:
+      maxAttempts: 5
+      windowSeconds: 900
+    refresh:
+      maxAttempts: 10
+      windowSeconds: 900
+    resetKey:
+      maxAttempts: 3
+      windowSeconds: 900
+    validateResetKey:
+      maxAttempts: 10
+      windowSeconds: 900
+    resetPassword:
+      maxAttempts: 5
+      windowSeconds: 900
+  ssm:
+    region: eu-central-1
+    parameters:
+      jwtSecret: ""
+      databaseUser: ""
+      databasePassword: ""
+  eventbus:
+    mode: real
