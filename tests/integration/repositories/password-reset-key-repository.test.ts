@@ -52,8 +52,8 @@ const MIGRATION_UP = `
 `;
 
 const MIGRATION_DOWN = `
-    DROP TABLE IF EXISTS "password_reset_keys";
-    DROP TABLE IF EXISTS "users";
+    DROP TABLE IF EXISTS "password_reset_keys" CASCADE;
+    DROP TABLE IF EXISTS "users" CASCADE;
 `;
 
 async function createTestUser(

@@ -24,8 +24,8 @@ down:
 
 wait-for-app:
 	@echo "Waiting for app on http://localhost:9000 ..."
-	URL=http://localhost:9000/partner-app/api/health-check; \
-	@i=0; while [ $$i -lt 30 ]; do \
+	@URL=http://localhost:9000/partner-app/api/health-check; \
+	i=0; while [ $$i -lt 30 ]; do \
 		if curl -sf "$$URL" > /dev/null 2>&1; then \
 			echo "App is ready."; exit 0; \
 		fi; \
