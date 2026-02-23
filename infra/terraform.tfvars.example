@@ -1,0 +1,24 @@
+environment = "production"
+
+# Networking
+vpc_id             = "vpc-0123456789abcdef0"
+vpc_cidr           = "10.0.0.0/16"
+private_subnet_ids = ["subnet-aaa", "subnet-bbb"]
+
+# EKS / IRSA
+eks_oidc_provider_arn = "arn:aws:iam::oidc-provider/oidc.eks.eu-central-1.amazonaws.com/id/EXAMPLE"
+eks_oidc_provider_url = "oidc.eks.eu-central-1.amazonaws.com/id/EXAMPLE"
+k8s_namespace         = "default"
+k8s_service_account   = "marta"
+
+# RDS
+db_name            = "case_study_db"
+db_instance_class  = "db.t3.micro"
+
+# ElastiCache
+redis_node_type = "cache.t3.micro"
+
+# Secrets (use -var or TF_VAR_ env vars in CI — never commit real values)
+# jwt_secret        = ""
+# database_user     = ""
+# database_password = ""
