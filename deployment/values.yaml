@@ -63,8 +63,8 @@ config:
   ssm:
     region: eu-central-1
     parameters:
-      jwtSecret: ""
-      databaseUser: ""
-      databasePassword: ""
+      jwtSecret: /marta/production/jwt-secret
+      databaseUser: /marta/production/database-user
+      databasePassword: /marta/production/database-password
   eventbus:
     mode: real

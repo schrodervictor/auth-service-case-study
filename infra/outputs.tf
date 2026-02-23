@@ -36,3 +36,8 @@ output "app_iam_role_arn" {
   description = "IAM role ARN to annotate the K8s service account"
   value       = aws_iam_role.app.arn
 }
+
+output "ecr_repository_url" {
+  description = "ECR repository URL for Docker images"
+  value       = aws_ecr_repository.app.repository_url
+}
