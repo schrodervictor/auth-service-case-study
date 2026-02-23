@@ -1,234 +1,109 @@
-# 🚀 Senior Full Stack Engineer Case Study
+# User Authentication Service
 
-## User Authentication Service
+A microservice for user registration, authentication, and profile management.
 
-Welcome to the marta Senior Full Stack Engineer technical case study. This repository contains a boilerplate microservice architecture that you will use to implement a **User Authentication Service**.
+## Tech Stack
 
----
-
-## 📋 Overview
-
-Your task is to build a fully functional user authentication service using the provided boilerplate. The service should handle user registration, authentication, and basic user management operations.
-
-### Time Expectation
-- **Estimated time:** 3-4 hours
-- Focus on code quality over feature completeness
-
----
-
-## 🎯 Requirements
-
-### Core Features
-
-#### 1. User Registration
-- Create an endpoint to register new users
-- Required fields: `email`, `password`, `firstName`, `lastName`
-- Email must be unique and validated
-- Password must meet security requirements (minimum 8 characters, at least one uppercase, one lowercase, and one number)
-
-#### 2. User Authentication
-- Implement a login endpoint that accepts `email` and `password`
-- Return a JWT token upon successful authentication
-- Implement proper error handling for invalid credentials
-
-#### 3. User Profile
-- Create an endpoint to retrieve the authenticated user's profile
-- Create an endpoint to update the user's profile (firstName, lastName)
-- Endpoints should be protected and require valid JWT token
-
-#### 4. Password Management
-- Implement the `PasswordManagerService` to securely hash passwords using scrypt
-- Implement password comparison for authentication
-
----
-
-## 🏗️ Architecture
-
-The boilerplate follows a clean architecture pattern with:
-
-```
-src/
-├── controllers/     # HTTP request handlers
-├── services/        # Business logic layer
-├── repositories/    # Data access layer
-├── entities/        # TypeORM entities
-├── lib/             # Shared utilities and types
-└── events/          # Event handlers (optional)
-```
-
-### Tech Stack
 - **Runtime:** Node.js with TypeScript
 - **Framework:** Express.js with inversify-express-utils
 - **Database:** PostgreSQL with TypeORM
+- **Cache / Rate limiting:** Redis (ioredis)
 - **DI Container:** Inversify
 - **Testing:** Jest with Supertest
 
----
+## API Endpoints
 
-## 📝 Tasks Breakdown
+All routes are prefixed with `/partner-app/api`.
 
-### Task 1: User Entity
-Complete the `User` entity in `src/entities/user.ts` with the following fields:
-- `id` (UUID, auto-generated)
-- `email` (string, unique)
-- `password` (string, hashed)
-- `firstName` (string)
-- `lastName` (string)
-- `createdAt` (timestamp)
-- `updatedAt` (timestamp)
+| Method | Path                        | Auth | Description                                   |
+| ------ | --------------------------- | ---- | --------------------------------------------- |
+| GET    | `/health-check`             | No   | Health check with dependency status (200/503) |
+| POST   | `/users/register`           | No   | Register a new user (201)                     |
+| POST   | `/users/login`              | No   | Authenticate and get token pair (200)         |
+| POST   | `/users/refresh`            | No   | Refresh access token (200)                    |
+| POST   | `/users/logout`             | Yes  | Invalidate refresh tokens (204)               |
+| GET    | `/users/profile`            | Yes  | Get current user profile (200)                |
+| PUT    | `/users/profile`            | Yes  | Update profile fields (200)                   |
+| PUT    | `/users/password`           | Yes  | Change password (204)                         |
+| POST   | `/users/reset-key`          | No   | Request a password reset key (200)            |
+| POST   | `/users/validate-reset-key` | No   | Check if a reset key is valid (200)           |
+| POST   | `/users/password/reset`     | No   | Reset password using a valid key (200)        |
 
-### Task 2: Password Manager Service
-Implement the `PasswordManagerService` in `src/services/password-manager-service.ts`:
-- `toHash(password: string)`: Hash a password with a random salt
-- `compare(storedPassword: string, suppliedPassword: string)`: Compare a supplied password with a stored hash
+Interactive API documentation is available at `/partner-app/api/docs` (Swagger
+UI) when the service is running. The raw spec can be downloaded as
+[JSON](/partner-app/api/docs/spec.json) or
+[YAML](/partner-app/api/docs/spec.yaml).
 
-### Task 3: User Repository
-Implement the `UserRepository` in `src/repositories/user-repository.ts`:
-- `findByEmail(email: string)`: Find a user by email
-- `findById(id: string)`: Find a user by ID
-- `create(userData: CreateUserDto)`: Create a new user
-- `update(id: string, userData: UpdateUserDto)`: Update user data
+## Features
 
-### Task 4: User Service
-Implement the `UserService` in `src/services/user-service.ts`:
-- `register(userData: RegisterUserDto)`: Register a new user
-- `authenticate(email: string, password: string)`: Authenticate user and return JWT
-- `getProfile(userId: string)`: Get user profile
-- `updateProfile(userId: string, data: UpdateProfileDto)`: Update user profile
+- **JWT Authentication**: Access + refresh token pair with token rotation
+- **Password Hashing**: `crypto.scrypt` with `timingSafeEqual` comparison
+- **Health Check**: Probes PostgreSQL and Redis on every request. Returns
+  `{ status: "healthy" }` (200), `{ "status": "degraded" }` (200, cache down),
+  or `{ "status": "unhealthy" }` (503, database down)
+- **Rate Limiting**: Redis-backed fixed-window counter on login, refresh, and
+  password reset endpoints. Fail-open — degrades gracefully if Redis is
+  unavailable
+- **Graceful Shutdown**: Handles SIGTERM/SIGINT with ordered cleanup (drain
+  connections, close DB pool, disconnect Redis) and configurable timeout
+- **Secrets Management**: File-based (dev/test) or AWS SSM (production)
+- **Structured Error Responses**: Missing or invalid fields return 422 with
+  per-field errors (`{ message, errors: { field: ["..."] } }`). Wrong
+  `Content-Type` on POST/PUT returns 415 before the body is parsed
+- **Password Reset**: Three-step flow — request a time-limited reset key via
+  email, optionally validate it, then use it to set a new password. Keys are
+  SHA-256 hashed before storage, single-use, and expire after 15 minutes
+  (default). A `PASSWORD_RESET_REQUESTED` domain event carries the plain key to
+  downstream consumers (e.g., an email service). All three endpoints are rate
+  limited
 
-### Task 5: User Controller
-Implement the `UserController` in `src/controllers/user-controller.ts`:
-- `POST /users/register` - Register a new user
-- `POST /users/login` - Authenticate and get JWT token
-- `GET /users/profile` - Get current user profile (protected)
-- `PUT /users/profile` - Update current user profile (protected)
+## Getting Started
 
-### Task 6: Authentication Middleware
-Create a middleware to protect routes that require authentication:
-- Validate JWT token from Authorization header
-- Extract user information and attach to request
-
----
-
-## 🔧 Getting Started
-
-### Prerequisites
-- Node.js 18+
-- PostgreSQL database
-- Yarn package manager
-
-### Installation
+The project is fully containerized — no local Node.js or npm required.
 
 ```bash
-# Install dependencies
-yarn install
+# Build the Docker image
+make build
 
-# Set up environment variables
-cp env.example .env
+# Start the development stack (app + PostgreSQL)
+make up
 
-# Start development server
-yarn dev
+# Stop everything
+make down
 ```
 
-### Environment Variables
+## Commands
 
-Create a `.env` file with the following variables:
+| Command                 | Description                                           |
+| ----------------------- | ----------------------------------------------------- |
+| `make build`            | Build the Docker image                                |
+| `make up`               | Start the dev stack (app + postgres + redis)          |
+| `make down`             | Stop all containers                                   |
+| `make test`             | Run all test layers (unit + integration + acceptance) |
+| `make test-unit`        | Run unit tests (no external deps)                     |
+| `make test-integration` | Run integration tests (with PostgreSQL)               |
+| `make test-acceptance`  | Run acceptance tests (full stack, black-box)          |
+| `make lint`             | ESLint check                                          |
+| `make typecheck`        | TypeScript type check                                 |
 
-```env
-PORT=9000
-DATABASE_HOST=localhost
-DATABASE_PORT=5432
-DATABASE_NAME=case_study_db
-DATABASE_USER=postgres
-DATABASE_PASSWORD=your_password
-JWT_SECRET=your_jwt_secret_key
-JWT_EXPIRES_IN=24h
-```
+## Common Issues
 
-### Running Tests
+### Changes to config files not taking effect
+
+Files like `package.json`, `jest.config.json`, `tsconfig.json`, `.eslintrc`, and
+`prettierrc.json` are copied into the Docker image at build time. If you modify
+any of these, rebuild first:
 
 ```bash
-# Run all tests
-yarn test
-
-# Run tests in watch mode
-yarn test:watch
+make build
 ```
 
----
+### Docker Compose using a stale app image
 
-## ✅ Evaluation Criteria
+If `make up` keeps running an old version of the app, remove the existing image
+first:
 
-Your submission will be evaluated based on:
-
-### Code Quality (40%)
-- Clean, readable, and maintainable code
-- Proper TypeScript usage with appropriate types
-- Consistent coding style (ESLint & Prettier)
-- SOLID principles adherence
-
-### Architecture (25%)
-- Proper separation of concerns
-- Correct use of dependency injection
-- Repository pattern implementation
-- Error handling strategy
-
-### Security (20%)
-- Secure password hashing implementation
-- JWT token handling
-- Input validation and sanitization
-- Protection against common vulnerabilities
-
-### Testing (15%)
-- Unit tests for services
-- Integration tests for API endpoints
-- Edge case coverage
-
----
-
-## 📦 Deliverables
-
-1. Complete implementation of all required features
-2. Unit tests for services (minimum 80% coverage)
-3. Integration tests for API endpoints
-4. Brief documentation of your design decisions (add to this README or create DESIGN.md)
-
----
-
-## 🎁 Bonus Points
-
-These are optional but will be considered favorably:
-
-- [ ] Implement refresh token mechanism
-- [ ] Add rate limiting for login attempts
-- [ ] Implement password reset flow (endpoint structure only)
-- [ ] Add request validation using class-validator
-- [ ] Docker Compose setup for local development
-- [ ] API documentation with Swagger/OpenAPI
-
----
-
-## 📚 Helpful Resources
-
-- [Inversify Documentation](https://inversify.io/)
-- [TypeORM Documentation](https://typeorm.io/)
-- [Express.js Documentation](https://expressjs.com/)
-- [JWT Introduction](https://jwt.io/introduction)
-
----
-
-## 🤝 Submission
-
-1. Fork this repository
-2. Create a new branch with your name: `feature/your-name`
-3. Implement the required features
-4. Push your changes and create a Pull Request
-5. Include any notes or assumptions in your PR description
-
----
-
-## ❓ Questions?
-
-If you have any questions about the requirements or need clarification, please reach out to your hiring contact.
-
-**Good luck! We're excited to see your solution.** 🎉
+```bash
+docker image rm marta-app:latest
+make up
+```

@@ -1,0 +1,90 @@
+import supertest from 'supertest';
+
+import { BASE, validUserData } from './helpers/api';
+import { flushRateLimitKeys } from './helpers/redis';
+
+const request = supertest(process.env.API_URL ?? 'http://app:9000');
+
+async function registerUser() {
+    const data = validUserData();
+    await request.post(`${BASE}/users/register`).send(data);
+    return data;
+}
+
+describe('POST /users/login', () => {
+    beforeEach(async () => {
+        await flushRateLimitKeys();
+    });
+
+    it('should login with valid credentials and return 200 with tokens', async () => {
+        const user = await registerUser();
+
+        const res = await request.post(`${BASE}/users/login`).send({
+            email: user.email,
+            password: user.password,
+        });
+
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual(
+            expect.objectContaining({
+                accessToken: expect.any(String),
+                refreshToken: expect.any(String),
+            }),
+        );
+    });
+
+    it('should return 401 for wrong password', async () => {
+        const user = await registerUser();
+
+        const res = await request.post(`${BASE}/users/login`).send({
+            email: user.email,
+            password: 'WrongPassword1',
+        });
+
+        expect(res.status).toBe(401);
+    });
+
+    it('should return 401 for non-existent email', async () => {
+        const res = await request.post(`${BASE}/users/login`).send({
+            email: 'nonexistent@example.com',
+            password: 'StrongPass1',
+        });
+
+        expect(res.status).toBe(401);
+    });
+
+    it('should return 422 with structured errors when body is empty', async () => {
+        const res = await request
+            .post(`${BASE}/users/login`)
+            .set('Content-Type', 'application/json')
+            .send({});
+
+        expect(res.status).toBe(422);
+        expect(res.body).toHaveProperty('message', 'Validation failed');
+        expect(res.body).toHaveProperty('errors');
+        expect(res.body.errors).toHaveProperty('email');
+        expect(res.body.errors).toHaveProperty('password');
+    });
+
+    it('should return 422 when password is missing', async () => {
+        const res = await request.post(`${BASE}/users/login`).send({
+            email: 'someone@example.com',
+        });
+
+        expect(res.status).toBe(422);
+        expect(res.body).toHaveProperty('errors');
+        expect(res.body.errors).toHaveProperty('password');
+    });
+
+    it('should return 415 when Content-Type is not application/json', async () => {
+        const res = await request
+            .post(`${BASE}/users/login`)
+            .set('Content-Type', 'text/plain')
+            .send('not json');
+
+        expect(res.status).toBe(415);
+        expect(res.body).toEqual({
+            message: 'Content-Type must be application/json',
+        });
+    });
+});

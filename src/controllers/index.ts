@@ -1,2 +1,2 @@
-// export * from './example-controller';
-// export * from './user-controller';
+export * from './health-check-controller';
+export * from './user-controller';

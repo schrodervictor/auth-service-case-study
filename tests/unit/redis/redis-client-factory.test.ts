@@ -1,0 +1,160 @@
+import { silenceConsole } from '../../helpers/test-console';
+import { makeTestConfig } from '../../helpers/test-config';
+import type { AppConfig } from '../../../src/config/schema';
+import { TYPES } from '../../../src/lib/types';
+import { createRedisClient } from '../../../src/redis/redis-client-factory';
+import { RedisClient } from '../../../src/redis/redis-client';
+
+jest.mock('ioredis');
+
+const MOCK_CONFIG = makeTestConfig();
+
+describe('TYPES.RedisClient', () => {
+    it('should have a RedisClient symbol defined in TYPES', () => {
+        expect(TYPES.RedisClient).toBeDefined();
+        expect(typeof TYPES.RedisClient).toBe('symbol');
+    });
+});
+
+describe('createRedisClient', () => {
+    let Redis: jest.Mock;
+    let mockRedisInstance: {
+        ping: jest.Mock;
+        on: jest.Mock;
+        quit: jest.Mock;
+        status: string;
+    };
+
+    beforeEach(async () => {
+        jest.clearAllMocks();
+
+        mockRedisInstance = {
+            ping: jest.fn().mockResolvedValue('PONG'),
+            on: jest.fn().mockReturnThis(),
+            quit: jest.fn().mockResolvedValue('OK'),
+            status: 'ready',
+        };
+
+        const ioredis = await import('ioredis');
+        Redis = ioredis.default as unknown as jest.Mock;
+        Redis.mockImplementation(() => mockRedisInstance);
+    });
+
+    it('should return a RedisClient instance on successful connection', async () => {
+        const client = await createRedisClient(MOCK_CONFIG);
+
+        expect(client).toBeInstanceOf(RedisClient);
+    });
+
+    it('should pass host and port from config to Redis constructor', async () => {
+        await createRedisClient(MOCK_CONFIG);
+
+        expect(Redis).toHaveBeenCalledWith(
+            expect.objectContaining({
+                host: 'redis',
+                port: 6379,
+            }),
+        );
+    });
+
+    it('should pass custom host and port from config', async () => {
+        const customConfig: AppConfig = {
+            ...MOCK_CONFIG,
+            redis: { host: 'custom-redis', port: 6380 },
+        };
+
+        await createRedisClient(customConfig);
+
+        expect(Redis).toHaveBeenCalledWith(
+            expect.objectContaining({
+                host: 'custom-redis',
+                port: 6380,
+            }),
+        );
+    });
+
+    it('should pass password to Redis constructor when provided', async () => {
+        const configWithPassword: AppConfig = {
+            ...MOCK_CONFIG,
+            redis: { host: 'redis', port: 6379, password: 's3cret' },
+        };
+
+        await createRedisClient(configWithPassword);
+
+        expect(Redis).toHaveBeenCalledWith(
+            expect.objectContaining({
+                password: 's3cret',
+            }),
+        );
+    });
+
+    it('should not pass password when not provided in config', async () => {
+        await createRedisClient(MOCK_CONFIG);
+
+        const constructorArgs = Redis.mock.calls[0][0];
+        expect(constructorArgs.password).toBeUndefined();
+    });
+
+    it('should return a RedisClient when Redis connection fails (fail-open)', async () => {
+        const captured = silenceConsole('error');
+        mockRedisInstance.ping.mockRejectedValue(
+            new Error('Connection refused'),
+        );
+
+        const client = await createRedisClient(MOCK_CONFIG);
+
+        expect(client).toBeInstanceOf(RedisClient);
+        captured.restore();
+    });
+
+    it('should log an error when Redis connection fails', async () => {
+        const captured = silenceConsole('error');
+        mockRedisInstance.ping.mockRejectedValue(
+            new Error('Connection refused'),
+        );
+
+        await createRedisClient(MOCK_CONFIG);
+
+        expect(captured.error.length).toBeGreaterThan(0);
+        expect(captured.error[0]).toMatch(/RATE-LIMIT DEGRADED/);
+
+        captured.restore();
+    });
+
+    it('should include the error cause in the log', async () => {
+        const captured = silenceConsole('error');
+        mockRedisInstance.ping.mockRejectedValue(new Error('ECONNREFUSED'));
+
+        await createRedisClient(MOCK_CONFIG);
+
+        expect(captured.error.join(' ')).toContain('ECONNREFUSED');
+
+        captured.restore();
+    });
+
+    it('should return a RedisClient when Redis constructor throws (fail-open)', async () => {
+        const captured = silenceConsole('error');
+        Redis.mockImplementation(() => {
+            throw new Error('Invalid host');
+        });
+
+        const client = await createRedisClient(MOCK_CONFIG);
+
+        expect(client).toBeInstanceOf(RedisClient);
+        captured.restore();
+    });
+
+    it('should log an error when Redis constructor throws', async () => {
+        const captured = silenceConsole('error');
+        Redis.mockImplementation(() => {
+            throw new Error('Invalid host');
+        });
+
+        await createRedisClient(MOCK_CONFIG);
+
+        expect(captured.error.length).toBeGreaterThan(0);
+        expect(captured.error[0]).toMatch(/RATE-LIMIT DEGRADED/);
+
+        captured.restore();
+    });
+});

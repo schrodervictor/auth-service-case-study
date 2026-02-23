@@ -1,0 +1,68 @@
+volumes:
+  eventbus-data:
+
+services:
+  app:
+    build:
+      context: .
+      target: dev
+      ssh:
+        - default
+    ports:
+      - "9000:9000"
+    environment:
+      CONFIG_PATH: /app/config/default.json
+      SECRETS_PATH: /app/config/secrets.json
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./config:/app/config
+      - eventbus-data:/tmp/eventbus
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: marta-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: case_study_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: marta-redis
+    ports:
+      - "6379:6379"
+    tmpfs:
+      - /data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  acceptance:
+    build:
+      context: ./tests/acceptance
+    environment:
+      API_URL: http://app:9000
+      EVENTBUS_PATH: /tmp/eventbus/events.jsonl
+    volumes:
+      - ./tests/acceptance/specs:/app/specs
+      - eventbus-data:/tmp/eventbus
+    depends_on:
+      app:
+        condition: service_started
