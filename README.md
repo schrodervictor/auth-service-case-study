@@ -81,10 +81,24 @@ make down
 | `make down`             | Stop all containers                                   |
 | `make test`             | Run all test layers (unit + integration + acceptance) |
 | `make test-unit`        | Run unit tests (no external deps)                     |
-| `make test-integration` | Run integration tests (with PostgreSQL)               |
+| `make test-integration` | Run integration tests (with PostgreSQL + Redis)       |
 | `make test-acceptance`  | Run acceptance tests (full stack, black-box)          |
+| `make coverage`         | Run unit + integration tests with coverage report     |
 | `make lint`             | ESLint check                                          |
 | `make typecheck`        | TypeScript type check                                 |
+
+## Project Structure
+
+| Directory     | Description                                        |
+| ------------- | -------------------------------------------------- |
+| `src/`        | Application source code (TypeScript)               |
+| `tests/`      | Unit, integration, and acceptance tests            |
+| `config/`     | JSON config files for dev/test environments        |
+| `infra/`      | Terraform — RDS, ElastiCache, SSM, ECR, IAM (IRSA) |
+| `deployment/` | Helm chart for Kubernetes deployment               |
+| `.github/`    | GitHub Actions CI workflow                         |
+| `DESIGN.md`   | Design decisions and architectural rationale       |
+| `docs/`       | Additional documentation (testing strategy)        |
 
 ## Common Issues
 
